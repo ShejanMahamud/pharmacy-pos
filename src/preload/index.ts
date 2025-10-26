@@ -1,0 +1,116 @@
+import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
+
+// Custom APIs for renderer
+const api = {
+  // Branches
+  branches: {
+    getAll: () => ipcRenderer.invoke('db:branches:getAll'),
+    getById: (id: string) => ipcRenderer.invoke('db:branches:getById', id),
+    create: (data: any) => ipcRenderer.invoke('db:branches:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:branches:update', { id, data }),
+    delete: (id: string) => ipcRenderer.invoke('db:branches:delete', id)
+  },
+  // Users
+  users: {
+    getAll: (branchId?: string) => ipcRenderer.invoke('db:users:getAll', branchId),
+    getById: (id: string) => ipcRenderer.invoke('db:users:getById', id),
+    authenticate: (username: string, password: string) =>
+      ipcRenderer.invoke('db:users:authenticate', { username, password }),
+    create: (data: any) => ipcRenderer.invoke('db:users:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:users:update', { id, data }),
+    delete: (id: string) => ipcRenderer.invoke('db:users:delete', id)
+  },
+  // Categories
+  categories: {
+    getAll: () => ipcRenderer.invoke('db:categories:getAll'),
+    create: (data: any) => ipcRenderer.invoke('db:categories:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:categories:update', { id, data }),
+    delete: (id: string) => ipcRenderer.invoke('db:categories:delete', id)
+  },
+  // Suppliers
+  suppliers: {
+    getAll: () => ipcRenderer.invoke('db:suppliers:getAll'),
+    create: (data: any) => ipcRenderer.invoke('db:suppliers:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:suppliers:update', { id, data }),
+    delete: (id: string) => ipcRenderer.invoke('db:suppliers:delete', id)
+  },
+  // Products
+  products: {
+    getAll: (search?: string) => ipcRenderer.invoke('db:products:getAll', search),
+    getById: (id: string) => ipcRenderer.invoke('db:products:getById', id),
+    getByBarcode: (barcode: string) => ipcRenderer.invoke('db:products:getByBarcode', barcode),
+    create: (data: any) => ipcRenderer.invoke('db:products:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:products:update', { id, data }),
+    delete: (id: string) => ipcRenderer.invoke('db:products:delete', id)
+  },
+  // Inventory
+  inventory: {
+    getByBranch: (branchId: string) => ipcRenderer.invoke('db:inventory:getByBranch', branchId),
+    getLowStock: (branchId: string) => ipcRenderer.invoke('db:inventory:getLowStock', branchId),
+    updateQuantity: (productId: string, branchId: string, quantity: number) =>
+      ipcRenderer.invoke('db:inventory:updateQuantity', { productId, branchId, quantity })
+  },
+  // Customers
+  customers: {
+    getAll: (search?: string) => ipcRenderer.invoke('db:customers:getAll', search),
+    getByPhone: (phone: string) => ipcRenderer.invoke('db:customers:getByPhone', phone),
+    create: (data: any) => ipcRenderer.invoke('db:customers:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:customers:update', { id, data })
+  },
+  // Sales
+  sales: {
+    create: (sale: any, items: any[]) => ipcRenderer.invoke('db:sales:create', { sale, items }),
+    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:sales:getByBranch', { branchId, startDate, endDate }),
+    getById: (id: string) => ipcRenderer.invoke('db:sales:getById', id)
+  },
+  // Purchases
+  purchases: {
+    create: (purchase: any, items: any[]) =>
+      ipcRenderer.invoke('db:purchases:create', { purchase, items }),
+    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:purchases:getByBranch', { branchId, startDate, endDate }),
+    getById: (id: string) => ipcRenderer.invoke('db:purchases:getById', id)
+  },
+  // Expenses
+  expenses: {
+    create: (data: any) => ipcRenderer.invoke('db:expenses:create', data),
+    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:expenses:getByBranch', { branchId, startDate, endDate })
+  },
+  // Settings
+  settings: {
+    getAll: () => ipcRenderer.invoke('db:settings:getAll'),
+    get: (key: string) => ipcRenderer.invoke('db:settings:get', key),
+    update: (key: string, value: string) => ipcRenderer.invoke('db:settings:update', { key, value })
+  },
+  // Reports
+  reports: {
+    salesSummary: (branchId: string, startDate: string, endDate: string) =>
+      ipcRenderer.invoke('db:reports:salesSummary', { branchId, startDate, endDate }),
+    topProducts: (branchId: string, startDate: string, endDate: string, limit?: number) =>
+      ipcRenderer.invoke('db:reports:topProducts', { branchId, startDate, endDate, limit })
+  },
+  // Audit Logs
+  auditLogs: {
+    create: (data: any) => ipcRenderer.invoke('db:auditLogs:create', data)
+  }
+}
+
+// Use `contextBridge` APIs to expose Electron APIs to
+// renderer only if context isolation is enabled, otherwise
+// just add to the DOM global.
+if (process.contextIsolated) {
+  try {
+    contextBridge.exposeInMainWorld('electron', electronAPI)
+    contextBridge.exposeInMainWorld('api', api)
+  } catch (error) {
+    console.error(error)
+  }
+} else {
+  // @ts-ignore (define in dts)
+  window.electron = electronAPI
+  // @ts-ignore (define in dts)
+  window.api = api
+}
