@@ -22,8 +22,9 @@ export const users = sqliteTable('users', {
   fullName: text('full_name').notNull(),
   email: text('email'),
   phone: text('phone'),
-  role: text('role').notNull(), // 'admin', 'manager', 'cashier', 'pharmacist'
+  role: text('role').notNull(), // 'super_admin', 'admin', 'manager', 'cashier', 'pharmacist'
   branchId: text('branch_id').references(() => branches.id),
+  createdBy: text('created_by').references(() => users.id), // Track who created this user
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)

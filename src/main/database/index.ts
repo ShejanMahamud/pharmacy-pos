@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { app } from 'electron'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { migrateAddCreatedBy } from './migrations/add-created-by'
 import * as schema from './schema'
 
 let db: ReturnType<typeof drizzle>
@@ -20,10 +21,23 @@ export function initDatabase() {
   // Create tables if they don't exist
   createTables(sqlite)
 
+  // Run migrations
+  runMigrations()
+
   // Initialize default data
   initializeDefaultData()
 
   return db
+}
+
+function runMigrations(): void {
+  try {
+    console.log('Running database migrations...')
+    migrateAddCreatedBy()
+    console.log('Database migrations completed successfully')
+  } catch (error) {
+    console.error('Migration failed:', error)
+  }
 }
 
 function createTables(sqlite: Database.Database) {
@@ -53,6 +67,7 @@ function createTables(sqlite: Database.Database) {
       phone TEXT,
       role TEXT NOT NULL,
       branch_id TEXT REFERENCES branches(id),
+      created_by TEXT REFERENCES users(id),
       is_active INTEGER DEFAULT 1,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -335,18 +350,84 @@ async function initializeDefaultData() {
       })
       .run()
 
-    // Create default admin user (password: admin123)
+    // Create default users for each role
     // Note: In production, use bcrypt or similar for password hashing
+
+    // Super Admin
+    const superAdminId = uuidv4()
+    db.insert(schema.users)
+      .values({
+        id: superAdminId,
+        username: 'superadmin',
+        password: 'super123', // Should be hashed in production
+        fullName: 'Super Administrator',
+        email: 'superadmin@pharmacy.com',
+        role: 'super_admin',
+        branchId: defaultBranchId,
+        isActive: true
+      })
+      .run()
+
+    // Admin
     const adminId = uuidv4()
     db.insert(schema.users)
       .values({
         id: adminId,
         username: 'admin',
         password: 'admin123', // Should be hashed in production
-        fullName: 'System Administrator',
+        fullName: 'Administrator',
         email: 'admin@pharmacy.com',
         role: 'admin',
         branchId: defaultBranchId,
+        createdBy: superAdminId,
+        isActive: true
+      })
+      .run()
+
+    // Manager
+    const managerId = uuidv4()
+    db.insert(schema.users)
+      .values({
+        id: managerId,
+        username: 'manager',
+        password: 'manager123', // Should be hashed in production
+        fullName: 'Store Manager',
+        email: 'manager@pharmacy.com',
+        role: 'manager',
+        branchId: defaultBranchId,
+        createdBy: adminId,
+        isActive: true
+      })
+      .run()
+
+    // Pharmacist
+    const pharmacistId = uuidv4()
+    db.insert(schema.users)
+      .values({
+        id: pharmacistId,
+        username: 'pharmacist',
+        password: 'pharma123', // Should be hashed in production
+        fullName: 'John Pharmacist',
+        email: 'pharmacist@pharmacy.com',
+        role: 'pharmacist',
+        branchId: defaultBranchId,
+        createdBy: managerId,
+        isActive: true
+      })
+      .run()
+
+    // Cashier
+    const cashierId = uuidv4()
+    db.insert(schema.users)
+      .values({
+        id: cashierId,
+        username: 'cashier',
+        password: 'cashier123', // Should be hashed in production
+        fullName: 'Jane Cashier',
+        email: 'cashier@pharmacy.com',
+        role: 'cashier',
+        branchId: defaultBranchId,
+        createdBy: managerId,
         isActive: true
       })
       .run()

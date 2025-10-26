@@ -1,23 +1,27 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { usePermissions } from '../hooks/usePermissions'
 import { useAuthStore } from '../store/authStore'
 import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { Permission } from '../utils/permissions'
 
 export default function Layout(): React.JSX.Element {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
   const selectedBranch = useBranchStore((state) => state.selectedBranch)
   const storeName = useSettingsStore((state) => state.storeName)
+  const { hasPermission } = usePermissions()
   const location = useLocation()
 
   const isActive = (path: string) => {
     return location.pathname === path
   }
 
-  const navigation = [
+  const navigationItems = [
     {
       name: 'Dashboard',
       path: '/',
+      permission: 'view_dashboard' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -32,6 +36,7 @@ export default function Layout(): React.JSX.Element {
     {
       name: 'POS',
       path: '/pos',
+      permission: 'create_sale' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -46,6 +51,7 @@ export default function Layout(): React.JSX.Element {
     {
       name: 'Products',
       path: '/products',
+      permission: 'view_products' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -60,6 +66,7 @@ export default function Layout(): React.JSX.Element {
     {
       name: 'Inventory',
       path: '/inventory',
+      permission: 'view_inventory' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -74,6 +81,7 @@ export default function Layout(): React.JSX.Element {
     {
       name: 'Sales',
       path: '/sales',
+      permission: 'view_sales' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -88,6 +96,7 @@ export default function Layout(): React.JSX.Element {
     {
       name: 'Purchases',
       path: '/purchases',
+      permission: 'view_purchases' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -102,6 +111,7 @@ export default function Layout(): React.JSX.Element {
     {
       name: 'Customers',
       path: '/customers',
+      permission: 'view_customers' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -116,6 +126,7 @@ export default function Layout(): React.JSX.Element {
     {
       name: 'Reports',
       path: '/reports',
+      permission: 'view_reports' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -128,8 +139,39 @@ export default function Layout(): React.JSX.Element {
       )
     },
     {
+      name: 'Roles',
+      path: '/roles',
+      permission: 'manage_roles' as Permission,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+          />
+        </svg>
+      )
+    },
+    {
+      name: 'Users',
+      path: '/users',
+      permission: 'view_users' as Permission,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
+        </svg>
+      )
+    },
+    {
       name: 'Settings',
       path: '/settings',
+      permission: 'view_settings' as Permission,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -148,6 +190,9 @@ export default function Layout(): React.JSX.Element {
       )
     }
   ]
+
+  // Filter navigation based on permissions
+  const navigation = navigationItems.filter((item) => hasPermission(item.permission))
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -179,7 +224,7 @@ export default function Layout(): React.JSX.Element {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
           {navigation.map((item) => (
             <Link
               key={item.path}
@@ -225,7 +270,7 @@ export default function Layout(): React.JSX.Element {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto bg-gray-100">
+      <main className="flex-1 overflow-auto bg-gray-100 scrollbar-hide">
         <Outlet />
       </main>
     </div>

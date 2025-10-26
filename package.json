@@ -1,10 +1,10 @@
 {
-  "name": "pharmacy-pos",
+  "name": "medixpos",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "Professional Pharmacy Management System - Licensed POS Software",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "MedixPOS",
+  "homepage": "https://medixpos.com",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

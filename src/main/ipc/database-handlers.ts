@@ -346,19 +346,27 @@ export function registerDatabaseHandlers(): void {
   })
 
   ipcMain.handle('db:sales:getByBranch', async (_, { branchId, startDate, endDate }) => {
-    let query = db.select().from(schema.sales).where(eq(schema.sales.branchId, branchId))
-
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          eq(schema.sales.branchId, branchId),
-          gte(schema.sales.createdAt, startDate),
-          lte(schema.sales.createdAt, endDate)
+      return db
+        .select()
+        .from(schema.sales)
+        .where(
+          and(
+            eq(schema.sales.branchId, branchId),
+            gte(schema.sales.createdAt, startDate),
+            lte(schema.sales.createdAt, endDate)
+          )
         )
-      )
+        .orderBy(desc(schema.sales.createdAt))
+        .all()
     }
 
-    return query.orderBy(desc(schema.sales.createdAt)).all()
+    return db
+      .select()
+      .from(schema.sales)
+      .where(eq(schema.sales.branchId, branchId))
+      .orderBy(desc(schema.sales.createdAt))
+      .all()
   })
 
   ipcMain.handle('db:sales:getById', async (_, id: string) => {
@@ -435,19 +443,27 @@ export function registerDatabaseHandlers(): void {
   })
 
   ipcMain.handle('db:purchases:getByBranch', async (_, { branchId, startDate, endDate }) => {
-    let query = db.select().from(schema.purchases).where(eq(schema.purchases.branchId, branchId))
-
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          eq(schema.purchases.branchId, branchId),
-          gte(schema.purchases.createdAt, startDate),
-          lte(schema.purchases.createdAt, endDate)
+      return db
+        .select()
+        .from(schema.purchases)
+        .where(
+          and(
+            eq(schema.purchases.branchId, branchId),
+            gte(schema.purchases.createdAt, startDate),
+            lte(schema.purchases.createdAt, endDate)
+          )
         )
-      )
+        .orderBy(desc(schema.purchases.createdAt))
+        .all()
     }
 
-    return query.orderBy(desc(schema.purchases.createdAt)).all()
+    return db
+      .select()
+      .from(schema.purchases)
+      .where(eq(schema.purchases.branchId, branchId))
+      .orderBy(desc(schema.purchases.createdAt))
+      .all()
   })
 
   ipcMain.handle('db:purchases:getById', async (_, id: string) => {
@@ -475,19 +491,27 @@ export function registerDatabaseHandlers(): void {
   })
 
   ipcMain.handle('db:expenses:getByBranch', async (_, { branchId, startDate, endDate }) => {
-    let query = db.select().from(schema.expenses).where(eq(schema.expenses.branchId, branchId))
-
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          eq(schema.expenses.branchId, branchId),
-          gte(schema.expenses.expenseDate, startDate),
-          lte(schema.expenses.expenseDate, endDate)
+      return db
+        .select()
+        .from(schema.expenses)
+        .where(
+          and(
+            eq(schema.expenses.branchId, branchId),
+            gte(schema.expenses.expenseDate, startDate),
+            lte(schema.expenses.expenseDate, endDate)
+          )
         )
-      )
+        .orderBy(desc(schema.expenses.expenseDate))
+        .all()
     }
 
-    return query.orderBy(desc(schema.expenses.createdAt)).all()
+    return db
+      .select()
+      .from(schema.expenses)
+      .where(eq(schema.expenses.branchId, branchId))
+      .orderBy(desc(schema.expenses.expenseDate))
+      .all()
   })
 
   // ==================== SETTINGS ====================

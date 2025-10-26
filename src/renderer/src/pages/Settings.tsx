@@ -2,15 +2,6 @@ import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useSettingsStore } from '../store/settingsStore'
 
-interface Setting {
-  id: string
-  key: string
-  value: string
-  description?: string
-  createdAt: string
-  updatedAt: string
-}
-
 export default function Settings(): React.JSX.Element {
   const updateSetting = useSettingsStore((state) => state.updateSetting)
   const loadSettingsFn = useSettingsStore((state) => state.loadSettings)

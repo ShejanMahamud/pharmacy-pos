@@ -182,6 +182,7 @@ export default function POS(): React.JSX.Element {
       }, 300)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [customerSearch])
 
   const handleCheckout = (): void => {

@@ -6,8 +6,9 @@ interface User {
   username: string
   fullName: string
   email?: string
-  role: 'admin' | 'manager' | 'cashier' | 'pharmacist'
+  role: 'super_admin' | 'admin' | 'manager' | 'cashier' | 'pharmacist'
   branchId?: string
+  createdBy?: string
 }
 
 interface AuthState {

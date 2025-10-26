@@ -63,7 +63,7 @@ export default function Reports(): React.JSX.Element {
 
   const renderOverviewReport = (): React.JSX.Element => {
     if (!reportData) return <></>
-    
+
     return (
       <>
         {/* Stats Cards */}
@@ -201,7 +201,9 @@ export default function Reports(): React.JSX.Element {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">No products sold in this period</div>
+                  <div className="text-center py-8 text-gray-500">
+                    No products sold in this period
+                  </div>
                 )}
               </div>
             </div>
@@ -350,7 +352,7 @@ export default function Reports(): React.JSX.Element {
 
   const renderSalesReport = (): React.JSX.Element => {
     if (!reportData) return <></>
-    
+
     return (
       <>
         {/* Sales Stats */}
@@ -555,7 +557,7 @@ export default function Reports(): React.JSX.Element {
 
   const renderInventoryReport = (): React.JSX.Element => {
     if (!reportData) return <></>
-    
+
     return (
       <>
         {/* Inventory Stats */}
@@ -616,9 +618,7 @@ export default function Reports(): React.JSX.Element {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Out of Stock</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">
-                  {reportData.outOfStockItems}
-                </p>
+                <p className="text-3xl font-bold text-red-600 mt-2">{reportData.outOfStockItems}</p>
                 <p className="text-xs text-gray-500 mt-1">Require immediate action</p>
               </div>
               <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -750,7 +750,7 @@ export default function Reports(): React.JSX.Element {
 
   const renderCustomerReport = (): React.JSX.Element => {
     if (!reportData) return <></>
-    
+
     return (
       <>
         {/* Customer Stats */}

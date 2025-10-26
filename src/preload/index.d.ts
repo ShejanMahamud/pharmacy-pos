@@ -17,8 +17,9 @@ interface User {
   fullName: string
   email?: string
   phone?: string
-  role: 'admin' | 'manager' | 'cashier' | 'pharmacist'
+  role: 'super_admin' | 'admin' | 'manager' | 'cashier' | 'pharmacist'
   branchId?: string
+  createdBy?: string
   isActive?: boolean
 }
 
