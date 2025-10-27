@@ -30,7 +30,6 @@ export async function addAccountToSales(): Promise<void> {
         id TEXT PRIMARY KEY,
         return_number TEXT NOT NULL UNIQUE,
         sale_id TEXT NOT NULL REFERENCES sales(id),
-        branch_id TEXT NOT NULL REFERENCES branches(id),
         customer_id TEXT REFERENCES customers(id),
         account_id TEXT REFERENCES bank_accounts(id),
         user_id TEXT NOT NULL REFERENCES users(id),

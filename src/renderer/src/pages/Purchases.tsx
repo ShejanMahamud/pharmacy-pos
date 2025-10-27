@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface Purchase {
@@ -40,6 +39,9 @@ interface Product {
   name: string
   sku: string
   costPrice: number
+  unit: string
+  packageUnit?: string
+  unitsPerPackage?: number
 }
 
 interface BankAccount {
@@ -67,7 +69,6 @@ export default function Purchases(): React.JSX.Element {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const itemsPerPage = 10
 
-  const { selectedBranch } = useBranchStore()
   const currency = useSettingsStore((state) => state.currency)
 
   // Get currency symbol
@@ -127,7 +128,7 @@ export default function Purchases(): React.JSX.Element {
     loadSuppliers()
     loadProducts()
     loadAccounts()
-  }, [selectedBranch])
+  }, [])
 
   useEffect(() => {
     filterPurchases()
@@ -135,8 +136,7 @@ export default function Purchases(): React.JSX.Element {
 
   const loadPurchases = async (): Promise<void> => {
     try {
-      if (!selectedBranch) return
-      const allPurchases = await window.api.purchases.getByBranch(selectedBranch.id)
+      const allPurchases = await window.api.purchases.getAll()
       setPurchases(allPurchases)
     } catch (_error) {
       toast.error('Failed to load purchases')
@@ -209,11 +209,6 @@ export default function Purchases(): React.JSX.Element {
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
 
-    if (!selectedBranch) {
-      toast.error('Please select a branch')
-      return
-    }
-
     if (!formData.supplierId) {
       toast.error('Please select a supplier')
       return
@@ -228,9 +223,9 @@ export default function Purchases(): React.JSX.Element {
       const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
       const purchase = {
-        branchId: selectedBranch.id,
         supplierId: formData.supplierId,
         invoiceNumber: formData.invoiceNumber || `PO-${Date.now()}`,
+        accountId: formData.accountId || null,
         totalAmount,
         paidAmount: formData.paidAmount,
         dueAmount: totalAmount - formData.paidAmount,
@@ -282,7 +277,17 @@ export default function Purchases(): React.JSX.Element {
     if (field === 'productId') {
       const product = products.find((p) => p.id === value)
       if (product) {
-        newItems[index].unitPrice = product.costPrice
+        // If product has package unit, calculate package price
+        // Otherwise use the base cost price
+        const hasPackageUnit =
+          product.packageUnit && product.unitsPerPackage && product.unitsPerPackage > 1
+        if (hasPackageUnit) {
+          // Price per package = cost per base unit * units per package
+          newItems[index].unitPrice = product.costPrice * (product.unitsPerPackage || 1)
+        } else {
+          // No package unit, use base cost price
+          newItems[index].unitPrice = product.costPrice
+        }
       }
     }
 
@@ -723,6 +728,42 @@ export default function Purchases(): React.JSX.Element {
 
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-6">
+              {/* Info Banner */}
+              <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="h-5 w-5 text-blue-600 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div>
+                    <h4 className="text-sm font-semibold text-blue-900 mb-1">
+                      Purchase in Package Units
+                    </h4>
+                    <p className="text-xs text-blue-800 mb-2">
+                      When purchasing from suppliers, enter quantities in{' '}
+                      <strong>package units</strong> (Box, Bottle, etc.) if configured. The system
+                      will automatically convert to base units (tablets, strips, ml) for inventory
+                      tracking and customer sales.
+                    </p>
+                    <p className="text-xs text-blue-800">
+                      💡 <strong>Prices auto-fill</strong> from product settings but can be edited
+                      if supplier offers different rates (bulk discounts, price changes, etc.).
+                      Modified prices will be highlighted in{' '}
+                      <span className="text-orange-600 font-semibold">orange</span>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Purchase Information */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Purchase Information</h3>
@@ -841,95 +882,310 @@ export default function Purchases(): React.JSX.Element {
                 </div>
 
                 <div className="space-y-3">
-                  {items.map((item, index) => (
-                    <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3">
-                        <div className="md:col-span-2">
-                          <select
-                            value={item.productId}
-                            onChange={(e) => updateItem(index, 'productId', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            required
-                          >
-                            <option value="">Select Product</option>
-                            {products.map((product) => (
-                              <option key={product.id} value={product.id}>
-                                {product.name} ({product.sku})
-                              </option>
-                            ))}
-                          </select>
+                  {items.map((item, index) => {
+                    const selectedProduct = products.find((p) => p.id === item.productId)
+                    const hasPackageUnit =
+                      selectedProduct?.packageUnit &&
+                      selectedProduct?.unitsPerPackage &&
+                      selectedProduct.unitsPerPackage > 1
+
+                    // Calculate expected price
+                    const expectedPrice = selectedProduct
+                      ? hasPackageUnit
+                        ? selectedProduct.costPrice * (selectedProduct.unitsPerPackage || 1)
+                        : selectedProduct.costPrice
+                      : 0
+
+                    // Check if price is different from expected
+                    const isPriceModified =
+                      item.productId &&
+                      item.unitPrice > 0 &&
+                      Math.abs(item.unitPrice - expectedPrice) > 0.01
+
+                    return (
+                      <div key={index} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                        <div className="flex gap-3 items-start">
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3">
+                            <div className="md:col-span-2">
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Product
+                              </label>
+                              <select
+                                value={item.productId}
+                                onChange={(e) => updateItem(index, 'productId', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                required
+                              >
+                                <option value="">Select Product</option>
+                                {products.map((product) => (
+                                  <option key={product.id} value={product.id}>
+                                    {product.name} ({product.sku})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Quantity {hasPackageUnit && `(${selectedProduct.packageUnit}s)`}
+                              </label>
+                              <input
+                                type="number"
+                                placeholder={
+                                  hasPackageUnit ? `${selectedProduct.packageUnit}s` : 'Quantity'
+                                }
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  updateItem(index, 'quantity', parseInt(e.target.value) || 1)
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                min="1"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Price{' '}
+                                {hasPackageUnit ? `per ${selectedProduct.packageUnit}` : 'per unit'}
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Price"
+                                  value={item.unitPrice}
+                                  onChange={(e) =>
+                                    updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)
+                                  }
+                                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 text-sm ${
+                                    isPriceModified
+                                      ? 'border-orange-400 bg-orange-50 focus:ring-orange-500 focus:border-orange-500'
+                                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                                  }`}
+                                  required
+                                />
+                                {isPriceModified && (
+                                  <button
+                                    type="button"
+                                    onClick={() => updateItem(index, 'unitPrice', expectedPrice)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-600 hover:text-orange-800"
+                                    title="Reset to standard price"
+                                  >
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                      />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                              {isPriceModified && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  Standard: {getCurrencySymbol()}
+                                  {expectedPrice.toFixed(2)}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Batch Number
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Batch #"
+                                value={item.batchNumber}
+                                onChange={(e) => updateItem(index, 'batchNumber', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                              />
+                            </div>
+                          </div>
+                          {items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeItem(index)}
+                              className="mt-5 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Remove item"
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          )}
                         </div>
-                        <div>
-                          <input
-                            type="number"
-                            placeholder="Quantity"
-                            value={item.quantity}
-                            onChange={(e) =>
-                              updateItem(index, 'quantity', parseInt(e.target.value) || 1)
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            min="1"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="Unit Price"
-                            value={item.unitPrice}
-                            onChange={(e) =>
-                              updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Batch #"
-                            value={item.batchNumber}
-                            onChange={(e) => updateItem(index, 'batchNumber', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          />
-                        </div>
+
+                        {/* Show conversion info */}
+                        {hasPackageUnit && item.quantity > 0 && (
+                          <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 px-3 py-2 rounded border border-blue-200">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <span className="font-medium">
+                              {item.quantity} {selectedProduct.packageUnit}
+                              {item.quantity > 1 ? 's' : ''} ={' '}
+                              {item.quantity * (selectedProduct.unitsPerPackage || 1)}{' '}
+                              {selectedProduct.unit}
+                              {item.quantity * (selectedProduct.unitsPerPackage || 1) > 1
+                                ? 's'
+                                : ''}
+                            </span>
+                            {item.unitPrice > 0 && (
+                              <span className="ml-2">
+                                | Cost per {selectedProduct.unit}: {getCurrencySymbol()}
+                                {(item.unitPrice / (selectedProduct.unitsPerPackage || 1)).toFixed(
+                                  2
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
-                {/* Total */}
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                    <span className="text-2xl font-bold text-blue-600">
-                      $
-                      {items
-                        .reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
-                        .toFixed(2)}
-                    </span>
+                {/* Summary Section */}
+                <div className="mt-6 space-y-4">
+                  {/* Items Summary */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                          />
+                        </svg>
+                        Purchase Summary
+                      </h4>
+                      <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
+                        {items.filter((item) => item.productId).length}{' '}
+                        {items.filter((item) => item.productId).length === 1 ? 'Item' : 'Items'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {/* Subtotal */}
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Subtotal:</span>
+                        <span className="font-semibold text-gray-900">
+                          {getCurrencySymbol()}
+                          {items
+                            .reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+                            .toFixed(2)}
+                        </span>
+                      </div>
+
+                      {/* Total line with emphasis */}
+                      <div className="pt-2 border-t-2 border-blue-300 flex justify-between items-center">
+                        <span className="text-lg font-bold text-gray-900">Total Amount:</span>
+                        <span className="text-2xl font-bold text-blue-600">
+                          {getCurrencySymbol()}
+                          {items
+                            .reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+                            .toFixed(2)}
+                        </span>
+                      </div>
+
+                      {/* Payment breakdown */}
+                      {formData.paidAmount > 0 && (
+                        <div className="pt-3 mt-3 border-t border-blue-200 space-y-2">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-green-700 font-medium">Paid Amount:</span>
+                            <span className="font-semibold text-green-700">
+                              {getCurrencySymbol()}
+                              {formData.paidAmount.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-red-700 font-medium">Due Amount:</span>
+                            <span className="font-semibold text-red-700">
+                              {getCurrencySymbol()}
+                              {(
+                                items.reduce(
+                                  (sum, item) => sum + item.quantity * item.unitPrice,
+                                  0
+                                ) - formData.paidAmount
+                              ).toFixed(2)}
+                            </span>
+                          </div>
+
+                          {/* Payment status indicator */}
+                          <div className="flex items-center gap-2 pt-2">
+                            <div className={`flex-1 h-2 rounded-full overflow-hidden bg-gray-200`}>
+                              <div
+                                className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-300"
+                                style={{
+                                  width: `${Math.min(100, (formData.paidAmount / items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)) * 100)}%`
+                                }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-gray-600">
+                              {items.reduce(
+                                (sum, item) => sum + item.quantity * item.unitPrice,
+                                0
+                              ) > 0
+                                ? Math.min(
+                                    100,
+                                    Math.round(
+                                      (formData.paidAmount /
+                                        items.reduce(
+                                          (sum, item) => sum + item.quantity * item.unitPrice,
+                                          0
+                                        )) *
+                                        100
+                                    )
+                                  )
+                                : 0}
+                              % Paid
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Total items count */}
+                      {items.some((item) => item.productId && item.quantity > 0) && (
+                        <div className="pt-3 mt-3 border-t border-blue-200">
+                          <div className="text-xs text-gray-600">
+                            <strong>Total Quantity:</strong>{' '}
+                            {items.reduce((sum, item) => sum + (item.quantity || 0), 0)} units
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1141,7 +1397,7 @@ export default function Purchases(): React.JSX.Element {
                 onSubmit={async (e) => {
                   e.preventDefault()
                   try {
-                    if (!selectedBranch || !returnFormData.purchaseId || returnItems.length === 0) {
+                    if (!returnFormData.purchaseId || returnItems.length === 0) {
                       toast.error('Please fill all required fields')
                       return
                     }
@@ -1161,7 +1417,6 @@ export default function Purchases(): React.JSX.Element {
                       {
                         returnNumber: `PR-${Date.now()}`,
                         purchaseId: returnFormData.purchaseId,
-                        branchId: selectedBranch.id,
                         supplierId: purchase.supplierId,
                         accountId: returnFormData.accountId || null,
                         userId: 'current-user',

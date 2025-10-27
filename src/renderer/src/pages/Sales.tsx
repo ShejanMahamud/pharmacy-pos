@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface Sale {
@@ -68,7 +67,6 @@ export default function Sales(): React.JSX.Element {
     }>
   >([])
 
-  const { selectedBranch } = useBranchStore()
   const currency = useSettingsStore((state) => state.currency)
 
   // Get currency symbol
@@ -92,7 +90,7 @@ export default function Sales(): React.JSX.Element {
   useEffect(() => {
     loadSales()
     loadAccounts()
-  }, [selectedBranch])
+  }, [])
 
   useEffect(() => {
     filterSales()
@@ -100,8 +98,7 @@ export default function Sales(): React.JSX.Element {
 
   const loadSales = async (): Promise<void> => {
     try {
-      if (!selectedBranch) return
-      const allSales = await window.api.sales.getByBranch(selectedBranch.id)
+      const allSales = await window.api.sales.getAll()
       setSales(allSales)
     } catch (error) {
       toast.error('Failed to load sales')
@@ -970,7 +967,7 @@ export default function Sales(): React.JSX.Element {
                 onSubmit={async (e) => {
                   e.preventDefault()
                   try {
-                    if (!selectedBranch || !returnFormData.saleId || returnItems.length === 0) {
+                    if (!returnFormData.saleId || returnItems.length === 0) {
                       toast.error('Please fill all required fields')
                       return
                     }
@@ -990,7 +987,6 @@ export default function Sales(): React.JSX.Element {
                       {
                         returnNumber: `SR-${Date.now()}`,
                         saleId: returnFormData.saleId,
-                        branchId: selectedBranch.id,
                         customerId: sale.customerId || null,
                         accountId: returnFormData.accountId || null,
                         userId: 'current-user',

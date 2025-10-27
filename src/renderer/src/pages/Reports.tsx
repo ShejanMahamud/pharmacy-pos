@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface ReportData {
@@ -32,7 +31,6 @@ interface ReportData {
 }
 
 export default function Reports(): React.JSX.Element {
-  const currentBranch = useBranchStore((state) => state.selectedBranch)
   const currency = useSettingsStore((state) => state.currency)
   const [reportData, setReportData] = useState<ReportData | null>(null)
   const [dateRange, setDateRange] = useState('30')
@@ -60,7 +58,7 @@ export default function Reports(): React.JSX.Element {
   useEffect(() => {
     loadReportData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentBranch, dateRange, reportType])
+  }, [dateRange, reportType])
 
   const renderOverviewReport = (): React.JSX.Element => {
     if (!reportData) return <></>
@@ -889,18 +887,13 @@ export default function Reports(): React.JSX.Element {
   const loadReportData = async (): Promise<void> => {
     setLoading(true)
     try {
-      if (!currentBranch) {
-        setLoading(false)
-        return
-      }
-
       // Calculate date range
       const endDate = new Date()
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - parseInt(dateRange))
 
       // Fetch all sales and filter in JavaScript for accuracy
-      const allSalesData = await window.api.sales.getByBranch(currentBranch.id)
+      const allSalesData = await window.api.sales.getAll()
 
       // Filter sales by date range
       const allSales = allSalesData.filter((sale: any) => {
@@ -914,11 +907,11 @@ export default function Reports(): React.JSX.Element {
       // Load data from database in parallel
       const [salesSummary, topProducts, allCustomers, allProducts, inventoryData] =
         await Promise.all([
-          window.api.reports.salesSummary(currentBranch.id, startDateStr, endDateStr),
-          window.api.reports.topProducts(currentBranch.id, startDateStr, endDateStr, 5),
+          window.api.reports.salesSummary(startDateStr, endDateStr),
+          window.api.reports.topProducts(startDateStr, endDateStr, 5),
           window.api.customers.getAll(),
           window.api.products.getAll(),
-          window.api.inventory.getByBranch(currentBranch.id)
+          window.api.inventory.getAll()
         ])
 
       // Process inventory data
@@ -1049,32 +1042,6 @@ export default function Reports(): React.JSX.Element {
     return (
       <div className="p-6 bg-gray-100 min-h-screen">
         <div className="text-center text-gray-600">No data available</div>
-      </div>
-    )
-  }
-
-  if (!currentBranch) {
-    return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No branch selected</h3>
-            <p className="mt-1 text-sm text-gray-500">Please select a branch to view reports</p>
-          </div>
-        </div>
       </div>
     )
   }

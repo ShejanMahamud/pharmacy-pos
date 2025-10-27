@@ -38,11 +38,6 @@ export type Permission =
   | 'edit_user'
   | 'delete_user'
   | 'manage_roles'
-  // Branches
-  | 'view_branches'
-  | 'create_branch'
-  | 'edit_branch'
-  | 'delete_branch'
   // Settings
   | 'view_settings'
   | 'edit_settings'
@@ -94,10 +89,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     'delete_user',
     'manage_roles',
     'manage_admins',
-    'view_branches',
-    'create_branch',
-    'edit_branch',
-    'delete_branch',
     'view_settings',
     'edit_settings',
     'system_configuration',
@@ -139,10 +130,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     'edit_user',
     'delete_user',
     'manage_roles',
-    'view_branches',
-    'create_branch',
-    'edit_branch',
-    'delete_branch',
     'view_settings',
     'edit_settings',
     'view_suppliers',
@@ -179,7 +166,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     'view_reports',
     'export_reports',
     'view_users',
-    'view_branches',
     'view_settings',
     'view_suppliers',
     'create_supplier',
@@ -290,7 +276,6 @@ export const permissionCategories = {
   Reports: ['view_reports', 'export_reports'],
   'Users & Roles': ['view_users', 'create_user', 'edit_user', 'delete_user', 'manage_roles'],
   'Admin Management': ['manage_admins'],
-  Branches: ['view_branches', 'create_branch', 'edit_branch', 'delete_branch'],
   Settings: ['view_settings', 'edit_settings', 'system_configuration'],
   Suppliers: ['view_suppliers', 'create_supplier', 'edit_supplier', 'delete_supplier'],
   Audit: ['view_audit_logs']

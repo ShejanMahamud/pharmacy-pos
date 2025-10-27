@@ -30,7 +30,6 @@ export async function addAccountToPurchases(): Promise<void> {
         id TEXT PRIMARY KEY,
         return_number TEXT NOT NULL UNIQUE,
         purchase_id TEXT NOT NULL REFERENCES purchases(id),
-        branch_id TEXT NOT NULL REFERENCES branches(id),
         supplier_id TEXT NOT NULL REFERENCES suppliers(id),
         account_id TEXT REFERENCES bank_accounts(id),
         user_id TEXT NOT NULL REFERENCES users(id),

@@ -445,13 +445,10 @@ export default function BankAccounts(): React.JSX.Element {
                           d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                         />
                       </svg>
-                      <p>No accounts found</p>
-                      <button
-                        onClick={() => setShowModal(true)}
-                        className="mt-2 text-blue-600 hover:text-blue-800"
-                      >
-                        Add your first account
-                      </button>
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No accounts found</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Get started by creating a new account
+                      </p>
                     </div>
                   </td>
                 </tr>

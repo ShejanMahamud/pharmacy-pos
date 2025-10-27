@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
-import { useBranchStore } from './store/branchStore'
 import { useSettingsStore } from './store/settingsStore'
 
 // Pages
@@ -33,15 +32,13 @@ function AuthRoute({ children }: { children: React.ReactNode }): React.JSX.Eleme
 
 function App(): React.JSX.Element {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const loadBranches = useBranchStore((state) => state.loadBranches)
   const loadSettings = useSettingsStore((state) => state.loadSettings)
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadBranches()
       loadSettings()
     }
-  }, [isAuthenticated, loadBranches, loadSettings])
+  }, [isAuthenticated, loadSettings])
 
   return (
     <HashRouter>

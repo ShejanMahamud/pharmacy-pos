@@ -3,17 +3,9 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 // Custom APIs for renderer
 const api = {
-  // Branches
-  branches: {
-    getAll: () => ipcRenderer.invoke('db:branches:getAll'),
-    getById: (id: string) => ipcRenderer.invoke('db:branches:getById', id),
-    create: (data: any) => ipcRenderer.invoke('db:branches:create', data),
-    update: (id: string, data: any) => ipcRenderer.invoke('db:branches:update', { id, data }),
-    delete: (id: string) => ipcRenderer.invoke('db:branches:delete', id)
-  },
   // Users
   users: {
-    getAll: (branchId?: string) => ipcRenderer.invoke('db:users:getAll', branchId),
+    getAll: () => ipcRenderer.invoke('db:users:getAll'),
     getById: (id: string) => ipcRenderer.invoke('db:users:getById', id),
     authenticate: (username: string, password: string) =>
       ipcRenderer.invoke('db:users:authenticate', { username, password }),
@@ -74,10 +66,10 @@ const api = {
   },
   // Inventory
   inventory: {
-    getByBranch: (branchId: string) => ipcRenderer.invoke('db:inventory:getByBranch', branchId),
-    getLowStock: (branchId: string) => ipcRenderer.invoke('db:inventory:getLowStock', branchId),
-    updateQuantity: (productId: string, branchId: string, quantity: number) =>
-      ipcRenderer.invoke('db:inventory:updateQuantity', { productId, branchId, quantity })
+    getAll: () => ipcRenderer.invoke('db:inventory:getAll'),
+    getLowStock: () => ipcRenderer.invoke('db:inventory:getLowStock'),
+    updateQuantity: (productId: string, quantity: number) =>
+      ipcRenderer.invoke('db:inventory:updateQuantity', { productId, quantity })
   },
   // Customers
   customers: {
@@ -89,39 +81,39 @@ const api = {
   // Sales
   sales: {
     create: (sale: any, items: any[]) => ipcRenderer.invoke('db:sales:create', { sale, items }),
-    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
-      ipcRenderer.invoke('db:sales:getByBranch', { branchId, startDate, endDate }),
+    getAll: (startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:sales:getAll', { startDate, endDate }),
     getById: (id: string) => ipcRenderer.invoke('db:sales:getById', id)
   },
   // Sales Returns
   salesReturns: {
     create: (salesReturn: any, items: any[]) =>
       ipcRenderer.invoke('db:salesReturns:create', { salesReturn, items }),
-    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
-      ipcRenderer.invoke('db:salesReturns:getByBranch', { branchId, startDate, endDate }),
+    getAll: (startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:salesReturns:getAll', { startDate, endDate }),
     getById: (id: string) => ipcRenderer.invoke('db:salesReturns:getById', id)
   },
   // Purchases
   purchases: {
     create: (purchase: any, items: any[]) =>
       ipcRenderer.invoke('db:purchases:create', { purchase, items }),
-    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
-      ipcRenderer.invoke('db:purchases:getByBranch', { branchId, startDate, endDate }),
+    getAll: (startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:purchases:getAll', { startDate, endDate }),
     getById: (id: string) => ipcRenderer.invoke('db:purchases:getById', id)
   },
   // Purchase Returns
   purchaseReturns: {
     create: (purchaseReturn: any, items: any[]) =>
       ipcRenderer.invoke('db:purchaseReturns:create', { purchaseReturn, items }),
-    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
-      ipcRenderer.invoke('db:purchaseReturns:getByBranch', { branchId, startDate, endDate }),
+    getAll: (startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:purchaseReturns:getAll', { startDate, endDate }),
     getById: (id: string) => ipcRenderer.invoke('db:purchaseReturns:getById', id)
   },
   // Expenses
   expenses: {
     create: (data: any) => ipcRenderer.invoke('db:expenses:create', data),
-    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
-      ipcRenderer.invoke('db:expenses:getByBranch', { branchId, startDate, endDate })
+    getAll: (startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:expenses:getAll', { startDate, endDate })
   },
   // Settings
   settings: {
@@ -131,10 +123,10 @@ const api = {
   },
   // Reports
   reports: {
-    salesSummary: (branchId: string, startDate: string, endDate: string) =>
-      ipcRenderer.invoke('db:reports:salesSummary', { branchId, startDate, endDate }),
-    topProducts: (branchId: string, startDate: string, endDate: string, limit?: number) =>
-      ipcRenderer.invoke('db:reports:topProducts', { branchId, startDate, endDate, limit })
+    salesSummary: (startDate: string, endDate: string) =>
+      ipcRenderer.invoke('db:reports:salesSummary', { startDate, endDate }),
+    topProducts: (startDate: string, endDate: string, limit?: number) =>
+      ipcRenderer.invoke('db:reports:topProducts', { startDate, endDate, limit })
   },
   // Audit Logs
   auditLogs: {

@@ -7,7 +7,6 @@ interface User {
   fullName: string
   email?: string
   role: 'super_admin' | 'admin' | 'manager' | 'cashier' | 'pharmacist'
-  branchId?: string
   createdBy?: string
 }
 
@@ -31,7 +30,6 @@ export const useAuthStore = create<AuthState>()(
             set({ user, isAuthenticated: true })
             await window.api.auditLogs.create({
               userId: user.id,
-              branchId: user.branchId,
               action: 'login',
               entityType: 'user',
               entityId: user.id

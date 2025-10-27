@@ -18,7 +18,6 @@ interface User {
   fullName: string
   email?: string
   role: Role
-  branchId?: string
   isActive?: boolean
   createdBy?: string
 }

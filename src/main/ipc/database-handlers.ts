@@ -9,50 +9,8 @@ import * as schema from '../database/schema'
 export function registerDatabaseHandlers(): void {
   const db = getDatabase()
 
-  // ==================== BRANCHES ====================
-  ipcMain.handle('db:branches:getAll', async () => {
-    return db.select().from(schema.branches).where(eq(schema.branches.isActive, true)).all()
-  })
-
-  ipcMain.handle('db:branches:getById', async (_, id: string) => {
-    return db.select().from(schema.branches).where(eq(schema.branches.id, id)).get()
-  })
-
-  ipcMain.handle('db:branches:create', async (_, data) => {
-    const id = uuidv4()
-    return db
-      .insert(schema.branches)
-      .values({ id, ...data })
-      .returning()
-      .get()
-  })
-
-  ipcMain.handle('db:branches:update', async (_, { id, data }) => {
-    return db
-      .update(schema.branches)
-      .set({ ...data, updatedAt: new Date().toISOString() })
-      .where(eq(schema.branches.id, id))
-      .returning()
-      .get()
-  })
-
-  ipcMain.handle('db:branches:delete', async (_, id: string) => {
-    return db
-      .update(schema.branches)
-      .set({ isActive: false })
-      .where(eq(schema.branches.id, id))
-      .run()
-  })
-
   // ==================== USERS ====================
-  ipcMain.handle('db:users:getAll', async (_, branchId?: string) => {
-    if (branchId) {
-      return db
-        .select()
-        .from(schema.users)
-        .where(and(eq(schema.users.branchId, branchId), eq(schema.users.isActive, true)))
-        .all()
-    }
+  ipcMain.handle('db:users:getAll', async () => {
     return db.select().from(schema.users).where(eq(schema.users.isActive, true)).all()
   })
 
@@ -484,12 +442,11 @@ export function registerDatabaseHandlers(): void {
   })
 
   // ==================== INVENTORY ====================
-  ipcMain.handle('db:inventory:getByBranch', async (_, branchId: string) => {
+  ipcMain.handle('db:inventory:getAll', async () => {
     return db
       .select({
         id: schema.inventory.id,
         productId: schema.inventory.productId,
-        branchId: schema.inventory.branchId,
         quantity: schema.inventory.quantity,
         batchNumber: schema.inventory.batchNumber,
         expiryDate: schema.inventory.expiryDate,
@@ -501,11 +458,10 @@ export function registerDatabaseHandlers(): void {
       })
       .from(schema.inventory)
       .innerJoin(schema.products, eq(schema.inventory.productId, schema.products.id))
-      .where(eq(schema.inventory.branchId, branchId))
       .all()
   })
 
-  ipcMain.handle('db:inventory:getLowStock', async (_, branchId: string) => {
+  ipcMain.handle('db:inventory:getLowStock', async () => {
     return db
       .select({
         id: schema.inventory.id,
@@ -516,38 +472,43 @@ export function registerDatabaseHandlers(): void {
       })
       .from(schema.inventory)
       .innerJoin(schema.products, eq(schema.inventory.productId, schema.products.id))
-      .where(
-        and(
-          eq(schema.inventory.branchId, branchId),
-          sql`${schema.inventory.quantity} <= ${schema.products.reorderLevel}`
-        )
-      )
+      .where(sql`${schema.inventory.quantity} <= ${schema.products.reorderLevel}`)
       .all()
   })
 
-  ipcMain.handle('db:inventory:updateQuantity', async (_, { productId, branchId, quantity }) => {
-    const existing = db
-      .select()
-      .from(schema.inventory)
-      .where(
-        and(eq(schema.inventory.productId, productId), eq(schema.inventory.branchId, branchId))
-      )
-      .get()
+  ipcMain.handle('db:inventory:updateQuantity', async (_, { productId, quantity }) => {
+    try {
+      // Validate that product exists
+      const product = db
+        .select()
+        .from(schema.products)
+        .where(eq(schema.products.id, productId))
+        .get()
 
-    if (existing) {
-      return db
-        .update(schema.inventory)
-        .set({ quantity: existing.quantity + quantity, updatedAt: new Date().toISOString() })
-        .where(eq(schema.inventory.id, existing.id))
-        .returning()
+      if (!product) {
+        throw new Error(`Product with ID ${productId} does not exist`)
+      }
+
+      const existing = db
+        .select()
+        .from(schema.inventory)
+        .where(eq(schema.inventory.productId, productId))
         .get()
-    } else {
-      const id = uuidv4()
-      return db
-        .insert(schema.inventory)
-        .values({ id, productId, branchId, quantity })
-        .returning()
-        .get()
+
+      if (existing) {
+        return db
+          .update(schema.inventory)
+          .set({ quantity: existing.quantity + quantity, updatedAt: new Date().toISOString() })
+          .where(eq(schema.inventory.id, existing.id))
+          .returning()
+          .get()
+      } else {
+        const id = uuidv4()
+        return db.insert(schema.inventory).values({ id, productId, quantity }).returning().get()
+      }
+    } catch (error) {
+      console.error('Error updating inventory quantity:', error)
+      throw error
     }
   })
 
@@ -614,7 +575,7 @@ export function registerDatabaseHandlers(): void {
     for (const item of items) {
       db.run(
         sql`UPDATE inventory SET quantity = quantity - ${item.quantity} 
-            WHERE product_id = ${item.productId} AND branch_id = ${sale.branchId}`
+            WHERE product_id = ${item.productId}`
       )
     }
 
@@ -644,28 +605,17 @@ export function registerDatabaseHandlers(): void {
     return saleResult
   })
 
-  ipcMain.handle('db:sales:getByBranch', async (_, { branchId, startDate, endDate }) => {
+  ipcMain.handle('db:sales:getAll', async (_, { startDate, endDate }) => {
     if (startDate && endDate) {
       return db
         .select()
         .from(schema.sales)
-        .where(
-          and(
-            eq(schema.sales.branchId, branchId),
-            gte(schema.sales.createdAt, startDate),
-            lte(schema.sales.createdAt, endDate)
-          )
-        )
+        .where(and(gte(schema.sales.createdAt, startDate), lte(schema.sales.createdAt, endDate)))
         .orderBy(desc(schema.sales.createdAt))
         .all()
     }
 
-    return db
-      .select()
-      .from(schema.sales)
-      .where(eq(schema.sales.branchId, branchId))
-      .orderBy(desc(schema.sales.createdAt))
-      .all()
+    return db.select().from(schema.sales).orderBy(desc(schema.sales.createdAt)).all()
   })
 
   ipcMain.handle('db:sales:getById', async (_, id: string) => {
@@ -703,12 +653,7 @@ export function registerDatabaseHandlers(): void {
       const existing = db
         .select()
         .from(schema.inventory)
-        .where(
-          and(
-            eq(schema.inventory.productId, item.productId),
-            eq(schema.inventory.branchId, salesReturn.branchId)
-          )
-        )
+        .where(eq(schema.inventory.productId, item.productId))
         .get()
 
       if (existing) {
@@ -748,14 +693,13 @@ export function registerDatabaseHandlers(): void {
     return returnResult
   })
 
-  ipcMain.handle('db:salesReturns:getByBranch', async (_, { branchId, startDate, endDate }) => {
+  ipcMain.handle('db:salesReturns:getAll', async (_, { startDate, endDate }) => {
     if (startDate && endDate) {
       return db
         .select()
         .from(schema.salesReturns)
         .where(
           and(
-            eq(schema.salesReturns.branchId, branchId),
             gte(schema.salesReturns.createdAt, startDate),
             lte(schema.salesReturns.createdAt, endDate)
           )
@@ -764,12 +708,7 @@ export function registerDatabaseHandlers(): void {
         .all()
     }
 
-    return db
-      .select()
-      .from(schema.salesReturns)
-      .where(eq(schema.salesReturns.branchId, branchId))
-      .orderBy(desc(schema.salesReturns.createdAt))
-      .all()
+    return db.select().from(schema.salesReturns).orderBy(desc(schema.salesReturns.createdAt)).all()
   })
 
   ipcMain.handle('db:salesReturns:getById', async (_, id: string) => {
@@ -815,12 +754,7 @@ export function registerDatabaseHandlers(): void {
       const existing = db
         .select()
         .from(schema.inventory)
-        .where(
-          and(
-            eq(schema.inventory.productId, item.productId),
-            eq(schema.inventory.branchId, purchase.branchId)
-          )
-        )
+        .where(eq(schema.inventory.productId, item.productId))
         .get()
 
       if (existing) {
@@ -840,7 +774,6 @@ export function registerDatabaseHandlers(): void {
           .values({
             id,
             productId: item.productId,
-            branchId: purchase.branchId,
             quantity: item.quantity,
             batchNumber: item.batchNumber,
             expiryDate: item.expiryDate,
@@ -921,28 +854,19 @@ export function registerDatabaseHandlers(): void {
     return purchaseResult
   })
 
-  ipcMain.handle('db:purchases:getByBranch', async (_, { branchId, startDate, endDate }) => {
+  ipcMain.handle('db:purchases:getAll', async (_, { startDate, endDate }) => {
     if (startDate && endDate) {
       return db
         .select()
         .from(schema.purchases)
         .where(
-          and(
-            eq(schema.purchases.branchId, branchId),
-            gte(schema.purchases.createdAt, startDate),
-            lte(schema.purchases.createdAt, endDate)
-          )
+          and(gte(schema.purchases.createdAt, startDate), lte(schema.purchases.createdAt, endDate))
         )
         .orderBy(desc(schema.purchases.createdAt))
         .all()
     }
 
-    return db
-      .select()
-      .from(schema.purchases)
-      .where(eq(schema.purchases.branchId, branchId))
-      .orderBy(desc(schema.purchases.createdAt))
-      .all()
+    return db.select().from(schema.purchases).orderBy(desc(schema.purchases.createdAt)).all()
   })
 
   ipcMain.handle('db:purchases:getById', async (_, id: string) => {
@@ -984,12 +908,7 @@ export function registerDatabaseHandlers(): void {
       const existing = db
         .select()
         .from(schema.inventory)
-        .where(
-          and(
-            eq(schema.inventory.productId, item.productId),
-            eq(schema.inventory.branchId, purchaseReturn.branchId)
-          )
-        )
+        .where(eq(schema.inventory.productId, item.productId))
         .get()
 
       if (existing) {
@@ -1029,14 +948,13 @@ export function registerDatabaseHandlers(): void {
     return returnResult
   })
 
-  ipcMain.handle('db:purchaseReturns:getByBranch', async (_, { branchId, startDate, endDate }) => {
+  ipcMain.handle('db:purchaseReturns:getAll', async (_, { startDate, endDate }) => {
     if (startDate && endDate) {
       return db
         .select()
         .from(schema.purchaseReturns)
         .where(
           and(
-            eq(schema.purchaseReturns.branchId, branchId),
             gte(schema.purchaseReturns.createdAt, startDate),
             lte(schema.purchaseReturns.createdAt, endDate)
           )
@@ -1048,7 +966,6 @@ export function registerDatabaseHandlers(): void {
     return db
       .select()
       .from(schema.purchaseReturns)
-      .where(eq(schema.purchaseReturns.branchId, branchId))
       .orderBy(desc(schema.purchaseReturns.createdAt))
       .all()
   })
@@ -1081,14 +998,13 @@ export function registerDatabaseHandlers(): void {
       .get()
   })
 
-  ipcMain.handle('db:expenses:getByBranch', async (_, { branchId, startDate, endDate }) => {
+  ipcMain.handle('db:expenses:getAll', async (_, { startDate, endDate }) => {
     if (startDate && endDate) {
       return db
         .select()
         .from(schema.expenses)
         .where(
           and(
-            eq(schema.expenses.branchId, branchId),
             gte(schema.expenses.expenseDate, startDate),
             lte(schema.expenses.expenseDate, endDate)
           )
@@ -1097,12 +1013,7 @@ export function registerDatabaseHandlers(): void {
         .all()
     }
 
-    return db
-      .select()
-      .from(schema.expenses)
-      .where(eq(schema.expenses.branchId, branchId))
-      .orderBy(desc(schema.expenses.expenseDate))
-      .all()
+    return db.select().from(schema.expenses).orderBy(desc(schema.expenses.expenseDate)).all()
   })
 
   // ==================== SETTINGS ====================
@@ -1131,7 +1042,7 @@ export function registerDatabaseHandlers(): void {
   })
 
   // ==================== REPORTS ====================
-  ipcMain.handle('db:reports:salesSummary', async (_, { branchId, startDate, endDate }) => {
+  ipcMain.handle('db:reports:salesSummary', async (_, { startDate, endDate }) => {
     const salesData = db
       .select({
         totalSales: sql<number>`COUNT(*)`,
@@ -1141,7 +1052,6 @@ export function registerDatabaseHandlers(): void {
       .from(schema.sales)
       .where(
         and(
-          eq(schema.sales.branchId, branchId),
           gte(schema.sales.createdAt, startDate),
           lte(schema.sales.createdAt, endDate),
           eq(schema.sales.status, 'completed')
@@ -1152,7 +1062,7 @@ export function registerDatabaseHandlers(): void {
     return salesData
   })
 
-  ipcMain.handle('db:reports:topProducts', async (_, { branchId, startDate, endDate, limit }) => {
+  ipcMain.handle('db:reports:topProducts', async (_, { startDate, endDate, limit }) => {
     return db
       .select({
         productId: schema.saleItems.productId,
@@ -1162,13 +1072,7 @@ export function registerDatabaseHandlers(): void {
       })
       .from(schema.saleItems)
       .innerJoin(schema.sales, eq(schema.saleItems.saleId, schema.sales.id))
-      .where(
-        and(
-          eq(schema.sales.branchId, branchId),
-          gte(schema.sales.createdAt, startDate),
-          lte(schema.sales.createdAt, endDate)
-        )
-      )
+      .where(and(gte(schema.sales.createdAt, startDate), lte(schema.sales.createdAt, endDate)))
       .groupBy(schema.saleItems.productId, schema.saleItems.productName)
       .orderBy(desc(sql`SUM(${schema.saleItems.quantity})`))
       .limit(limit || 10)

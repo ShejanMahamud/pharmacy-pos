@@ -11,7 +11,9 @@ interface Category {
 interface Unit {
   id: string
   name: string
-  symbol: string
+  abbreviation: string
+  type: 'base' | 'package'
+  symbol?: string
   description?: string
 }
 
@@ -35,7 +37,8 @@ export default function CategoryUnit(): React.JSX.Element {
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [unitFormData, setUnitFormData] = useState({
     name: '',
-    symbol: '',
+    abbreviation: '',
+    type: 'base' as 'base' | 'package',
     description: ''
   })
 
@@ -142,7 +145,8 @@ export default function CategoryUnit(): React.JSX.Element {
     setEditingUnit(unit)
     setUnitFormData({
       name: unit.name,
-      symbol: unit.symbol,
+      abbreviation: unit.abbreviation,
+      type: unit.type,
       description: unit.description || ''
     })
     setShowUnitModal(true)
@@ -166,7 +170,8 @@ export default function CategoryUnit(): React.JSX.Element {
     setEditingUnit(null)
     setUnitFormData({
       name: '',
-      symbol: '',
+      abbreviation: '',
+      type: 'base',
       description: ''
     })
   }
@@ -179,7 +184,7 @@ export default function CategoryUnit(): React.JSX.Element {
   const filteredUnits = units.filter(
     (unit) =>
       unit.name.toLowerCase().includes(unitSearchTerm.toLowerCase()) ||
-      unit.symbol.toLowerCase().includes(unitSearchTerm.toLowerCase())
+      unit.abbreviation.toLowerCase().includes(unitSearchTerm.toLowerCase())
   )
 
   // Pagination for Categories
@@ -469,7 +474,10 @@ export default function CategoryUnit(): React.JSX.Element {
                       Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Symbol
+                      Abbreviation
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Description
@@ -488,7 +496,18 @@ export default function CategoryUnit(): React.JSX.Element {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {unit.symbol}
+                            {unit.abbreviation}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              unit.type === 'base'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-purple-100 text-purple-800'
+                            }`}
+                          >
+                            {unit.type === 'base' ? 'Base Unit' : 'Package Unit'}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -512,7 +531,7 @@ export default function CategoryUnit(): React.JSX.Element {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                         No units found
                       </td>
                     </tr>
@@ -680,20 +699,49 @@ export default function CategoryUnit(): React.JSX.Element {
                       value={unitFormData.name}
                       onChange={(e) => setUnitFormData({ ...unitFormData, name: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., Piece, Box, Strip"
+                      placeholder="e.g., Tablet, Box, Bottle"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Symbol *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Abbreviation *
+                    </label>
                     <input
                       type="text"
                       required
-                      value={unitFormData.symbol}
-                      onChange={(e) => setUnitFormData({ ...unitFormData, symbol: e.target.value })}
+                      value={unitFormData.abbreviation}
+                      onChange={(e) =>
+                        setUnitFormData({ ...unitFormData, abbreviation: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., pcs, box, strip"
+                      placeholder="e.g., Tab, Bx, Btl"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Unit Type *
+                    </label>
+                    <select
+                      required
+                      value={unitFormData.type}
+                      onChange={(e) =>
+                        setUnitFormData({
+                          ...unitFormData,
+                          type: e.target.value as 'base' | 'package'
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="base">Base Unit (Smallest unit for selling)</option>
+                      <option value="package">Package Unit (Bulk unit for purchasing)</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {unitFormData.type === 'base'
+                        ? 'Base units are the smallest units customers can buy (e.g., Tablet, Strip, ML)'
+                        : 'Package units are bulk units for purchasing from suppliers (e.g., Box, Bottle, Carton)'}
+                    </p>
                   </div>
 
                   <div>

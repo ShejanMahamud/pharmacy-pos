@@ -8,9 +8,12 @@ import { addAccountToSales } from './migrations/add-account-to-sales'
 import { addBankAccountsTable } from './migrations/add-bank-accounts-table'
 import { migrateAddCreatedBy } from './migrations/add-created-by'
 import { addMissingOpeningBalances } from './migrations/add-missing-opening-balances'
+import { migrateProductShelf } from './migrations/add-product-shelf'
+import { migrateProductUnitConversion } from './migrations/add-product-unit-conversion'
 import { addSupplierAccountingFields } from './migrations/add-supplier-accounting-fields'
 import { migrateSupplierPaymentsLedger } from './migrations/add-supplier-payments-ledger'
 import { addUnitsTable } from './migrations/add-units-table'
+import { migrateUnitsTable } from './migrations/update-units-table'
 import * as schema from './schema'
 
 let db: ReturnType<typeof drizzle>
@@ -50,6 +53,9 @@ function runMigrations(): void {
     if (sqlite) {
       migrateSupplierPaymentsLedger(sqlite)
       addMissingOpeningBalances(sqlite)
+      migrateProductUnitConversion(sqlite)
+      migrateUnitsTable(sqlite)
+      migrateProductShelf(sqlite)
     }
     console.log('Database migrations completed successfully')
   } catch (error) {
@@ -58,21 +64,6 @@ function runMigrations(): void {
 }
 
 function createTables(sqlite: Database.Database) {
-  // Create branches table
-  sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS branches (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      code TEXT NOT NULL UNIQUE,
-      address TEXT,
-      phone TEXT,
-      email TEXT,
-      is_active INTEGER DEFAULT 1,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `)
-
   // Create users table
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -83,7 +74,6 @@ function createTables(sqlite: Database.Database) {
       email TEXT,
       phone TEXT,
       role TEXT NOT NULL,
-      branch_id TEXT REFERENCES branches(id),
       created_by TEXT REFERENCES users(id),
       is_active INTEGER DEFAULT 1,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -152,7 +142,6 @@ function createTables(sqlite: Database.Database) {
     CREATE TABLE IF NOT EXISTS inventory (
       id TEXT PRIMARY KEY,
       product_id TEXT NOT NULL REFERENCES products(id),
-      branch_id TEXT NOT NULL REFERENCES branches(id),
       batch_number TEXT,
       quantity INTEGER NOT NULL DEFAULT 0,
       expiry_date TEXT,
@@ -186,7 +175,6 @@ function createTables(sqlite: Database.Database) {
     CREATE TABLE IF NOT EXISTS sales (
       id TEXT PRIMARY KEY,
       invoice_number TEXT NOT NULL UNIQUE,
-      branch_id TEXT NOT NULL REFERENCES branches(id),
       customer_id TEXT REFERENCES customers(id),
       user_id TEXT NOT NULL REFERENCES users(id),
       subtotal REAL NOT NULL,
@@ -224,7 +212,6 @@ function createTables(sqlite: Database.Database) {
     CREATE TABLE IF NOT EXISTS purchases (
       id TEXT PRIMARY KEY,
       invoice_number TEXT NOT NULL UNIQUE,
-      branch_id TEXT NOT NULL REFERENCES branches(id),
       supplier_id TEXT NOT NULL REFERENCES suppliers(id),
       user_id TEXT NOT NULL REFERENCES users(id),
       subtotal REAL NOT NULL,
@@ -262,7 +249,6 @@ function createTables(sqlite: Database.Database) {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS expenses (
       id TEXT PRIMARY KEY,
-      branch_id TEXT NOT NULL REFERENCES branches(id),
       user_id TEXT NOT NULL REFERENCES users(id),
       category TEXT NOT NULL,
       amount REAL NOT NULL,
@@ -291,12 +277,10 @@ function createTables(sqlite: Database.Database) {
     )
   `)
 
-  // Create stock_transfers table
+  // Create stock_transfers table (deprecated - kept for backward compatibility)
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS stock_transfers (
       id TEXT PRIMARY KEY,
-      from_branch_id TEXT NOT NULL REFERENCES branches(id),
-      to_branch_id TEXT NOT NULL REFERENCES branches(id),
       product_id TEXT NOT NULL REFERENCES products(id),
       quantity INTEGER NOT NULL,
       batch_number TEXT,
@@ -324,7 +308,6 @@ function createTables(sqlite: Database.Database) {
     CREATE TABLE IF NOT EXISTS audit_logs (
       id TEXT PRIMARY KEY,
       user_id TEXT REFERENCES users(id),
-      branch_id TEXT REFERENCES branches(id),
       action TEXT NOT NULL,
       entity_type TEXT NOT NULL,
       entity_id TEXT,
@@ -336,10 +319,8 @@ function createTables(sqlite: Database.Database) {
 
   // Create indexes
   sqlite.exec(`
-    CREATE INDEX IF NOT EXISTS idx_inventory_product_branch ON inventory(product_id, branch_id);
-    CREATE INDEX IF NOT EXISTS idx_sales_branch ON sales(branch_id);
+    CREATE INDEX IF NOT EXISTS idx_inventory_product ON inventory(product_id);
     CREATE INDEX IF NOT EXISTS idx_sales_date ON sales(created_at);
-    CREATE INDEX IF NOT EXISTS idx_purchases_branch ON purchases(branch_id);
     CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(created_at);
     CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id);
     CREATE INDEX IF NOT EXISTS idx_purchase_items_purchase ON purchase_items(purchase_id);
@@ -350,23 +331,9 @@ function createTables(sqlite: Database.Database) {
 
 async function initializeDefaultData() {
   // Check if data already exists
-  const existingBranches = db.select().from(schema.branches).all()
+  const existingUsers = db.select().from(schema.users).all()
 
-  if (existingBranches.length === 0) {
-    // Create default branch
-    const defaultBranchId = uuidv4()
-    db.insert(schema.branches)
-      .values({
-        id: defaultBranchId,
-        name: 'Main Branch',
-        code: 'MAIN',
-        address: '',
-        phone: '',
-        email: '',
-        isActive: true
-      })
-      .run()
-
+  if (existingUsers.length === 0) {
     // Create default users for each role
     // Note: In production, use bcrypt or similar for password hashing
 
@@ -380,7 +347,6 @@ async function initializeDefaultData() {
         fullName: 'Super Administrator',
         email: 'superadmin@pharmacy.com',
         role: 'super_admin',
-        branchId: defaultBranchId,
         isActive: true
       })
       .run()
@@ -395,7 +361,6 @@ async function initializeDefaultData() {
         fullName: 'Administrator',
         email: 'admin@pharmacy.com',
         role: 'admin',
-        branchId: defaultBranchId,
         createdBy: superAdminId,
         isActive: true
       })
@@ -411,7 +376,6 @@ async function initializeDefaultData() {
         fullName: 'Store Manager',
         email: 'manager@pharmacy.com',
         role: 'manager',
-        branchId: defaultBranchId,
         createdBy: adminId,
         isActive: true
       })
@@ -427,7 +391,6 @@ async function initializeDefaultData() {
         fullName: 'John Pharmacist',
         email: 'pharmacist@pharmacy.com',
         role: 'pharmacist',
-        branchId: defaultBranchId,
         createdBy: managerId,
         isActive: true
       })
@@ -443,7 +406,6 @@ async function initializeDefaultData() {
         fullName: 'Jane Cashier',
         email: 'cashier@pharmacy.com',
         role: 'cashier',
-        branchId: defaultBranchId,
         createdBy: managerId,
         isActive: true
       })

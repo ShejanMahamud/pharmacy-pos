@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
-import { useBranchStore } from '../store/branchStore'
 import { useCartStore } from '../store/cartStore'
 import { useSettingsStore } from '../store/settingsStore'
 
@@ -59,7 +58,6 @@ export default function POS(): React.JSX.Element {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const cart = useCartStore()
-  const selectedBranch = useBranchStore((state) => state.selectedBranch)
   const user = useAuthStore((state) => state.user)
   const currency = useSettingsStore((state) => state.currency)
 
@@ -108,9 +106,8 @@ export default function POS(): React.JSX.Element {
   }
 
   const loadInventory = async (): Promise<void> => {
-    if (!selectedBranch) return
     try {
-      const inv = await window.api.inventory.getByBranch(selectedBranch.id)
+      const inv = await window.api.inventory.getAll()
       setInventory(inv)
     } catch (_error) {
       console.error('Failed to load inventory')
@@ -139,7 +136,7 @@ export default function POS(): React.JSX.Element {
     void loadAccounts()
     // Focus search input on mount for barcode scanner
     searchInputRef.current?.focus()
-  }, [selectedBranch])
+  }, [])
 
   const addToCart = (product: Product): void => {
     // Check inventory
@@ -214,7 +211,7 @@ export default function POS(): React.JSX.Element {
   }
 
   const completeSale = async (): Promise<void> => {
-    if (!selectedBranch || !user) return
+    if (!user) return
 
     const paidAmountNum = parseFloat(paidAmount) || 0
     const total = cart.getTotal()
@@ -228,7 +225,6 @@ export default function POS(): React.JSX.Element {
       const invoiceNumber = `INV-${Date.now()}`
       const sale = {
         invoiceNumber,
-        branchId: selectedBranch.id,
         userId: user.id,
         customerId: cart.customerId,
         accountId: selectedAccount || null,

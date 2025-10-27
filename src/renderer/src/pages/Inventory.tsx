@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface InventoryItem {
   id: string
   productId: string
-  branchId: string
   quantity: number
   batchNumber?: string
   expiryDate?: string
@@ -33,7 +31,6 @@ interface Category {
 }
 
 export default function Inventory(): React.JSX.Element {
-  const { selectedBranch } = useBranchStore()
   const currency = useSettingsStore((state) => state.currency)
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -72,18 +69,14 @@ export default function Inventory(): React.JSX.Element {
   })
 
   useEffect(() => {
-    if (selectedBranch) {
-      loadData()
-    }
-  }, [selectedBranch])
+    loadData()
+  }, [])
 
   const loadData = async (): Promise<void> => {
-    if (!selectedBranch) return
-
     try {
       setLoading(true)
       const [inventoryData, productsData, categoriesData] = await Promise.all([
-        window.api.inventory.getByBranch(selectedBranch.id),
+        window.api.inventory.getAll(),
         window.api.products.getAll(),
         window.api.categories.getAll()
       ])
@@ -134,25 +127,12 @@ export default function Inventory(): React.JSX.Element {
       return
     }
 
-    if (!selectedBranch) {
-      toast.error('Please select a branch first')
-      return
-    }
-
     try {
       if (editingItem) {
-        await window.api.inventory.updateQuantity(
-          formData.productId,
-          selectedBranch.id,
-          formData.quantity
-        )
+        await window.api.inventory.updateQuantity(formData.productId, formData.quantity)
         toast.success('Inventory updated successfully')
       } else {
-        await window.api.inventory.updateQuantity(
-          formData.productId,
-          selectedBranch.id,
-          formData.quantity
-        )
+        await window.api.inventory.updateQuantity(formData.productId, formData.quantity)
         toast.success('Inventory added successfully')
       }
       handleCloseModal()
@@ -389,11 +369,7 @@ export default function Inventory(): React.JSX.Element {
               />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No inventory items found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {selectedBranch
-                ? 'Start by adding stock to your products.'
-                : 'Please select a branch first.'}
-            </p>
+            <p className="mt-1 text-sm text-gray-500">Start by adding stock to your products.</p>
           </div>
         ) : (
           <>

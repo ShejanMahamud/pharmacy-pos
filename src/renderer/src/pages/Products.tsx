@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
-import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface Product {
@@ -15,6 +14,10 @@ interface Product {
   description?: string
   manufacturer?: string
   unit: string
+  unitsPerPackage?: number
+  packageUnit?: string
+  shelf: string
+  imageUrl?: string
   prescriptionRequired: boolean
   reorderLevel: number
   sellingPrice: number
@@ -27,7 +30,6 @@ interface Product {
 interface InventoryItem {
   id: string
   productId: string
-  branchId: string
   quantity: number
   batchNumber?: string
   expiryDate?: string
@@ -44,12 +46,19 @@ interface Supplier {
   code: string
 }
 
+interface Unit {
+  id: string
+  name: string
+  abbreviation: string
+  type: 'base' | 'package'
+}
+
 export default function Products(): React.JSX.Element {
-  const { selectedBranch } = useBranchStore()
   const currency = useSettingsStore((state) => state.currency)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [units, setUnits] = useState<Unit[]>([])
   const [inventory, setInventory] = useState<Record<string, number>>({})
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
@@ -86,7 +95,11 @@ export default function Products(): React.JSX.Element {
     supplierId: '',
     description: '',
     manufacturer: '',
-    unit: 'piece',
+    unit: 'tablet',
+    unitsPerPackage: 1,
+    packageUnit: '',
+    shelf: 'A1',
+    imageUrl: '',
     prescriptionRequired: false,
     reorderLevel: 10,
     sellingPrice: 0,
@@ -97,21 +110,58 @@ export default function Products(): React.JSX.Element {
   })
 
   useEffect(() => {
+    const loadData = async (): Promise<void> => {
+      try {
+        setLoading(true)
+        const [productsData, categoriesData, suppliersData, unitsData, inventoryData] =
+          await Promise.all([
+            window.api.products.getAll(),
+            window.api.categories.getAll(),
+            window.api.suppliers.getAll(),
+            window.api.units.getAll(),
+            window.api.inventory.getAll()
+          ])
+        setProducts(productsData)
+        setCategories(categoriesData)
+        setSuppliers(suppliersData)
+        setUnits(unitsData)
+
+        // Create inventory map: productId -> total quantity
+        const inventoryMap: Record<string, number> = {}
+        inventoryData.forEach((item: InventoryItem) => {
+          if (inventoryMap[item.productId]) {
+            inventoryMap[item.productId] += item.quantity
+          } else {
+            inventoryMap[item.productId] = item.quantity
+          }
+        })
+        setInventory(inventoryMap)
+      } catch (error) {
+        toast.error('Failed to load data')
+        console.error(error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     loadData()
   }, [])
 
-  const loadData = async (): Promise<void> => {
+  const reloadData = async (): Promise<void> => {
     try {
       setLoading(true)
-      const [productsData, categoriesData, suppliersData, inventoryData] = await Promise.all([
-        window.api.products.getAll(),
-        window.api.categories.getAll(),
-        window.api.suppliers.getAll(),
-        selectedBranch ? window.api.inventory.getByBranch(selectedBranch.id) : Promise.resolve([])
-      ])
+      const [productsData, categoriesData, suppliersData, unitsData, inventoryData] =
+        await Promise.all([
+          window.api.products.getAll(),
+          window.api.categories.getAll(),
+          window.api.suppliers.getAll(),
+          window.api.units.getAll(),
+          window.api.inventory.getAll()
+        ])
       setProducts(productsData)
       setCategories(categoriesData)
       setSuppliers(suppliersData)
+      setUnits(unitsData)
 
       // Create inventory map: productId -> total quantity
       const inventoryMap: Record<string, number> = {}
@@ -153,11 +203,6 @@ export default function Products(): React.JSX.Element {
       return
     }
 
-    if (!selectedBranch) {
-      toast.error('Please select a branch first')
-      return
-    }
-
     try {
       const productData = {
         ...formData,
@@ -172,27 +217,23 @@ export default function Products(): React.JSX.Element {
       if (editingProduct) {
         await window.api.products.update(editingProduct.id, productData)
         // Update inventory quantity
-        await window.api.inventory.updateQuantity(
-          editingProduct.id,
-          selectedBranch.id,
-          formData.stockQuantity
-        )
+        await window.api.inventory.updateQuantity(editingProduct.id, formData.stockQuantity)
         toast.success('Product updated successfully')
       } else {
         const newProduct = await window.api.products.create(productData)
         // Create initial inventory record
-        await window.api.inventory.updateQuantity(
-          newProduct.id,
-          selectedBranch.id,
-          formData.stockQuantity
-        )
+        await window.api.inventory.updateQuantity(newProduct.id, formData.stockQuantity)
         toast.success('Product created successfully')
       }
       handleCloseModal()
-      loadData()
+      reloadData()
     } catch (error) {
-      toast.error('Failed to save product')
-      console.error(error)
+      console.error('Error saving product:', error)
+      if (error instanceof Error) {
+        toast.error(`Failed to save product: ${error.message}`)
+      } else {
+        toast.error('Failed to save product')
+      }
     }
   }
 
@@ -209,6 +250,10 @@ export default function Products(): React.JSX.Element {
       description: product.description || '',
       manufacturer: product.manufacturer || '',
       unit: product.unit,
+      unitsPerPackage: product.unitsPerPackage || 1,
+      packageUnit: product.packageUnit || '',
+      shelf: product.shelf || 'A1',
+      imageUrl: product.imageUrl || '',
       prescriptionRequired: product.prescriptionRequired,
       reorderLevel: product.reorderLevel,
       sellingPrice: product.sellingPrice,
@@ -226,7 +271,7 @@ export default function Products(): React.JSX.Element {
     try {
       await window.api.products.delete(id)
       toast.success('Product deleted successfully')
-      loadData()
+      reloadData()
     } catch (error) {
       toast.error('Failed to delete product')
       console.error(error)
@@ -245,7 +290,11 @@ export default function Products(): React.JSX.Element {
       supplierId: '',
       description: '',
       manufacturer: '',
-      unit: 'piece',
+      unit: 'tablet',
+      unitsPerPackage: 1,
+      packageUnit: '',
+      shelf: 'A1',
+      imageUrl: '',
       prescriptionRequired: false,
       reorderLevel: 10,
       sellingPrice: 0,
@@ -406,6 +455,9 @@ export default function Products(): React.JSX.Element {
                       Stock
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Shelf
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -501,6 +553,11 @@ export default function Products(): React.JSX.Element {
                           <div className="text-xs text-gray-500">
                             Reorder at: {product.reorderLevel}
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            {product.shelf}
+                          </span>
                         </td>
                         <td className="px-6 py-4">
                           {product.isActive ? (
@@ -747,20 +804,132 @@ export default function Products(): React.JSX.Element {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Shelf Location <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.shelf}
+                    onChange={(e) => setFormData({ ...formData, shelf: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., A1, B2, C3"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Which shelf the medicine is stored (e.g., A1, B2, Rack-5)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Product Image URL
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter image URL (optional)"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Optional: URL or path to product image
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Base Unit (Smallest Unit) <span className="text-red-500">*</span>
+                  </label>
                   <select
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="piece">Piece</option>
-                    <option value="box">Box</option>
-                    <option value="strip">Strip</option>
-                    <option value="bottle">Bottle</option>
-                    <option value="tube">Tube</option>
-                    <option value="vial">Vial</option>
+                    <option value="">Select Base Unit</option>
+                    {units
+                      .filter((u) => u.type === 'base')
+                      .map((unit) => (
+                        <option key={unit.id} value={unit.name.toLowerCase()}>
+                          {unit.name} ({unit.abbreviation})
+                        </option>
+                      ))}
                   </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    The smallest unit customers can buy (e.g., 1 tablet, 1 strip)
+                  </p>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Package Unit (Bulk Unit)
+                  </label>
+                  <select
+                    value={formData.packageUnit}
+                    onChange={(e) => setFormData({ ...formData, packageUnit: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Package Unit</option>
+                    {units
+                      .filter((u) => u.type === 'package')
+                      .map((unit) => (
+                        <option key={unit.id} value={unit.name}>
+                          {unit.name} ({unit.abbreviation})
+                        </option>
+                      ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    How you purchase from suppliers (e.g., Box, Bottle)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Units Per Package
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.unitsPerPackage}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        unitsPerPackage: parseInt(e.target.value) || 1
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="1"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    How many base units in one package? (e.g., 1 Box = 10 Strips)
+                  </p>
+                </div>
+
+                {formData.packageUnit && formData.unitsPerPackage > 1 && (
+                  <div className="md:col-span-2">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="h-5 w-5 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span className="text-sm font-medium text-blue-900">
+                          Conversion: 1 {formData.packageUnit} = {formData.unitsPerPackage}{' '}
+                          {formData.unit}
+                          {formData.unitsPerPackage > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -784,7 +953,7 @@ export default function Products(): React.JSX.Element {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cost Price <span className="text-red-500">*</span>
+                    Cost Price (per base unit) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2 text-gray-500">
@@ -803,11 +972,14 @@ export default function Products(): React.JSX.Element {
                       placeholder="0.00"
                     />
                   </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Cost per {formData.unit} (not per {formData.packageUnit || 'package'})
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Selling Price <span className="text-red-500">*</span>
+                    Selling Price (per base unit) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2 text-gray-500">
@@ -826,6 +998,9 @@ export default function Products(): React.JSX.Element {
                       placeholder="0.00"
                     />
                   </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Selling price per {formData.unit} to customers
+                  </p>
                 </div>
 
                 <div>

@@ -13,7 +13,6 @@ interface User {
   fullName: string
   email?: string
   role: Role
-  branchId?: string
 }
 
 interface UsePermissionsReturn {

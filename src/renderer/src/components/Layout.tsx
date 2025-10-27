@@ -1,14 +1,12 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { usePermissions } from '../hooks/usePermissions'
 import { useAuthStore } from '../store/authStore'
-import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { Permission } from '../utils/permissions'
 
 export default function Layout(): React.JSX.Element {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
-  const selectedBranch = useBranchStore((state) => state.selectedBranch)
   const storeName = useSettingsStore((state) => state.storeName)
   const { hasPermission } = usePermissions()
   const location = useLocation()
@@ -238,7 +236,6 @@ export default function Layout(): React.JSX.Element {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">{storeName || 'Pharmacy POS'}</h1>
-              {selectedBranch && <p className="text-xs text-blue-200">{selectedBranch.name}</p>}
             </div>
           </div>
         </div>

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface RecentSale {
@@ -24,7 +23,6 @@ interface LowStockItem {
 }
 
 export default function Dashboard(): React.JSX.Element {
-  const selectedBranch = useBranchStore((state) => state.selectedBranch)
   const user = useAuthStore((state) => state.user)
   const currency = useSettingsStore((state) => state.currency)
 
@@ -60,13 +58,11 @@ export default function Dashboard(): React.JSX.Element {
 
   useEffect(() => {
     const loadDashboardData = async (): Promise<void> => {
-      if (!selectedBranch) return
-
       try {
         setLoading(true)
 
         // Get all sales first
-        const allSales = await window.api.sales.getByBranch(selectedBranch.id)
+        const allSales = await window.api.sales.getAll()
 
         // Filter today's sales
         const today = new Date()
@@ -98,7 +94,7 @@ export default function Dashboard(): React.JSX.Element {
         )
 
         // Load low stock items
-        const lowStock = await window.api.inventory.getLowStock(selectedBranch.id)
+        const lowStock = await window.api.inventory.getLowStock()
 
         // Load products
         const products = await window.api.products.getAll()
@@ -129,7 +125,7 @@ export default function Dashboard(): React.JSX.Element {
     }
 
     loadDashboardData()
-  }, [selectedBranch])
+  }, [])
 
   if (loading) {
     return (

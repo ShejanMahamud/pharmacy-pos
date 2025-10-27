@@ -1,19 +1,6 @@
 import { sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-// Branches table
-export const branches = sqliteTable('branches', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  code: text('code').notNull().unique(),
-  address: text('address'),
-  phone: text('phone'),
-  email: text('email'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
-  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
-})
-
 // Users table
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -23,7 +10,6 @@ export const users = sqliteTable('users', {
   email: text('email'),
   phone: text('phone'),
   role: text('role').notNull(), // 'super_admin', 'admin', 'manager', 'cashier', 'pharmacist'
-  branchId: text('branch_id').references(() => branches.id),
   createdBy: text('created_by').references(() => users.id), // Track who created this user
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
@@ -45,7 +31,11 @@ export const categories = sqliteTable('categories', {
 export const units = sqliteTable('units', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  symbol: text('symbol').notNull().unique(),
+  symbol: text('symbol').notNull().unique(), // Legacy field, kept for compatibility
+  abbreviation: text('abbreviation').notNull(), // New field for unit abbreviation
+  type: text('type', { enum: ['base', 'package'] })
+    .notNull()
+    .default('base'), // Unit type: base (smallest) or package (bulk)
   description: text('description'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
@@ -103,14 +93,17 @@ export const products = sqliteTable('products', {
   supplierId: text('supplier_id').references(() => suppliers.id),
   description: text('description'),
   manufacturer: text('manufacturer'),
-  unit: text('unit').notNull(), // 'piece', 'box', 'strip', 'bottle', etc.
+  unit: text('unit').notNull(), // Base unit (smallest): 'tablet', 'capsule', 'strip', 'ml', etc.
+  unitsPerPackage: integer('units_per_package').default(1), // How many base units in one package
+  packageUnit: text('package_unit'), // Package unit name: 'box', 'bottle', 'pack', etc.
   prescriptionRequired: integer('prescription_required', { mode: 'boolean' }).default(false),
   reorderLevel: integer('reorder_level').default(10),
-  sellingPrice: real('selling_price').notNull(),
-  costPrice: real('cost_price').notNull(),
+  sellingPrice: real('selling_price').notNull(), // Price per base unit
+  costPrice: real('cost_price').notNull(), // Cost per base unit
   taxRate: real('tax_rate').default(0),
   discountPercent: real('discount_percent').default(0),
-  imageUrl: text('image_url'),
+  imageUrl: text('image_url'), // Product image URL or path
+  shelf: text('shelf').notNull().default('A1'), // Shelf location identifier (e.g., A1, B2, C3)
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
@@ -122,9 +115,6 @@ export const inventory = sqliteTable('inventory', {
   productId: text('product_id')
     .notNull()
     .references(() => products.id),
-  branchId: text('branch_id')
-    .notNull()
-    .references(() => branches.id),
   batchNumber: text('batch_number'),
   quantity: integer('quantity').notNull().default(0),
   expiryDate: text('expiry_date'),
@@ -154,9 +144,6 @@ export const customers = sqliteTable('customers', {
 export const sales = sqliteTable('sales', {
   id: text('id').primaryKey(),
   invoiceNumber: text('invoice_number').notNull().unique(),
-  branchId: text('branch_id')
-    .notNull()
-    .references(() => branches.id),
   customerId: text('customer_id').references(() => customers.id),
   accountId: text('account_id').references(() => bankAccounts.id),
   userId: text('user_id')
@@ -200,9 +187,6 @@ export const salesReturns = sqliteTable('sales_returns', {
   saleId: text('sale_id')
     .notNull()
     .references(() => sales.id),
-  branchId: text('branch_id')
-    .notNull()
-    .references(() => branches.id),
   customerId: text('customer_id').references(() => customers.id),
   accountId: text('account_id').references(() => bankAccounts.id),
   userId: text('user_id')
@@ -247,9 +231,6 @@ export const salesReturnItems = sqliteTable('sales_return_items', {
 export const purchases = sqliteTable('purchases', {
   id: text('id').primaryKey(),
   invoiceNumber: text('invoice_number').notNull().unique(),
-  branchId: text('branch_id')
-    .notNull()
-    .references(() => branches.id),
   supplierId: text('supplier_id')
     .notNull()
     .references(() => suppliers.id),
@@ -296,9 +277,6 @@ export const purchaseReturns = sqliteTable('purchase_returns', {
   purchaseId: text('purchase_id')
     .notNull()
     .references(() => purchases.id),
-  branchId: text('branch_id')
-    .notNull()
-    .references(() => branches.id),
   supplierId: text('supplier_id')
     .notNull()
     .references(() => suppliers.id),
@@ -344,9 +322,6 @@ export const purchaseReturnItems = sqliteTable('purchase_return_items', {
 // Expenses table
 export const expenses = sqliteTable('expenses', {
   id: text('id').primaryKey(),
-  branchId: text('branch_id')
-    .notNull()
-    .references(() => branches.id),
   userId: text('user_id')
     .notNull()
     .references(() => users.id),
@@ -376,15 +351,10 @@ export const prescriptions = sqliteTable('prescriptions', {
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
 })
 
-// Stock Transfers table
+// Stock Transfers table - DEPRECATED (no longer needed for single store)
+// Kept for backward compatibility but not used in single-store mode
 export const stockTransfers = sqliteTable('stock_transfers', {
   id: text('id').primaryKey(),
-  fromBranchId: text('from_branch_id')
-    .notNull()
-    .references(() => branches.id),
-  toBranchId: text('to_branch_id')
-    .notNull()
-    .references(() => branches.id),
   productId: text('product_id')
     .notNull()
     .references(() => products.id),
@@ -448,7 +418,6 @@ export const supplierLedgerEntries = sqliteTable('supplier_ledger_entries', {
 export const auditLogs = sqliteTable('audit_logs', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id),
-  branchId: text('branch_id').references(() => branches.id),
   action: text('action').notNull(), // 'create', 'update', 'delete', 'login', 'logout'
   entityType: text('entity_type').notNull(), // 'sale', 'product', 'user', etc.
   entityId: text('entity_id'),
