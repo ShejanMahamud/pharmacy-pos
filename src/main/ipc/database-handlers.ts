@@ -1,5 +1,7 @@
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
-import { ipcMain } from 'electron'
+import { app, dialog, ipcMain } from 'electron'
+import fs from 'fs'
+import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { getDatabase } from '../database'
 import * as schema from '../database/schema'
@@ -159,11 +161,41 @@ export function registerDatabaseHandlers(): void {
 
   ipcMain.handle('db:suppliers:create', async (_, data) => {
     const id = uuidv4()
-    return db
+
+    // currentBalance should start at 0, not equal to openingBalance
+    // openingBalance is a separate field that stays constant
+    const supplierData = {
+      ...data,
+      currentBalance: 0
+    }
+
+    const supplier = db
       .insert(schema.suppliers)
-      .values({ id, ...data })
+      .values({ id, ...supplierData })
       .returning()
       .get()
+
+    // Create opening balance ledger entry if opening balance exists
+    if (supplier.openingBalance && supplier.openingBalance !== 0) {
+      const ledgerId = uuidv4()
+      db.insert(schema.supplierLedgerEntries)
+        .values({
+          id: ledgerId,
+          supplierId: supplier.id,
+          type: 'opening_balance',
+          referenceNumber: 'OPENING',
+          description: 'Opening Balance',
+          debit: supplier.openingBalance > 0 ? supplier.openingBalance : 0,
+          credit: supplier.openingBalance < 0 ? Math.abs(supplier.openingBalance) : 0,
+          balance: supplier.openingBalance,
+          transactionDate:
+            supplier.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+          createdBy: data.userId || null
+        })
+        .run()
+    }
+
+    return supplier
   })
 
   ipcMain.handle('db:suppliers:update', async (_, { id, data }) => {
@@ -181,6 +213,161 @@ export function registerDatabaseHandlers(): void {
       .set({ isActive: false })
       .where(eq(schema.suppliers.id, id))
       .run()
+  })
+
+  // ==================== SUPPLIER PAYMENTS ====================
+  ipcMain.handle('db:supplierPayments:create', async (_, data) => {
+    // Validate that accountId is provided
+    if (!data.accountId) {
+      throw new Error('Payment account is required')
+    }
+
+    const id = uuidv4()
+    const payment = db
+      .insert(schema.supplierPayments)
+      .values({ id, ...data })
+      .returning()
+      .get()
+
+    // Update supplier balance
+    const supplier = db
+      .select()
+      .from(schema.suppliers)
+      .where(eq(schema.suppliers.id, data.supplierId))
+      .get()
+
+    if (!supplier) {
+      throw new Error('Supplier not found')
+    }
+
+    const previousBalance = supplier.currentBalance ?? 0
+    const totalPayments = supplier.totalPayments ?? 0
+    const newBalance = previousBalance - data.amount
+
+    db.update(schema.suppliers)
+      .set({
+        currentBalance: newBalance,
+        totalPayments: totalPayments + data.amount,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(schema.suppliers.id, data.supplierId))
+      .run()
+
+    // Update bank account (now required)
+    const account = db
+      .select()
+      .from(schema.bankAccounts)
+      .where(eq(schema.bankAccounts.id, data.accountId))
+      .get()
+
+    if (!account) {
+      throw new Error('Payment account not found')
+    }
+
+    const accountBalance = account.currentBalance ?? 0
+    if (accountBalance < data.amount) {
+      throw new Error(
+        `Insufficient balance in ${account.name}. Available: ${accountBalance.toFixed(2)}`
+      )
+    }
+
+    const totalWithdrawals = account.totalWithdrawals ?? 0
+
+    db.update(schema.bankAccounts)
+      .set({
+        currentBalance: accountBalance - data.amount,
+        totalWithdrawals: totalWithdrawals + data.amount,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(schema.bankAccounts.id, data.accountId))
+      .run()
+
+    // Create ledger entry
+    // For supplier ledger: Payment reduces what we owe (credit entry reduces payable balance)
+    const ledgerId = uuidv4()
+
+    // Calculate total balance including opening balance
+    const openingBalance = supplier.openingBalance ?? 0
+    const totalBalance = openingBalance + newBalance
+
+    db.insert(schema.supplierLedgerEntries)
+      .values({
+        id: ledgerId,
+        supplierId: data.supplierId,
+        type: 'payment',
+        referenceId: id,
+        referenceNumber: data.referenceNumber,
+        description: `Payment: ${data.notes || 'Supplier payment'}`,
+        debit: 0,
+        credit: data.amount,
+        balance: totalBalance,
+        transactionDate: data.paymentDate,
+        createdBy: data.userId
+      })
+      .run()
+
+    return payment
+  })
+
+  ipcMain.handle(
+    'db:supplierPayments:getBySupplierId',
+    async (_, { supplierId, startDate, endDate }) => {
+      if (startDate && endDate) {
+        return db
+          .select()
+          .from(schema.supplierPayments)
+          .where(
+            and(
+              eq(schema.supplierPayments.supplierId, supplierId),
+              gte(schema.supplierPayments.paymentDate, startDate),
+              lte(schema.supplierPayments.paymentDate, endDate)
+            )
+          )
+          .orderBy(desc(schema.supplierPayments.paymentDate))
+          .all()
+      }
+
+      return db
+        .select()
+        .from(schema.supplierPayments)
+        .where(eq(schema.supplierPayments.supplierId, supplierId))
+        .orderBy(desc(schema.supplierPayments.paymentDate))
+        .all()
+    }
+  )
+
+  // ==================== SUPPLIER LEDGER ====================
+  ipcMain.handle('db:supplierLedger:getEntries', async (_, { supplierId, startDate, endDate }) => {
+    if (startDate && endDate) {
+      return db
+        .select()
+        .from(schema.supplierLedgerEntries)
+        .where(
+          and(
+            eq(schema.supplierLedgerEntries.supplierId, supplierId),
+            gte(schema.supplierLedgerEntries.transactionDate, startDate),
+            lte(schema.supplierLedgerEntries.transactionDate, endDate)
+          )
+        )
+        .orderBy(schema.supplierLedgerEntries.transactionDate)
+        .all()
+    }
+
+    return db
+      .select()
+      .from(schema.supplierLedgerEntries)
+      .where(eq(schema.supplierLedgerEntries.supplierId, supplierId))
+      .orderBy(schema.supplierLedgerEntries.transactionDate)
+      .all()
+  })
+
+  ipcMain.handle('db:supplierLedger:createEntry', async (_, data) => {
+    const id = uuidv4()
+    return db
+      .insert(schema.supplierLedgerEntries)
+      .values({ id, ...data })
+      .returning()
+      .get()
   })
 
   // ==================== BANK ACCOUNTS ====================
@@ -686,6 +873,51 @@ export function registerDatabaseHandlers(): void {
       }
     }
 
+    // Update supplier balance
+    const supplier = db
+      .select()
+      .from(schema.suppliers)
+      .where(eq(schema.suppliers.id, purchase.supplierId))
+      .get()
+
+    if (supplier) {
+      const currentBalance = supplier.currentBalance ?? 0
+      const totalPurchases = supplier.totalPurchases ?? 0
+
+      db.update(schema.suppliers)
+        .set({
+          currentBalance: currentBalance + purchase.totalAmount,
+          totalPurchases: totalPurchases + purchase.totalAmount,
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(schema.suppliers.id, purchase.supplierId))
+        .run()
+
+      // Create ledger entry for purchase
+      const ledgerId = uuidv4()
+      const newBalance = currentBalance + purchase.totalAmount
+
+      // Calculate total balance including opening balance
+      const openingBalance = supplier.openingBalance ?? 0
+      const totalBalance = openingBalance + newBalance
+
+      db.insert(schema.supplierLedgerEntries)
+        .values({
+          id: ledgerId,
+          supplierId: purchase.supplierId,
+          type: 'purchase',
+          referenceId: purchaseId,
+          referenceNumber: purchase.invoiceNumber,
+          description: `Purchase: ${purchase.notes || 'Goods purchased'}`,
+          debit: purchase.totalAmount,
+          credit: 0,
+          balance: totalBalance,
+          transactionDate: new Date().toISOString().split('T')[0],
+          createdBy: purchase.userId
+        })
+        .run()
+    }
+
     return purchaseResult
   })
 
@@ -950,5 +1182,100 @@ export function registerDatabaseHandlers(): void {
       .insert(schema.auditLogs)
       .values({ id, ...data })
       .run()
+  })
+
+  // ==================== DATABASE BACKUP & RESTORE ====================
+  ipcMain.handle('db:backup:create', async () => {
+    try {
+      const userDataPath = app.getPath('userData')
+      const dbPath = path.join(userDataPath, 'pharmacy.db')
+
+      // Show save dialog
+      const { filePath, canceled } = await dialog.showSaveDialog({
+        title: 'Save Database Backup',
+        defaultPath: `pharmacy-backup-${new Date().toISOString().split('T')[0]}.db`,
+        filters: [
+          { name: 'Database Files', extensions: ['db'] },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      })
+
+      if (canceled || !filePath) {
+        return { success: false, message: 'Backup canceled' }
+      }
+
+      // Copy database file
+      fs.copyFileSync(dbPath, filePath)
+
+      return {
+        success: true,
+        message: 'Database backup created successfully',
+        path: filePath
+      }
+    } catch (error) {
+      console.error('Backup failed:', error)
+      return {
+        success: false,
+        message: `Backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }
+    }
+  })
+
+  ipcMain.handle('db:backup:restore', async () => {
+    try {
+      // Show open dialog
+      const { filePaths, canceled } = await dialog.showOpenDialog({
+        title: 'Select Database Backup to Restore',
+        filters: [
+          { name: 'Database Files', extensions: ['db'] },
+          { name: 'All Files', extensions: ['*'] }
+        ],
+        properties: ['openFile']
+      })
+
+      if (canceled || filePaths.length === 0) {
+        return { success: false, message: 'Restore canceled' }
+      }
+
+      const backupPath = filePaths[0]
+
+      // Validate backup file
+      if (!fs.existsSync(backupPath)) {
+        return { success: false, message: 'Backup file not found' }
+      }
+
+      const userDataPath = app.getPath('userData')
+      const restoreFlagPath = path.join(userDataPath, 'restore-pending.json')
+
+      // Save restore information to a flag file
+      // The app will process this on next startup
+      try {
+        fs.writeFileSync(
+          restoreFlagPath,
+          JSON.stringify({
+            backupPath,
+            timestamp: Date.now()
+          })
+        )
+      } catch (err) {
+        console.error('Failed to create restore flag:', err)
+        return {
+          success: false,
+          message: `Failed to prepare restore: ${err instanceof Error ? err.message : 'Unknown error'}`
+        }
+      }
+
+      return {
+        success: true,
+        message: 'Restore prepared. The application will restart and restore your data.',
+        requiresRestart: true
+      }
+    } catch (error) {
+      console.error('Restore failed:', error)
+      return {
+        success: false,
+        message: `Restore failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }
+    }
   })
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 
 interface Category {
   id: string
@@ -199,8 +200,20 @@ export default function CategoryUnit(): React.JSX.Element {
     <div className="p-6 bg-gray-100 min-h-screen">
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Categories & Units Management</h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <div className="flex items-center gap-3 mb-2">
+          <Link to="/products" className="text-gray-600 hover:text-gray-800 transition-colors">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-800">Categories & Units Management</h1>
+        </div>
+        <p className="text-sm text-gray-600 ml-9">
           Manage product categories and measurement units
         </p>
       </div>
@@ -553,7 +566,7 @@ export default function CategoryUnit(): React.JSX.Element {
 
       {/* Category Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50  z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -633,7 +646,7 @@ export default function CategoryUnit(): React.JSX.Element {
 
       {/* Unit Modal */}
       {showUnitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50  z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">

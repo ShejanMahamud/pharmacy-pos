@@ -7,17 +7,20 @@ import { addAccountToPurchases } from './migrations/add-account-to-purchases'
 import { addAccountToSales } from './migrations/add-account-to-sales'
 import { addBankAccountsTable } from './migrations/add-bank-accounts-table'
 import { migrateAddCreatedBy } from './migrations/add-created-by'
+import { addMissingOpeningBalances } from './migrations/add-missing-opening-balances'
 import { addSupplierAccountingFields } from './migrations/add-supplier-accounting-fields'
+import { migrateSupplierPaymentsLedger } from './migrations/add-supplier-payments-ledger'
 import { addUnitsTable } from './migrations/add-units-table'
 import * as schema from './schema'
 
 let db: ReturnType<typeof drizzle>
+let sqlite: Database.Database | null = null
 
 export function initDatabase() {
   const userDataPath = app.getPath('userData')
   const dbPath = path.join(userDataPath, 'pharmacy.db')
 
-  const sqlite = new Database(dbPath)
+  sqlite = new Database(dbPath)
   sqlite.pragma('journal_mode = WAL')
   sqlite.pragma('foreign_keys = ON')
 
@@ -44,6 +47,10 @@ function runMigrations(): void {
     addBankAccountsTable()
     addAccountToPurchases()
     addAccountToSales()
+    if (sqlite) {
+      migrateSupplierPaymentsLedger(sqlite)
+      addMissingOpeningBalances(sqlite)
+    }
     console.log('Database migrations completed successfully')
   } catch (error) {
     console.error('Migration failed:', error)
@@ -497,4 +504,15 @@ export function getDatabase() {
     throw new Error('Database not initialized. Call initDatabase() first.')
   }
   return db
+}
+
+export function closeDatabase(): void {
+  if (sqlite) {
+    try {
+      sqlite.close()
+      sqlite = null
+    } catch (error) {
+      console.error('Error closing database:', error)
+    }
+  }
 }

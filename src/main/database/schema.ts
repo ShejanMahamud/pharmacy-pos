@@ -408,6 +408,42 @@ export const settings = sqliteTable('settings', {
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
 })
 
+// Supplier Payments table
+export const supplierPayments = sqliteTable('supplier_payments', {
+  id: text('id').primaryKey(),
+  supplierId: text('supplier_id')
+    .notNull()
+    .references(() => suppliers.id),
+  accountId: text('account_id').references(() => bankAccounts.id),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  referenceNumber: text('reference_number').notNull().unique(),
+  amount: real('amount').notNull(),
+  paymentMethod: text('payment_method').notNull(), // 'cash', 'bank', 'cheque', 'mobile'
+  paymentDate: text('payment_date').notNull(),
+  notes: text('notes'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
+// Supplier Ledger Entries table (for tracking all supplier transactions)
+export const supplierLedgerEntries = sqliteTable('supplier_ledger_entries', {
+  id: text('id').primaryKey(),
+  supplierId: text('supplier_id')
+    .notNull()
+    .references(() => suppliers.id),
+  type: text('type').notNull(), // 'purchase', 'payment', 'return', 'adjustment', 'opening_balance'
+  referenceId: text('reference_id'), // ID of related purchase, payment, or return
+  referenceNumber: text('reference_number').notNull(),
+  description: text('description').notNull(),
+  debit: real('debit').default(0), // Purchase amounts (increases payable)
+  credit: real('credit').default(0), // Payment amounts (decreases payable)
+  balance: real('balance').notNull(), // Running balance
+  transactionDate: text('transaction_date').notNull(),
+  createdBy: text('created_by').references(() => users.id),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
 // Audit Logs table
 export const auditLogs = sqliteTable('audit_logs', {
   id: text('id').primaryKey(),

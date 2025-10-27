@@ -42,6 +42,18 @@ const api = {
     update: (id: string, data: any) => ipcRenderer.invoke('db:suppliers:update', { id, data }),
     delete: (id: string) => ipcRenderer.invoke('db:suppliers:delete', id)
   },
+  // Supplier Payments
+  supplierPayments: {
+    create: (data: any) => ipcRenderer.invoke('db:supplierPayments:create', data),
+    getBySupplierId: (supplierId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:supplierPayments:getBySupplierId', { supplierId, startDate, endDate })
+  },
+  // Supplier Ledger
+  supplierLedger: {
+    getEntries: (supplierId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:supplierLedger:getEntries', { supplierId, startDate, endDate }),
+    createEntry: (data: any) => ipcRenderer.invoke('db:supplierLedger:createEntry', data)
+  },
   // Bank Accounts
   bankAccounts: {
     getAll: () => ipcRenderer.invoke('db:bankAccounts:getAll'),

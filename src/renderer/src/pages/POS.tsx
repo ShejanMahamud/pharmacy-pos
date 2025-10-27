@@ -715,7 +715,7 @@ export default function POS(): React.JSX.Element {
 
       {/* Customer Modal */}
       {showCustomerModal && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50  z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl shadow-xl">
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-200">
@@ -830,7 +830,7 @@ export default function POS(): React.JSX.Element {
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50  z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-200">

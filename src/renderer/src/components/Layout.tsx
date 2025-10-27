@@ -231,11 +231,11 @@ export default function Layout(): React.JSX.Element {
         {/* Logo Section */}
         <div className="p-6 border-b border-blue-700">
           <div className="flex items-center space-x-3">
-            <img
-              src="/resources/icon.png"
-              alt="Logo"
-              className="h-10 w-10 object-contain rounded-lg"
-            />
+            <div className="h-12 w-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl font-bold text-blue-900">
+                {(storeName || 'POS').substring(0, 2).toUpperCase()}
+              </span>
+            </div>
             <div>
               <h1 className="text-xl font-bold text-white">{storeName || 'Pharmacy POS'}</h1>
               {selectedBranch && <p className="text-xs text-blue-200">{selectedBranch.name}</p>}

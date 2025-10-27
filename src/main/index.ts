@@ -1,6 +1,7 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
-import { join } from 'path'
+import fs from 'fs'
+import path, { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { initDatabase } from './database'
 import { registerDatabaseHandlers } from './ipc/database-handlers'
@@ -45,6 +46,55 @@ app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.medixpos.app')
 
+  // Check for pending restore operation
+  const userDataPath = app.getPath('userData')
+  const restoreFlagPath = path.join(userDataPath, 'restore-pending.json')
+  const dbPath = path.join(userDataPath, 'pharmacy.db')
+  const walPath = dbPath + '-wal'
+  const shmPath = dbPath + '-shm'
+
+  if (fs.existsSync(restoreFlagPath)) {
+    try {
+      console.log('Processing pending database restore...')
+      const restoreData = JSON.parse(fs.readFileSync(restoreFlagPath, 'utf-8'))
+      const backupPath = restoreData.backupPath
+
+      if (fs.existsSync(backupPath)) {
+        // Create backup of current database
+        const currentBackupPath = path.join(
+          userDataPath,
+          `pharmacy-before-restore-${Date.now()}.db`
+        )
+        if (fs.existsSync(dbPath)) {
+          fs.copyFileSync(dbPath, currentBackupPath)
+          console.log('Current database backed up')
+        }
+
+        // Remove WAL and SHM files
+        if (fs.existsSync(walPath)) fs.unlinkSync(walPath)
+        if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath)
+
+        // Restore the backup
+        fs.copyFileSync(backupPath, dbPath)
+        console.log('Database restored successfully')
+
+        // Remove the restore flag
+        fs.unlinkSync(restoreFlagPath)
+      } else {
+        console.error('Backup file not found:', backupPath)
+        fs.unlinkSync(restoreFlagPath)
+      }
+    } catch (error) {
+      console.error('Failed to process restore:', error)
+      // Remove the flag even if restore failed to prevent infinite loop
+      try {
+        fs.unlinkSync(restoreFlagPath)
+      } catch (e) {
+        console.error('Failed to remove restore flag:', e)
+      }
+    }
+  }
+
   try {
     // Initialize database
     console.log('Initializing database...')
@@ -73,6 +123,17 @@ app.whenReady().then(async () => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // Handle app quit from renderer
+  ipcMain.on('app:quit', () => {
+    app.quit()
+  })
+
+  // Handle app restart from renderer
+  ipcMain.on('app:restart', () => {
+    app.relaunch()
+    app.quit()
+  })
 
   try {
     createWindow()

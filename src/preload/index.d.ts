@@ -57,6 +57,14 @@ interface API {
     update: (id: string, data: any) => Promise<any>
     delete: (id: string) => Promise<void>
   }
+  supplierPayments: {
+    create: (data: any) => Promise<any>
+    getBySupplierId: (supplierId: string, startDate?: string, endDate?: string) => Promise<any[]>
+  }
+  supplierLedger: {
+    getEntries: (supplierId: string, startDate?: string, endDate?: string) => Promise<any[]>
+    createEntry: (data: any) => Promise<any>
+  }
   bankAccounts: {
     getAll: () => Promise<any[]>
     create: (data: any) => Promise<any>
