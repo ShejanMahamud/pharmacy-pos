@@ -45,11 +45,24 @@ interface API {
     update: (id: string, data: any) => Promise<any>
     delete: (id: string) => Promise<void>
   }
+  units: {
+    getAll: () => Promise<any[]>
+    create: (data: any) => Promise<any>
+    update: (id: string, data: any) => Promise<any>
+    delete: (id: string) => Promise<void>
+  }
   suppliers: {
     getAll: () => Promise<any[]>
     create: (data: any) => Promise<any>
     update: (id: string, data: any) => Promise<any>
     delete: (id: string) => Promise<void>
+  }
+  bankAccounts: {
+    getAll: () => Promise<any[]>
+    create: (data: any) => Promise<any>
+    update: (id: string, data: any) => Promise<any>
+    delete: (id: string) => Promise<void>
+    updateBalance: (id: string, amount: number, type: 'debit' | 'credit') => Promise<any>
   }
   products: {
     getAll: (search?: string) => Promise<any[]>
@@ -75,8 +88,18 @@ interface API {
     getByBranch: (branchId: string, startDate?: string, endDate?: string) => Promise<any[]>
     getById: (id: string) => Promise<any>
   }
+  salesReturns: {
+    create: (salesReturn: any, items: any[]) => Promise<any>
+    getByBranch: (branchId: string, startDate?: string, endDate?: string) => Promise<any[]>
+    getById: (id: string) => Promise<any>
+  }
   purchases: {
     create: (purchase: any, items: any[]) => Promise<any>
+    getByBranch: (branchId: string, startDate?: string, endDate?: string) => Promise<any[]>
+    getById: (id: string) => Promise<any>
+  }
+  purchaseReturns: {
+    create: (purchaseReturn: any, items: any[]) => Promise<any>
     getByBranch: (branchId: string, startDate?: string, endDate?: string) => Promise<any[]>
     getById: (id: string) => Promise<any>
   }

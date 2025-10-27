@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
 
@@ -249,33 +250,21 @@ export default function Reports(): React.JSX.Element {
           </div>
           <div className="p-6">
             {reportData.monthlySales.length > 0 ? (
-              <div className="flex items-end justify-between h-64 gap-4">
-                {reportData.monthlySales.map((data) => {
-                  const maxRevenue = Math.max(...reportData.monthlySales.map((d) => d.revenue), 1)
-                  const height = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0
-                  return (
-                    <div key={data.month} className="flex-1 flex flex-col items-center">
-                      <div className="w-full flex flex-col items-center justify-end h-full">
-                        <div className="relative group w-full">
-                          <div
-                            className="bg-blue-500 hover:bg-blue-600 rounded-t-lg transition-all cursor-pointer w-full"
-                            style={{ height: `${Math.max(height, 5)}%`, minHeight: '4px' }}
-                          >
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                              {getCurrencySymbol()}
-                              {data.revenue.toFixed(2)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-center">
-                        <p className="text-xs font-medium text-gray-700">{data.month}</p>
-                        <p className="text-xs text-gray-500">{data.sales} sales</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={reportData.monthlySales}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value: number) => [
+                      `${getCurrencySymbol()}${value.toFixed(2)}`,
+                      'Revenue'
+                    ]}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Bar dataKey="revenue" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center text-gray-500">
@@ -448,33 +437,21 @@ export default function Reports(): React.JSX.Element {
           </div>
           <div className="p-6">
             {reportData.monthlySales.length > 0 ? (
-              <div className="flex items-end justify-between h-64 gap-4">
-                {reportData.monthlySales.map((data) => {
-                  const maxRevenue = Math.max(...reportData.monthlySales.map((d) => d.revenue), 1)
-                  const height = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0
-                  return (
-                    <div key={data.month} className="flex-1 flex flex-col items-center">
-                      <div className="w-full flex flex-col items-center justify-end h-full">
-                        <div className="relative group w-full">
-                          <div
-                            className="bg-blue-500 hover:bg-blue-600 rounded-t-lg transition-all cursor-pointer w-full"
-                            style={{ height: `${Math.max(height, 5)}%`, minHeight: '4px' }}
-                          >
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                              {getCurrencySymbol()}
-                              {data.revenue.toFixed(2)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-center">
-                        <p className="text-xs font-medium text-gray-700">{data.month}</p>
-                        <p className="text-xs text-gray-500">{data.sales} sales</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={reportData.monthlySales}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value: number) => [
+                      `${getCurrencySymbol()}${value.toFixed(2)}`,
+                      'Revenue'
+                    ]}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Bar dataKey="revenue" fill="#10b981" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center text-gray-500">
@@ -922,15 +899,23 @@ export default function Reports(): React.JSX.Element {
       const startDate = new Date()
       startDate.setDate(startDate.getDate() - parseInt(dateRange))
 
+      // Fetch all sales and filter in JavaScript for accuracy
+      const allSalesData = await window.api.sales.getByBranch(currentBranch.id)
+
+      // Filter sales by date range
+      const allSales = allSalesData.filter((sale: any) => {
+        const saleDate = new Date(sale.createdAt)
+        return saleDate >= startDate && saleDate <= endDate
+      })
+
       const startDateStr = startDate.toISOString().split('T')[0]
       const endDateStr = endDate.toISOString().split('T')[0]
 
       // Load data from database in parallel
-      const [salesSummary, topProducts, allSales, allCustomers, allProducts, inventoryData] =
+      const [salesSummary, topProducts, allCustomers, allProducts, inventoryData] =
         await Promise.all([
           window.api.reports.salesSummary(currentBranch.id, startDateStr, endDateStr),
           window.api.reports.topProducts(currentBranch.id, startDateStr, endDateStr, 5),
-          window.api.sales.getByBranch(currentBranch.id, startDateStr, endDateStr),
           window.api.customers.getAll(),
           window.api.products.getAll(),
           window.api.inventory.getByBranch(currentBranch.id)

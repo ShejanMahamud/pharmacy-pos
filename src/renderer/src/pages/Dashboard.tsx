@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useBranchStore } from '../store/branchStore'
 import { useSettingsStore } from '../store/settingsStore'
@@ -63,24 +64,34 @@ export default function Dashboard(): React.JSX.Element {
 
       try {
         setLoading(true)
-        const today = new Date().toISOString().split('T')[0]
-        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-          .toISOString()
-          .split('T')[0]
 
-        // Load today's sales
-        const todaySales = await window.api.sales.getByBranch(selectedBranch.id, today, today)
+        // Get all sales first
+        const allSales = await window.api.sales.getByBranch(selectedBranch.id)
+
+        // Filter today's sales
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const todaySales = allSales.filter((sale: { createdAt: string }) => {
+          const saleDate = new Date(sale.createdAt)
+          saleDate.setHours(0, 0, 0, 0)
+          return saleDate.getTime() === today.getTime()
+        })
         const todayRevenue = todaySales.reduce(
           (sum: number, sale: { totalAmount: number }) => sum + sale.totalAmount,
           0
         )
 
-        // Load monthly sales
-        const monthlySales = await window.api.sales.getByBranch(
-          selectedBranch.id,
-          firstDayOfMonth,
-          today
-        )
+        // Filter monthly sales
+        const now = new Date()
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        firstDayOfMonth.setHours(0, 0, 0, 0)
+        const endOfToday = new Date()
+        endOfToday.setHours(23, 59, 59, 999)
+
+        const monthlySales = allSales.filter((sale: { createdAt: string }) => {
+          const saleDate = new Date(sale.createdAt)
+          return saleDate >= firstDayOfMonth && saleDate <= endOfToday
+        })
         const monthlyRevenue = monthlySales.reduce(
           (sum: number, sale: { totalAmount: number }) => sum + sale.totalAmount,
           0
@@ -96,7 +107,6 @@ export default function Dashboard(): React.JSX.Element {
         const customers = await window.api.customers.getAll()
 
         // Get recent 5 sales
-        const allSales = await window.api.sales.getByBranch(selectedBranch.id)
         const recent = allSales.slice(0, 5)
 
         setStats({
@@ -470,8 +480,8 @@ export default function Dashboard(): React.JSX.Element {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <a
-            href="#/pos"
+          <Link
+            to="/pos"
             className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group"
           >
             <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
@@ -492,10 +502,10 @@ export default function Dashboard(): React.JSX.Element {
             <span className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
               New Sale
             </span>
-          </a>
+          </Link>
 
-          <a
-            href="#/products"
+          <Link
+            to="/products"
             className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group"
           >
             <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
@@ -516,10 +526,10 @@ export default function Dashboard(): React.JSX.Element {
             <span className="font-medium text-gray-900 group-hover:text-green-600 transition-colors">
               Add Product
             </span>
-          </a>
+          </Link>
 
-          <a
-            href="#/customers"
+          <Link
+            to="/customers"
             className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group"
           >
             <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
@@ -540,10 +550,10 @@ export default function Dashboard(): React.JSX.Element {
             <span className="font-medium text-gray-900 group-hover:text-purple-600 transition-colors">
               Add Customer
             </span>
-          </a>
+          </Link>
 
-          <a
-            href="#/reports"
+          <Link
+            to="/reports"
             className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all group"
           >
             <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-orange-200 transition-colors">
@@ -564,7 +574,7 @@ export default function Dashboard(): React.JSX.Element {
             <span className="font-medium text-gray-900 group-hover:text-orange-600 transition-colors">
               View Reports
             </span>
-          </a>
+          </Link>
         </div>
       </div>
     </div>

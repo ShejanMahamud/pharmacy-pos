@@ -3,7 +3,12 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { app } from 'electron'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { addAccountToPurchases } from './migrations/add-account-to-purchases'
+import { addAccountToSales } from './migrations/add-account-to-sales'
+import { addBankAccountsTable } from './migrations/add-bank-accounts-table'
 import { migrateAddCreatedBy } from './migrations/add-created-by'
+import { addSupplierAccountingFields } from './migrations/add-supplier-accounting-fields'
+import { addUnitsTable } from './migrations/add-units-table'
 import * as schema from './schema'
 
 let db: ReturnType<typeof drizzle>
@@ -21,7 +26,7 @@ export function initDatabase() {
   // Create tables if they don't exist
   createTables(sqlite)
 
-  // Run migrations
+  // Run migrations (after db is set)
   runMigrations()
 
   // Initialize default data
@@ -34,6 +39,11 @@ function runMigrations(): void {
   try {
     console.log('Running database migrations...')
     migrateAddCreatedBy()
+    addUnitsTable()
+    addSupplierAccountingFields()
+    addBankAccountsTable()
+    addAccountToPurchases()
+    addAccountToSales()
     console.log('Database migrations completed successfully')
   } catch (error) {
     console.error('Migration failed:', error)

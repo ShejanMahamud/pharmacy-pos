@@ -109,6 +109,21 @@ export default function Layout(): React.JSX.Element {
       )
     },
     {
+      name: 'Suppliers',
+      path: '/suppliers',
+      permission: 'view_products' as Permission,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+          />
+        </svg>
+      )
+    },
+    {
       name: 'Customers',
       path: '/customers',
       permission: 'view_customers' as Permission,
@@ -119,6 +134,21 @@ export default function Layout(): React.JSX.Element {
             strokeLinejoin="round"
             strokeWidth={2}
             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      )
+    },
+    {
+      name: 'Bank Accounts',
+      path: '/bank-accounts',
+      permission: 'view_reports' as Permission,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
           />
         </svg>
       )
@@ -201,21 +231,11 @@ export default function Layout(): React.JSX.Element {
         {/* Logo Section */}
         <div className="p-6 border-b border-blue-700">
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center">
-              <svg
-                className="h-6 w-6 text-blue-900"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                />
-              </svg>
-            </div>
+            <img
+              src="/resources/icon.png"
+              alt="Logo"
+              className="h-10 w-10 object-contain rounded-lg"
+            />
             <div>
               <h1 className="text-xl font-bold text-white">{storeName || 'Pharmacy POS'}</h1>
               {selectedBranch && <p className="text-xs text-blue-200">{selectedBranch.name}</p>}

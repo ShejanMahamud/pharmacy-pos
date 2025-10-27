@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useBranchStore } from './store/branchStore'
 import { useSettingsStore } from './store/settingsStore'
@@ -9,6 +9,8 @@ import { useSettingsStore } from './store/settingsStore'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import SessionChecker from './components/SessionChecker'
+import BankAccounts from './pages/BankAccounts'
+import CategoryUnit from './pages/CategoryUnit'
 import Customers from './pages/Customers'
 import Dashboard from './pages/Dashboard'
 import Inventory from './pages/Inventory'
@@ -20,6 +22,8 @@ import Reports from './pages/Reports'
 import RoleManagement from './pages/RoleManagement'
 import Sales from './pages/Sales'
 import Settings from './pages/Settings'
+import SupplierLedger from './pages/SupplierLedger'
+import Suppliers from './pages/Suppliers'
 import Users from './pages/Users'
 
 function AuthRoute({ children }: { children: React.ReactNode }): React.JSX.Element {
@@ -40,7 +44,7 @@ function App(): React.JSX.Element {
   }, [isAuthenticated, loadBranches, loadSettings])
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Toaster position="top-right" />
       <SessionChecker />
       <Routes>
@@ -78,6 +82,30 @@ function App(): React.JSX.Element {
             }
           />
           <Route
+            path="categories-units"
+            element={
+              <ProtectedRoute permission="view_products">
+                <CategoryUnit />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="suppliers"
+            element={
+              <ProtectedRoute permission="view_products">
+                <Suppliers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="supplier-ledger"
+            element={
+              <ProtectedRoute permission="view_products">
+                <SupplierLedger />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="inventory"
             element={
               <ProtectedRoute permission="view_inventory">
@@ -106,6 +134,14 @@ function App(): React.JSX.Element {
             element={
               <ProtectedRoute permission="view_customers">
                 <Customers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="bank-accounts"
+            element={
+              <ProtectedRoute permission="view_reports">
+                <BankAccounts />
               </ProtectedRoute>
             }
           />
@@ -143,7 +179,7 @@ function App(): React.JSX.Element {
           />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 

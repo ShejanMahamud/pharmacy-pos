@@ -41,6 +41,17 @@ export const categories = sqliteTable('categories', {
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
 })
 
+// Units table
+export const units = sqliteTable('units', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  symbol: text('symbol').notNull().unique(),
+  description: text('description'),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
 // Suppliers table
 export const suppliers = sqliteTable('suppliers', {
   id: text('id').primaryKey(),
@@ -51,6 +62,31 @@ export const suppliers = sqliteTable('suppliers', {
   email: text('email'),
   address: text('address'),
   taxNumber: text('tax_number'),
+  openingBalance: real('opening_balance').default(0), // Opening balance (positive = payable, negative = receivable)
+  currentBalance: real('current_balance').default(0), // Current outstanding balance
+  totalPurchases: real('total_purchases').default(0), // Total purchase amount
+  totalPayments: real('total_payments').default(0), // Total payments made
+  creditLimit: real('credit_limit').default(0), // Maximum credit allowed
+  creditDays: integer('credit_days').default(0), // Payment terms in days
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
+// Bank Accounts table
+export const bankAccounts = sqliteTable('bank_accounts', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(), // Account name/label
+  accountType: text('account_type').notNull(), // 'cash', 'bank', 'mobile_banking'
+  accountNumber: text('account_number'), // Bank account number (optional for cash)
+  bankName: text('bank_name'), // Bank name (for bank type)
+  branchName: text('branch_name'), // Bank branch name
+  accountHolder: text('account_holder'), // Account holder name
+  openingBalance: real('opening_balance').default(0), // Opening balance
+  currentBalance: real('current_balance').default(0), // Current balance
+  totalDeposits: real('total_deposits').default(0), // Total deposits/additions
+  totalWithdrawals: real('total_withdrawals').default(0), // Total withdrawals/deductions
+  description: text('description'), // Notes/description
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
@@ -122,6 +158,7 @@ export const sales = sqliteTable('sales', {
     .notNull()
     .references(() => branches.id),
   customerId: text('customer_id').references(() => customers.id),
+  accountId: text('account_id').references(() => bankAccounts.id),
   userId: text('user_id')
     .notNull()
     .references(() => users.id),
@@ -156,6 +193,56 @@ export const saleItems = sqliteTable('sale_items', {
   expiryDate: text('expiry_date')
 })
 
+// Sales Returns table
+export const salesReturns = sqliteTable('sales_returns', {
+  id: text('id').primaryKey(),
+  returnNumber: text('return_number').notNull().unique(),
+  saleId: text('sale_id')
+    .notNull()
+    .references(() => sales.id),
+  branchId: text('branch_id')
+    .notNull()
+    .references(() => branches.id),
+  customerId: text('customer_id').references(() => customers.id),
+  accountId: text('account_id').references(() => bankAccounts.id),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  subtotal: real('subtotal').notNull(),
+  taxAmount: real('tax_amount').default(0),
+  discountAmount: real('discount_amount').default(0),
+  totalAmount: real('total_amount').notNull(),
+  refundAmount: real('refund_amount').default(0),
+  refundStatus: text('refund_status').notNull().default('pending'), // 'pending', 'partial', 'refunded'
+  reason: text('reason'),
+  notes: text('notes'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
+// Sales Return Items table
+export const salesReturnItems = sqliteTable('sales_return_items', {
+  id: text('id').primaryKey(),
+  returnId: text('return_id')
+    .notNull()
+    .references(() => salesReturns.id, { onDelete: 'cascade' }),
+  saleItemId: text('sale_item_id')
+    .notNull()
+    .references(() => saleItems.id),
+  productId: text('product_id')
+    .notNull()
+    .references(() => products.id),
+  productName: text('product_name').notNull(),
+  quantity: integer('quantity').notNull(),
+  unitPrice: real('unit_price').notNull(),
+  discountPercent: real('discount_percent').default(0),
+  taxRate: real('tax_rate').default(0),
+  subtotal: real('subtotal').notNull(),
+  batchNumber: text('batch_number'),
+  expiryDate: text('expiry_date'),
+  reason: text('reason'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
 // Purchases table
 export const purchases = sqliteTable('purchases', {
   id: text('id').primaryKey(),
@@ -166,6 +253,7 @@ export const purchases = sqliteTable('purchases', {
   supplierId: text('supplier_id')
     .notNull()
     .references(() => suppliers.id),
+  accountId: text('account_id').references(() => bankAccounts.id),
   userId: text('user_id')
     .notNull()
     .references(() => users.id),
@@ -199,6 +287,58 @@ export const purchaseItems = sqliteTable('purchase_items', {
   batchNumber: text('batch_number'),
   expiryDate: text('expiry_date'),
   manufactureDate: text('manufacture_date')
+})
+
+// Purchase Returns table
+export const purchaseReturns = sqliteTable('purchase_returns', {
+  id: text('id').primaryKey(),
+  returnNumber: text('return_number').notNull().unique(),
+  purchaseId: text('purchase_id')
+    .notNull()
+    .references(() => purchases.id),
+  branchId: text('branch_id')
+    .notNull()
+    .references(() => branches.id),
+  supplierId: text('supplier_id')
+    .notNull()
+    .references(() => suppliers.id),
+  accountId: text('account_id').references(() => bankAccounts.id),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  subtotal: real('subtotal').notNull(),
+  taxAmount: real('tax_amount').default(0),
+  discountAmount: real('discount_amount').default(0),
+  totalAmount: real('total_amount').notNull(),
+  refundAmount: real('refund_amount').default(0),
+  refundStatus: text('refund_status').notNull().default('pending'), // 'pending', 'partial', 'refunded'
+  reason: text('reason'),
+  notes: text('notes'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
+// Purchase Return Items table
+export const purchaseReturnItems = sqliteTable('purchase_return_items', {
+  id: text('id').primaryKey(),
+  returnId: text('return_id')
+    .notNull()
+    .references(() => purchaseReturns.id, { onDelete: 'cascade' }),
+  purchaseItemId: text('purchase_item_id')
+    .notNull()
+    .references(() => purchaseItems.id),
+  productId: text('product_id')
+    .notNull()
+    .references(() => products.id),
+  productName: text('product_name').notNull(),
+  quantity: integer('quantity').notNull(),
+  unitPrice: real('unit_price').notNull(),
+  discountPercent: real('discount_percent').default(0),
+  taxRate: real('tax_rate').default(0),
+  subtotal: real('subtotal').notNull(),
+  batchNumber: text('batch_number'),
+  expiryDate: text('expiry_date'),
+  reason: text('reason'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
 })
 
 // Expenses table

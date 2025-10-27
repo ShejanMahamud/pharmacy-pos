@@ -125,6 +125,33 @@ export function registerDatabaseHandlers(): void {
       .run()
   })
 
+  // ==================== UNITS ====================
+  ipcMain.handle('db:units:getAll', async () => {
+    return db.select().from(schema.units).where(eq(schema.units.isActive, true)).all()
+  })
+
+  ipcMain.handle('db:units:create', async (_, data) => {
+    const id = uuidv4()
+    return db
+      .insert(schema.units)
+      .values({ id, ...data })
+      .returning()
+      .get()
+  })
+
+  ipcMain.handle('db:units:update', async (_, { id, data }) => {
+    return db
+      .update(schema.units)
+      .set({ ...data, updatedAt: new Date().toISOString() })
+      .where(eq(schema.units.id, id))
+      .returning()
+      .get()
+  })
+
+  ipcMain.handle('db:units:delete', async (_, id: string) => {
+    return db.update(schema.units).set({ isActive: false }).where(eq(schema.units.id, id)).run()
+  })
+
   // ==================== SUPPLIERS ====================
   ipcMain.handle('db:suppliers:getAll', async () => {
     return db.select().from(schema.suppliers).where(eq(schema.suppliers.isActive, true)).all()
@@ -154,6 +181,68 @@ export function registerDatabaseHandlers(): void {
       .set({ isActive: false })
       .where(eq(schema.suppliers.id, id))
       .run()
+  })
+
+  // ==================== BANK ACCOUNTS ====================
+  ipcMain.handle('db:bankAccounts:getAll', async () => {
+    return db.select().from(schema.bankAccounts).where(eq(schema.bankAccounts.isActive, true)).all()
+  })
+
+  ipcMain.handle('db:bankAccounts:create', async (_, data) => {
+    const id = uuidv4()
+    const currentBalance = data.openingBalance || 0
+    return db
+      .insert(schema.bankAccounts)
+      .values({ id, ...data, currentBalance })
+      .returning()
+      .get()
+  })
+
+  ipcMain.handle('db:bankAccounts:update', async (_, { id, data }) => {
+    return db
+      .update(schema.bankAccounts)
+      .set({ ...data, updatedAt: new Date().toISOString() })
+      .where(eq(schema.bankAccounts.id, id))
+      .returning()
+      .get()
+  })
+
+  ipcMain.handle('db:bankAccounts:delete', async (_, id: string) => {
+    return db
+      .update(schema.bankAccounts)
+      .set({ isActive: false })
+      .where(eq(schema.bankAccounts.id, id))
+      .run()
+  })
+
+  ipcMain.handle('db:bankAccounts:updateBalance', async (_, { id, amount, type }) => {
+    const account = db
+      .select()
+      .from(schema.bankAccounts)
+      .where(eq(schema.bankAccounts.id, id))
+      .get()
+
+    if (!account) throw new Error('Account not found')
+
+    const currentBalance = account.currentBalance ?? 0
+    const totalWithdrawals = account.totalWithdrawals ?? 0
+    const totalDeposits = account.totalDeposits ?? 0
+
+    const newBalance = type === 'debit' ? currentBalance - amount : currentBalance + amount
+    const newTotalWithdrawals = type === 'debit' ? totalWithdrawals + amount : totalWithdrawals
+    const newTotalDeposits = type === 'credit' ? totalDeposits + amount : totalDeposits
+
+    return db
+      .update(schema.bankAccounts)
+      .set({
+        currentBalance: newBalance,
+        totalWithdrawals: newTotalWithdrawals,
+        totalDeposits: newTotalDeposits,
+        updatedAt: new Date().toISOString()
+      })
+      .where(eq(schema.bankAccounts.id, id))
+      .returning()
+      .get()
   })
 
   // ==================== PRODUCTS ====================
@@ -342,6 +431,29 @@ export function registerDatabaseHandlers(): void {
       )
     }
 
+    // Update bank account balance if accountId is provided (add money from sale)
+    if (sale.accountId && sale.paidAmount > 0) {
+      const account = db
+        .select()
+        .from(schema.bankAccounts)
+        .where(eq(schema.bankAccounts.id, sale.accountId))
+        .get()
+
+      if (account) {
+        const currentBalance = account.currentBalance ?? 0
+        const totalDeposits = account.totalDeposits ?? 0
+
+        db.update(schema.bankAccounts)
+          .set({
+            currentBalance: currentBalance + sale.paidAmount,
+            totalDeposits: totalDeposits + sale.paidAmount,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.bankAccounts.id, sale.accountId))
+          .run()
+      }
+    }
+
     return saleResult
   })
 
@@ -375,6 +487,118 @@ export function registerDatabaseHandlers(): void {
     if (sale) {
       const items = db.select().from(schema.saleItems).where(eq(schema.saleItems.saleId, id)).all()
       return { ...sale, items }
+    }
+    return null
+  })
+
+  // ==================== SALES RETURNS ====================
+  ipcMain.handle('db:salesReturns:create', async (_, { salesReturn, items }) => {
+    const returnId = uuidv4()
+    const returnResult = db
+      .insert(schema.salesReturns)
+      .values({ id: returnId, ...salesReturn })
+      .returning()
+      .get()
+
+    // Insert sales return items
+    const returnItemsData = items.map((item) => ({
+      id: uuidv4(),
+      returnId,
+      ...item
+    }))
+
+    if (returnItemsData.length > 0) {
+      db.insert(schema.salesReturnItems).values(returnItemsData).run()
+    }
+
+    // Update inventory - add returned quantities back
+    for (const item of items) {
+      const existing = db
+        .select()
+        .from(schema.inventory)
+        .where(
+          and(
+            eq(schema.inventory.productId, item.productId),
+            eq(schema.inventory.branchId, salesReturn.branchId)
+          )
+        )
+        .get()
+
+      if (existing) {
+        db.update(schema.inventory)
+          .set({
+            quantity: existing.quantity + item.quantity,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.inventory.id, existing.id))
+          .run()
+      }
+    }
+
+    // Update bank account balance if accountId is provided (deduct refund amount)
+    if (salesReturn.accountId && salesReturn.refundAmount > 0) {
+      const account = db
+        .select()
+        .from(schema.bankAccounts)
+        .where(eq(schema.bankAccounts.id, salesReturn.accountId))
+        .get()
+
+      if (account) {
+        const currentBalance = account.currentBalance ?? 0
+        const totalWithdrawals = account.totalWithdrawals ?? 0
+
+        db.update(schema.bankAccounts)
+          .set({
+            currentBalance: currentBalance - salesReturn.refundAmount,
+            totalWithdrawals: totalWithdrawals + salesReturn.refundAmount,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.bankAccounts.id, salesReturn.accountId))
+          .run()
+      }
+    }
+
+    return returnResult
+  })
+
+  ipcMain.handle('db:salesReturns:getByBranch', async (_, { branchId, startDate, endDate }) => {
+    if (startDate && endDate) {
+      return db
+        .select()
+        .from(schema.salesReturns)
+        .where(
+          and(
+            eq(schema.salesReturns.branchId, branchId),
+            gte(schema.salesReturns.createdAt, startDate),
+            lte(schema.salesReturns.createdAt, endDate)
+          )
+        )
+        .orderBy(desc(schema.salesReturns.createdAt))
+        .all()
+    }
+
+    return db
+      .select()
+      .from(schema.salesReturns)
+      .where(eq(schema.salesReturns.branchId, branchId))
+      .orderBy(desc(schema.salesReturns.createdAt))
+      .all()
+  })
+
+  ipcMain.handle('db:salesReturns:getById', async (_, id: string) => {
+    const salesReturn = db
+      .select()
+      .from(schema.salesReturns)
+      .where(eq(schema.salesReturns.id, id))
+      .get()
+
+    if (salesReturn) {
+      const items = db
+        .select()
+        .from(schema.salesReturnItems)
+        .where(eq(schema.salesReturnItems.returnId, id))
+        .all()
+      return { ...salesReturn, items }
     }
     return null
   })
@@ -439,6 +663,29 @@ export function registerDatabaseHandlers(): void {
       }
     }
 
+    // Update bank account balance if accountId is provided (deduct money)
+    if (purchase.accountId && purchase.paidAmount > 0) {
+      const account = db
+        .select()
+        .from(schema.bankAccounts)
+        .where(eq(schema.bankAccounts.id, purchase.accountId))
+        .get()
+
+      if (account) {
+        const currentBalance = account.currentBalance ?? 0
+        const totalWithdrawals = account.totalWithdrawals ?? 0
+
+        db.update(schema.bankAccounts)
+          .set({
+            currentBalance: currentBalance - purchase.paidAmount,
+            totalWithdrawals: totalWithdrawals + purchase.paidAmount,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.bankAccounts.id, purchase.accountId))
+          .run()
+      }
+    }
+
     return purchaseResult
   })
 
@@ -476,6 +723,118 @@ export function registerDatabaseHandlers(): void {
         .where(eq(schema.purchaseItems.purchaseId, id))
         .all()
       return { ...purchase, items }
+    }
+    return null
+  })
+
+  // ==================== PURCHASE RETURNS ====================
+  ipcMain.handle('db:purchaseReturns:create', async (_, { purchaseReturn, items }) => {
+    const returnId = uuidv4()
+    const returnResult = db
+      .insert(schema.purchaseReturns)
+      .values({ id: returnId, ...purchaseReturn })
+      .returning()
+      .get()
+
+    // Insert purchase return items
+    const returnItemsData = items.map((item) => ({
+      id: uuidv4(),
+      returnId,
+      ...item
+    }))
+
+    if (returnItemsData.length > 0) {
+      db.insert(schema.purchaseReturnItems).values(returnItemsData).run()
+    }
+
+    // Update inventory - deduct returned quantities
+    for (const item of items) {
+      const existing = db
+        .select()
+        .from(schema.inventory)
+        .where(
+          and(
+            eq(schema.inventory.productId, item.productId),
+            eq(schema.inventory.branchId, purchaseReturn.branchId)
+          )
+        )
+        .get()
+
+      if (existing) {
+        db.update(schema.inventory)
+          .set({
+            quantity: existing.quantity - item.quantity,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.inventory.id, existing.id))
+          .run()
+      }
+    }
+
+    // Update bank account balance if accountId is provided (add money back)
+    if (purchaseReturn.accountId && purchaseReturn.refundAmount > 0) {
+      const account = db
+        .select()
+        .from(schema.bankAccounts)
+        .where(eq(schema.bankAccounts.id, purchaseReturn.accountId))
+        .get()
+
+      if (account) {
+        const currentBalance = account.currentBalance ?? 0
+        const totalDeposits = account.totalDeposits ?? 0
+
+        db.update(schema.bankAccounts)
+          .set({
+            currentBalance: currentBalance + purchaseReturn.refundAmount,
+            totalDeposits: totalDeposits + purchaseReturn.refundAmount,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.bankAccounts.id, purchaseReturn.accountId))
+          .run()
+      }
+    }
+
+    return returnResult
+  })
+
+  ipcMain.handle('db:purchaseReturns:getByBranch', async (_, { branchId, startDate, endDate }) => {
+    if (startDate && endDate) {
+      return db
+        .select()
+        .from(schema.purchaseReturns)
+        .where(
+          and(
+            eq(schema.purchaseReturns.branchId, branchId),
+            gte(schema.purchaseReturns.createdAt, startDate),
+            lte(schema.purchaseReturns.createdAt, endDate)
+          )
+        )
+        .orderBy(desc(schema.purchaseReturns.createdAt))
+        .all()
+    }
+
+    return db
+      .select()
+      .from(schema.purchaseReturns)
+      .where(eq(schema.purchaseReturns.branchId, branchId))
+      .orderBy(desc(schema.purchaseReturns.createdAt))
+      .all()
+  })
+
+  ipcMain.handle('db:purchaseReturns:getById', async (_, id: string) => {
+    const purchaseReturn = db
+      .select()
+      .from(schema.purchaseReturns)
+      .where(eq(schema.purchaseReturns.id, id))
+      .get()
+
+    if (purchaseReturn) {
+      const items = db
+        .select()
+        .from(schema.purchaseReturnItems)
+        .where(eq(schema.purchaseReturnItems.returnId, id))
+        .all()
+      return { ...purchaseReturn, items }
     }
     return null
   })

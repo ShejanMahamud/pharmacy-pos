@@ -1,5 +1,5 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { initDatabase } from './database'
@@ -12,8 +12,8 @@ function createWindow(): void {
     height: 900,
     show: false,
     autoHideMenuBar: true,
+    icon: icon,
     title: 'MedixPOS - Professional Pharmacy Management',
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -41,15 +41,28 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.medixpos.app')
 
-  // Initialize database
-  initDatabase()
+  try {
+    // Initialize database
+    console.log('Initializing database...')
+    await initDatabase()
+    console.log('Database initialized successfully')
 
-  // Register IPC handlers
-  registerDatabaseHandlers()
+    // Register IPC handlers
+    registerDatabaseHandlers()
+    console.log('IPC handlers registered')
+  } catch (error) {
+    console.error('Failed to initialize application:', error)
+    dialog.showErrorBox(
+      'Application Initialization Error',
+      `Failed to start MedixPOS:\n\n${error instanceof Error ? error.message : String(error)}\n\nStack: ${error instanceof Error ? error.stack : 'No stack trace'}`
+    )
+    app.quit()
+    return
+  }
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -61,7 +74,17 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  createWindow()
+  try {
+    createWindow()
+  } catch (error) {
+    console.error('Failed to create window:', error)
+    dialog.showErrorBox(
+      'Window Creation Error',
+      `Failed to create application window:\n\n${error instanceof Error ? error.message : String(error)}`
+    )
+    app.quit()
+    return
+  }
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

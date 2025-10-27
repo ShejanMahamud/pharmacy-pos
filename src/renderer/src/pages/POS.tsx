@@ -33,11 +33,21 @@ interface Customer {
   loyaltyPoints: number
 }
 
+interface BankAccount {
+  id: string
+  name: string
+  accountType: string
+  currentBalance: number
+  isActive: boolean
+}
+
 export default function POS(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
   const [products, setProducts] = useState<Product[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState('cash')
+  const [selectedAccount, setSelectedAccount] = useState('')
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [paidAmount, setPaidAmount] = useState('')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showCustomerModal, setShowCustomerModal] = useState(false)
@@ -107,6 +117,15 @@ export default function POS(): React.JSX.Element {
     }
   }
 
+  const loadAccounts = async (): Promise<void> => {
+    try {
+      const allAccounts = await window.api.bankAccounts.getAll()
+      setAccounts(allAccounts.filter((acc) => acc.isActive))
+    } catch (_error) {
+      console.error('Failed to load accounts')
+    }
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       void searchProducts()
@@ -117,6 +136,7 @@ export default function POS(): React.JSX.Element {
   useEffect(() => {
     void loadProducts()
     void loadInventory()
+    void loadAccounts()
     // Focus search input on mount for barcode scanner
     searchInputRef.current?.focus()
   }, [selectedBranch])
@@ -211,6 +231,7 @@ export default function POS(): React.JSX.Element {
         branchId: selectedBranch.id,
         userId: user.id,
         customerId: cart.customerId,
+        accountId: selectedAccount || null,
         subtotal: cart.getSubtotal(),
         taxAmount: cart.getTaxAmount(),
         discountAmount: cart.getDiscountAmount(),
@@ -236,6 +257,7 @@ export default function POS(): React.JSX.Element {
       toast.success(`Sale completed! Invoice: ${invoiceNumber}`)
       cart.clearCart()
       setPaidAmount('')
+      setSelectedAccount('')
       setShowPaymentModal(false)
       setNotes('')
       await loadProducts()
@@ -898,6 +920,31 @@ export default function POS(): React.JSX.Element {
                     Credit
                   </button>
                 </div>
+              </div>
+
+              {/* Account Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Payment Account <span className="text-xs text-gray-500">(Optional)</span>
+                </label>
+                <select
+                  value={selectedAccount}
+                  onChange={(e) => setSelectedAccount(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">No Account</option>
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.name} - {getCurrencySymbol()}
+                      {account.currentBalance.toFixed(2)}
+                    </option>
+                  ))}
+                </select>
+                {selectedAccount && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Money will be added to this account
+                  </p>
+                )}
               </div>
 
               {/* Total Amount */}

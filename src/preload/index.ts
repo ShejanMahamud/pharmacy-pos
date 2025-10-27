@@ -28,12 +28,28 @@ const api = {
     update: (id: string, data: any) => ipcRenderer.invoke('db:categories:update', { id, data }),
     delete: (id: string) => ipcRenderer.invoke('db:categories:delete', id)
   },
+  // Units
+  units: {
+    getAll: () => ipcRenderer.invoke('db:units:getAll'),
+    create: (data: any) => ipcRenderer.invoke('db:units:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:units:update', { id, data }),
+    delete: (id: string) => ipcRenderer.invoke('db:units:delete', id)
+  },
   // Suppliers
   suppliers: {
     getAll: () => ipcRenderer.invoke('db:suppliers:getAll'),
     create: (data: any) => ipcRenderer.invoke('db:suppliers:create', data),
     update: (id: string, data: any) => ipcRenderer.invoke('db:suppliers:update', { id, data }),
     delete: (id: string) => ipcRenderer.invoke('db:suppliers:delete', id)
+  },
+  // Bank Accounts
+  bankAccounts: {
+    getAll: () => ipcRenderer.invoke('db:bankAccounts:getAll'),
+    create: (data: any) => ipcRenderer.invoke('db:bankAccounts:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:bankAccounts:update', { id, data }),
+    delete: (id: string) => ipcRenderer.invoke('db:bankAccounts:delete', id),
+    updateBalance: (id: string, amount: number, type: 'debit' | 'credit') =>
+      ipcRenderer.invoke('db:bankAccounts:updateBalance', { id, amount, type })
   },
   // Products
   products: {
@@ -65,6 +81,14 @@ const api = {
       ipcRenderer.invoke('db:sales:getByBranch', { branchId, startDate, endDate }),
     getById: (id: string) => ipcRenderer.invoke('db:sales:getById', id)
   },
+  // Sales Returns
+  salesReturns: {
+    create: (salesReturn: any, items: any[]) =>
+      ipcRenderer.invoke('db:salesReturns:create', { salesReturn, items }),
+    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:salesReturns:getByBranch', { branchId, startDate, endDate }),
+    getById: (id: string) => ipcRenderer.invoke('db:salesReturns:getById', id)
+  },
   // Purchases
   purchases: {
     create: (purchase: any, items: any[]) =>
@@ -72,6 +96,14 @@ const api = {
     getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
       ipcRenderer.invoke('db:purchases:getByBranch', { branchId, startDate, endDate }),
     getById: (id: string) => ipcRenderer.invoke('db:purchases:getById', id)
+  },
+  // Purchase Returns
+  purchaseReturns: {
+    create: (purchaseReturn: any, items: any[]) =>
+      ipcRenderer.invoke('db:purchaseReturns:create', { purchaseReturn, items }),
+    getByBranch: (branchId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('db:purchaseReturns:getByBranch', { branchId, startDate, endDate }),
+    getById: (id: string) => ipcRenderer.invoke('db:purchaseReturns:getById', id)
   },
   // Expenses
   expenses: {
