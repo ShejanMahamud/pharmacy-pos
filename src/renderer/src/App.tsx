@@ -20,7 +20,6 @@ import Products from './pages/Products'
 import Purchases from './pages/Purchases'
 import Reports from './pages/Reports'
 import Returns from './pages/Returns'
-import RoleManagement from './pages/RoleManagement'
 import Sales from './pages/Sales'
 import Settings from './pages/Settings'
 import SupplierLedger from './pages/SupplierLedger'
@@ -157,14 +156,6 @@ function App(): React.JSX.Element {
             element={
               <ProtectedRoute permission="view_reports">
                 <Reports />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="roles"
-            element={
-              <ProtectedRoute permission="manage_roles">
-                <RoleManagement />
               </ProtectedRoute>
             }
           />
