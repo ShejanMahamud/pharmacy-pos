@@ -12,6 +12,7 @@ export const users = sqliteTable('users', {
   role: text('role').notNull(), // 'super_admin', 'admin', 'manager', 'cashier', 'pharmacist'
   createdBy: text('created_by').references(() => users.id), // Track who created this user
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  mustChangePassword: integer('must_change_password', { mode: 'boolean' }).default(false), // Force password change on next login
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
 })
@@ -414,14 +415,35 @@ export const supplierLedgerEntries = sqliteTable('supplier_ledger_entries', {
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
 })
 
+// Damaged/Expired Items table
+export const damagedItems = sqliteTable('damaged_items', {
+  id: text('id').primaryKey(),
+  productId: text('product_id')
+    .notNull()
+    .references(() => products.id),
+  productName: text('product_name').notNull(),
+  quantity: integer('quantity').notNull(),
+  reason: text('reason').notNull(), // 'expired', 'damaged', 'defective'
+  batchNumber: text('batch_number'),
+  expiryDate: text('expiry_date'),
+  notes: text('notes'),
+  reportedBy: text('reported_by')
+    .notNull()
+    .references(() => users.id),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
 // Audit Logs table
 export const auditLogs = sqliteTable('audit_logs', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id),
+  username: text('username'),
   action: text('action').notNull(), // 'create', 'update', 'delete', 'login', 'logout'
   entityType: text('entity_type').notNull(), // 'sale', 'product', 'user', etc.
   entityId: text('entity_id'),
+  entityName: text('entity_name'),
   changes: text('changes'), // JSON string of changes
   ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
 })

@@ -1,13 +1,22 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import ChangePasswordModal from '../components/ChangePasswordModal'
 import { useAuthStore } from '../store/authStore'
+
+interface User {
+  id: string
+  username: string
+  mustChangePassword?: boolean
+}
 
 export default function Login(): React.JSX.Element {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [loggedInUser, setLoggedInUser] = useState<User | null>(null)
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
 
@@ -20,10 +29,37 @@ export default function Login(): React.JSX.Element {
 
     setLoading(true)
     try {
-      const success = await login(username, password)
-      if (success) {
-        toast.success('Login successful!')
-        navigate('/')
+      const authenticatedUser = (await window.api.users.authenticate(
+        username,
+        password
+      )) as User | null
+
+      if (authenticatedUser) {
+        // Log successful login attempt
+        await window.api.auditLogs.create({
+          userId: authenticatedUser.id,
+          username: authenticatedUser.username,
+          action: 'login',
+          entityType: 'auth',
+          entityName: (authenticatedUser as any).fullName || authenticatedUser.username
+        })
+
+        // Check if user must change password
+        if (authenticatedUser.mustChangePassword) {
+          setLoggedInUser(authenticatedUser)
+          setShowChangePassword(true)
+          toast('You must change your password before continuing', {
+            icon: 'ℹ️',
+            duration: 5000
+          })
+        } else {
+          // Normal login flow
+          const success = await login(username, password)
+          if (success) {
+            toast.success('Login successful!')
+            navigate('/')
+          }
+        }
       } else {
         toast.error('Invalid username or password')
       }
@@ -31,6 +67,16 @@ export default function Login(): React.JSX.Element {
       toast.error('Login failed. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePasswordChanged = async () => {
+    setShowChangePassword(false)
+    // Complete login after password change
+    const success = await login(username, password)
+    if (success) {
+      toast.success('Password changed! Logging in...')
+      navigate('/')
     }
   }
 
@@ -208,6 +254,16 @@ export default function Login(): React.JSX.Element {
           <p className="mt-1">Professional Pharmacy Management Software</p>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && loggedInUser && (
+        <ChangePasswordModal
+          userId={loggedInUser.id}
+          username={loggedInUser.username}
+          onSuccess={handlePasswordChanged}
+          isFirstLogin={true}
+        />
+      )}
     </div>
   )
 }

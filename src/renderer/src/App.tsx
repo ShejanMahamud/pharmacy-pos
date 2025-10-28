@@ -8,6 +8,7 @@ import { useSettingsStore } from './store/settingsStore'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import SessionChecker from './components/SessionChecker'
+import AuditLogs from './pages/AuditLogs'
 import BankAccounts from './pages/BankAccounts'
 import CategoryUnit from './pages/CategoryUnit'
 import Customers from './pages/Customers'
@@ -18,6 +19,7 @@ import POS from './pages/POS'
 import Products from './pages/Products'
 import Purchases from './pages/Purchases'
 import Reports from './pages/Reports'
+import Returns from './pages/Returns'
 import RoleManagement from './pages/RoleManagement'
 import Sales from './pages/Sales'
 import Settings from './pages/Settings'
@@ -127,6 +129,14 @@ function App(): React.JSX.Element {
             }
           />
           <Route
+            path="returns"
+            element={
+              <ProtectedRoute permission="view_purchases">
+                <Returns />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="customers"
             element={
               <ProtectedRoute permission="view_customers">
@@ -163,6 +173,14 @@ function App(): React.JSX.Element {
             element={
               <ProtectedRoute permission="view_users">
                 <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="audit-logs"
+            element={
+              <ProtectedRoute permission="view_users">
+                <AuditLogs />
               </ProtectedRoute>
             }
           />

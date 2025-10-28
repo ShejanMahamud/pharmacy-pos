@@ -107,6 +107,21 @@ export default function Layout(): React.JSX.Element {
       )
     },
     {
+      name: 'Returns',
+      path: '/returns',
+      permission: 'view_purchases' as Permission,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"
+          />
+        </svg>
+      )
+    },
+    {
       name: 'Suppliers',
       path: '/suppliers',
       permission: 'view_products' as Permission,
@@ -137,7 +152,7 @@ export default function Layout(): React.JSX.Element {
       )
     },
     {
-      name: 'Bank Accounts',
+      name: 'Accounts',
       path: '/bank-accounts',
       permission: 'view_reports' as Permission,
       icon: (
@@ -197,6 +212,21 @@ export default function Layout(): React.JSX.Element {
       )
     },
     {
+      name: 'Audit Logs',
+      path: '/audit-logs',
+      permission: 'view_users' as Permission,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      )
+    },
+    {
       name: 'Settings',
       path: '/settings',
       permission: 'view_settings' as Permission,
@@ -225,55 +255,71 @@ export default function Layout(): React.JSX.Element {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-gradient-to-b from-blue-900 to-blue-800 shadow-xl flex flex-col">
+      <aside className="w-64 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 shadow-2xl flex flex-col">
         {/* Logo Section */}
-        <div className="p-6 border-b border-blue-700">
-          <div className="flex items-center space-x-3">
-            <div className="h-12 w-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl font-bold text-blue-900">
+        <div className="p-5 border-b border-blue-800/50">
+          <div className="flex items-center space-x-3 px-1">
+            <div className="h-11 w-11 bg-gradient-to-br from-white to-blue-50 rounded-xl flex items-center justify-center shadow-lg shrink-0 ring-2 ring-blue-700/30">
+              <span className="text-xl font-extrabold bg-gradient-to-br from-blue-900 to-blue-700 bg-clip-text text-transparent">
                 {(storeName || 'POS').substring(0, 2).toUpperCase()}
               </span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">{storeName || 'Pharmacy POS'}</h1>
+              <h1 className="text-lg font-bold text-white tracking-tight leading-tight">
+                {storeName || 'Pharmacy POS'}
+              </h1>
+              <p className="text-xs text-blue-300/80 font-medium">Management System</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto scrollbar-hide">
           {navigation.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`group flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 ${
                 isActive(item.path)
-                  ? 'bg-white text-blue-900 shadow-md'
-                  : 'text-blue-100 hover:bg-blue-700 hover:text-white'
+                  ? 'bg-white text-blue-900 shadow-lg shadow-blue-900/20 scale-[1.02]'
+                  : 'text-blue-100 hover:bg-blue-800/50 hover:text-white hover:translate-x-0.5 hover:shadow-md'
               }`}
             >
-              <span className="mr-3">{item.icon}</span>
-              <span className="font-medium">{item.name}</span>
+              <span
+                className={`mr-3 transition-transform duration-200 ${
+                  isActive(item.path)
+                    ? 'scale-110 text-blue-600'
+                    : 'group-hover:scale-110 text-blue-300'
+                }`}
+              >
+                {item.icon}
+              </span>
+              <span className="font-semibold text-sm tracking-wide">{item.name}</span>
+              {isActive(item.path) && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+              )}
             </Link>
           ))}
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-blue-700">
-          <div className="flex items-center mb-4">
-            <div className="h-10 w-10 bg-blue-700 rounded-full flex items-center justify-center text-white font-semibold">
+        <div className="p-4 border-t border-blue-800/50 bg-blue-950/30">
+          <div className="flex items-center mb-3 px-2 py-2 rounded-xl bg-blue-900/30 backdrop-blur-sm">
+            <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold shadow-md ring-2 ring-blue-400/30 shrink-0">
               {user?.fullName?.charAt(0).toUpperCase()}
             </div>
-            <div className="ml-3 flex-1">
-              <p className="font-medium text-white text-sm">{user?.fullName}</p>
-              <p className="text-xs text-blue-200 capitalize">{user?.role}</p>
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="font-semibold text-white text-sm truncate">{user?.fullName}</p>
+              <p className="text-xs text-blue-300 capitalize font-medium">
+                {user?.role?.replace('_', ' ')}
+              </p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="w-full bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center font-medium"
+            className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center font-semibold text-sm shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

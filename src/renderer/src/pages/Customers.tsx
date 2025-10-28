@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import Pagination from '../components/Pagination'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface Customer {
@@ -23,7 +24,7 @@ export default function Customers(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
-  const itemsPerPage = 10
+  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   const currency = useSettingsStore((state) => state.currency)
 
@@ -463,43 +464,18 @@ export default function Customers(): React.JSX.Element {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
-            <div className="text-sm text-gray-700">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-              {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} of{' '}
-              {filteredCustomers.length} customers
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 border rounded-md text-sm font-medium ${
-                    currentPage === i + 1
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+        {filteredCustomers.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredCustomers.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={(page) => setCurrentPage(page)}
+            onItemsPerPageChange={(items) => {
+              setItemsPerPage(items)
+              setCurrentPage(1)
+            }}
+          />
         )}
       </div>
 

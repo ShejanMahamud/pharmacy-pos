@@ -10,6 +10,7 @@ interface User {
   role: 'super_admin' | 'admin' | 'manager' | 'cashier' | 'pharmacist'
   createdBy?: string
   isActive?: boolean
+  mustChangePassword?: boolean
 }
 
 interface API {
@@ -20,6 +21,8 @@ interface API {
     create: (data: Partial<User>) => Promise<User>
     update: (id: string, data: Partial<User>) => Promise<User>
     delete: (id: string) => Promise<void>
+    changePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<User>
+    resetPassword: (userId: string, newPassword: string, adminId: string) => Promise<User>
   }
   categories: {
     getAll: () => Promise<any[]>
@@ -52,12 +55,19 @@ interface API {
     create: (data: any) => Promise<any>
     update: (id: string, data: any) => Promise<any>
     delete: (id: string) => Promise<void>
-    updateBalance: (id: string, amount: number, type: 'debit' | 'credit') => Promise<any>
+    updateBalance: (
+      id: string,
+      amount: number,
+      type: 'debit' | 'credit',
+      userId: string | null,
+      username: string | null
+    ) => Promise<any>
   }
   products: {
     getAll: (search?: string) => Promise<any[]>
     getById: (id: string) => Promise<any>
     getByBarcode: (barcode: string) => Promise<any>
+    search: (search: string) => Promise<any[]>
     create: (data: any) => Promise<any>
     update: (id: string, data: any) => Promise<any>
     delete: (id: string) => Promise<void>
@@ -93,6 +103,10 @@ interface API {
     getAll: (startDate?: string, endDate?: string) => Promise<any[]>
     getById: (id: string) => Promise<any>
   }
+  damagedItems: {
+    getAll: () => Promise<any[]>
+    create: (data: any) => Promise<any>
+  }
   expenses: {
     create: (data: any) => Promise<any>
     getAll: (startDate?: string, endDate?: string) => Promise<any[]>
@@ -107,7 +121,29 @@ interface API {
     topProducts: (startDate: string, endDate: string, limit?: number) => Promise<any[]>
   }
   auditLogs: {
-    create: (data: any) => Promise<void>
+    getAll: (filters?: {
+      startDate?: string
+      endDate?: string
+      action?: string
+      entityType?: string
+      userId?: string
+    }) => Promise<any[]>
+    create: (data: {
+      userId?: string
+      username?: string
+      action: string
+      entityType: string
+      entityId?: string
+      entityName?: string
+      changes?: object
+      ipAddress?: string
+      userAgent?: string
+    }) => Promise<{ success: boolean; id?: string; error?: string }>
+    getStats: () => Promise<{
+      totalLogs: number
+      recentActivity: any[]
+      userActivity: any[]
+    }>
   }
 }
 

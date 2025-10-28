@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import Pagination from '../components/Pagination'
 import { usePermissions } from '../hooks/usePermissions'
 import {
   canCreateUserWithRole,
@@ -29,6 +30,13 @@ export default function Users(): React.JSX.Element {
   const [selectedRole, setSelectedRole] = useState<Role | 'all'>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string>('')
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -124,6 +132,80 @@ export default function Users(): React.JSX.Element {
     }
   }
 
+  const handleResetPassword = (user: User): void => {
+    if (!currentUser) {
+      toast.error('No current user found')
+      return
+    }
+
+    // Check role permissions
+    const canReset =
+      (currentUser.role === 'super_admin' && ['super_admin', 'admin'].includes(user.role)) ||
+      (currentUser.role === 'admin' && ['manager', 'pharmacist', 'cashier'].includes(user.role))
+
+    if (!canReset) {
+      toast.error(`You cannot reset password for ${roleMetadata[user.role].name}`)
+      return
+    }
+
+    setResetPasswordUser(user)
+    setResetPasswordUserId(user.id)
+    setShowResetPasswordModal(true)
+  }
+
+  const handleSubmitResetPassword = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault()
+
+    if (!newPassword || !confirmNewPassword) {
+      toast.error('Please fill in all fields')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (!currentUser) {
+      toast.error('No current user found')
+      return
+    }
+
+    try {
+      await window.api.users.resetPassword(resetPasswordUserId, newPassword, currentUser.id)
+      toast.success('Password reset successfully. User must change password on next login.')
+      setShowResetPasswordModal(false)
+      setNewPassword('')
+      setConfirmNewPassword('')
+      setResetPasswordUserId('')
+      setResetPasswordUser(null)
+    } catch (error: any) {
+      console.error('Failed to reset password:', error)
+      toast.error(error.message || 'Failed to reset password')
+    }
+  }
+
+  const canResetPassword = (user: User): boolean => {
+    if (!currentUser) return false
+
+    // Super admin can reset super_admin and admin passwords
+    if (currentUser.role === 'super_admin') {
+      return ['super_admin', 'admin'].includes(user.role)
+    }
+
+    // Admin can reset manager, pharmacist, and cashier passwords
+    if (currentUser.role === 'admin') {
+      return ['manager', 'pharmacist', 'cashier'].includes(user.role)
+    }
+
+    return false
+  }
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,6 +214,13 @@ export default function Users(): React.JSX.Element {
     const matchesRole = selectedRole === 'all' || user.role === selectedRole
     return matchesSearch && matchesRole
   })
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
 
   const availableRoles = currentUser ? getAssignableRoles(currentUser.role) : []
 
@@ -302,7 +391,7 @@ export default function Users(): React.JSX.Element {
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((user) => {
+                  paginatedUsers.map((user) => {
                     const userRoleMeta = roleMetadata[user.role]
                     return (
                       <tr
@@ -377,6 +466,21 @@ export default function Users(): React.JSX.Element {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {filteredUsers.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredUsers.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={(page) => setCurrentPage(page)}
+              onItemsPerPageChange={(items) => {
+                setItemsPerPage(items)
+                setCurrentPage(1)
+              }}
+            />
+          )}
         </div>
 
         {/* User Details Panel - Takes 1 column */}
@@ -485,6 +589,31 @@ export default function Users(): React.JSX.Element {
                     </div>
                   </div>
                 </div>
+
+                {/* Actions */}
+                {canResetPassword(selectedUser) && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => handleResetPassword(selectedUser)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                        />
+                      </svg>
+                      Reset Password
+                    </button>
+                  </div>
+                )}
 
                 {/* Permissions */}
                 <div className="pt-4 border-t border-gray-200">
@@ -679,6 +808,113 @@ export default function Users(): React.JSX.Element {
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Create User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {showResetPasswordModal && resetPasswordUser && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Reset Password</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Reset password for{' '}
+                  <span className="font-semibold">{resetPasswordUser.fullName}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowResetPasswordModal(false)
+                  setNewPassword('')
+                  setConfirmNewPassword('')
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitResetPassword} className="space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <div className="text-sm text-yellow-800">
+                  <p className="font-semibold mb-1">Important</p>
+                  <p>The user will be required to change this password on their next login.</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  placeholder="Enter new password"
+                  minLength={6}
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  placeholder="Confirm new password"
+                  minLength={6}
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResetPasswordModal(false)
+                    setNewPassword('')
+                    setConfirmNewPassword('')
+                  }}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold rounded-lg transition-all shadow-lg"
+                >
+                  Reset Password
                 </button>
               </div>
             </form>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
 import { useCartStore } from '../store/cartStore'
@@ -55,7 +55,10 @@ export default function POS(): React.JSX.Element {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(true)
+  const [barcodeBuffer, setBarcodeBuffer] = useState('')
+  const [isBarcodeScanning, setIsBarcodeScanning] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const barcodeTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const cart = useCartStore()
   const user = useAuthStore((state) => state.user)
@@ -138,43 +141,91 @@ export default function POS(): React.JSX.Element {
     searchInputRef.current?.focus()
   }, [])
 
-  const addToCart = (product: Product): void => {
-    // Check inventory
-    const inventoryItem = inventory.find((inv) => inv.productId === product.id)
-    if (inventoryItem && inventoryItem.quantity <= 0) {
-      toast.error('Product out of stock')
-      return
-    }
-
-    cart.addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.sellingPrice,
-      quantity: 1,
-      discount: product.discountPercent || 0,
-      taxRate: product.taxRate || 0
-    })
-    toast.success(`${product.name} added to cart`)
-
-    // Refocus search input for barcode scanner
-    searchInputRef.current?.focus()
-  }
-
-  const handleBarcodeSearch = async (barcode: string): Promise<void> => {
-    if (!barcode.trim()) return
-
-    try {
-      const product = await window.api.products.getByBarcode(barcode)
-      if (product) {
-        addToCart(product)
-        setSearchTerm('')
-      } else {
-        toast.error('Product not found')
+  const addToCart = useCallback(
+    (product: Product): void => {
+      // Check inventory
+      const inventoryItem = inventory.find((inv) => inv.productId === product.id)
+      if (inventoryItem && inventoryItem.quantity <= 0) {
+        toast.error('Product out of stock')
+        return
       }
-    } catch (_error) {
-      console.error('Barcode search error')
+
+      cart.addItem({
+        productId: product.id,
+        name: product.name,
+        price: product.sellingPrice,
+        quantity: 1,
+        discount: product.discountPercent || 0,
+        taxRate: product.taxRate || 0
+      })
+      toast.success(`${product.name} added to cart`)
+
+      // Refocus search input for barcode scanner
+      searchInputRef.current?.focus()
+    },
+    [cart, inventory]
+  )
+
+  const handleBarcodeSearch = useCallback(
+    async (barcode: string): Promise<void> => {
+      if (!barcode.trim()) return
+
+      try {
+        const product = await window.api.products.getByBarcode(barcode)
+        if (product) {
+          addToCart(product)
+          setSearchTerm('')
+        } else {
+          toast.error('Product not found')
+        }
+      } catch (_error) {
+        console.error('Barcode search error')
+      }
+    },
+    [addToCart, setSearchTerm]
+  )
+
+  // Barcode scanner keyboard event listener
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent): void => {
+      // Ignore if typing in input fields (except search input)
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return
+      }
+
+      // If Enter pressed and buffer has content, search
+      if (e.key === 'Enter' && barcodeBuffer) {
+        void handleBarcodeSearch(barcodeBuffer)
+        setBarcodeBuffer('')
+        setIsBarcodeScanning(false)
+        return
+      }
+
+      // Accumulate printable characters (letters, numbers, symbols)
+      if (e.key.length === 1) {
+        setBarcodeBuffer((prev) => prev + e.key)
+        setIsBarcodeScanning(true)
+
+        // Clear buffer if no input for 100ms (indicates manual typing, not scanner)
+        if (barcodeTimerRef.current) {
+          clearTimeout(barcodeTimerRef.current)
+        }
+        barcodeTimerRef.current = setTimeout(() => {
+          setBarcodeBuffer('')
+          setIsBarcodeScanning(false)
+        }, 100)
+      }
     }
-  }
+
+    window.addEventListener('keypress', handleKeyPress)
+    return () => {
+      window.removeEventListener('keypress', handleKeyPress)
+      if (barcodeTimerRef.current) {
+        clearTimeout(barcodeTimerRef.current)
+      }
+    }
+  }, [barcodeBuffer, handleBarcodeSearch])
 
   const searchCustomers = async (): Promise<void> => {
     try {
@@ -304,6 +355,20 @@ export default function POS(): React.JSX.Element {
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
+                {/* Barcode Scanning Indicator */}
+                {isBarcodeScanning && (
+                  <div className="absolute right-3 top-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium animate-pulse">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                      />
+                    </svg>
+                    <span>Scanning...</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => setShowCustomerModal(true)}

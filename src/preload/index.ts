@@ -11,7 +11,11 @@ const api = {
       ipcRenderer.invoke('db:users:authenticate', { username, password }),
     create: (data: any) => ipcRenderer.invoke('db:users:create', data),
     update: (id: string, data: any) => ipcRenderer.invoke('db:users:update', { id, data }),
-    delete: (id: string) => ipcRenderer.invoke('db:users:delete', id)
+    delete: (id: string) => ipcRenderer.invoke('db:users:delete', id),
+    changePassword: (userId: string, currentPassword: string, newPassword: string) =>
+      ipcRenderer.invoke('db:users:changePassword', { userId, currentPassword, newPassword }),
+    resetPassword: (userId: string, newPassword: string, adminId: string) =>
+      ipcRenderer.invoke('db:users:resetPassword', { userId, newPassword, adminId })
   },
   // Categories
   categories: {
@@ -52,14 +56,20 @@ const api = {
     create: (data: any) => ipcRenderer.invoke('db:bankAccounts:create', data),
     update: (id: string, data: any) => ipcRenderer.invoke('db:bankAccounts:update', { id, data }),
     delete: (id: string) => ipcRenderer.invoke('db:bankAccounts:delete', id),
-    updateBalance: (id: string, amount: number, type: 'debit' | 'credit') =>
-      ipcRenderer.invoke('db:bankAccounts:updateBalance', { id, amount, type })
+    updateBalance: (
+      id: string,
+      amount: number,
+      type: 'debit' | 'credit',
+      userId: string | null,
+      username: string | null
+    ) => ipcRenderer.invoke('db:bankAccounts:updateBalance', { id, amount, type, userId, username })
   },
   // Products
   products: {
     getAll: (search?: string) => ipcRenderer.invoke('db:products:getAll', search),
     getById: (id: string) => ipcRenderer.invoke('db:products:getById', id),
     getByBarcode: (barcode: string) => ipcRenderer.invoke('db:products:getByBarcode', barcode),
+    search: (search: string) => ipcRenderer.invoke('db:products:search', search),
     create: (data: any) => ipcRenderer.invoke('db:products:create', data),
     update: (id: string, data: any) => ipcRenderer.invoke('db:products:update', { id, data }),
     delete: (id: string) => ipcRenderer.invoke('db:products:delete', id)
@@ -109,6 +119,11 @@ const api = {
       ipcRenderer.invoke('db:purchaseReturns:getAll', { startDate, endDate }),
     getById: (id: string) => ipcRenderer.invoke('db:purchaseReturns:getById', id)
   },
+  // Damaged Items
+  damagedItems: {
+    getAll: () => ipcRenderer.invoke('db:damagedItems:getAll'),
+    create: (data: any) => ipcRenderer.invoke('db:damagedItems:create', data)
+  },
   // Expenses
   expenses: {
     create: (data: any) => ipcRenderer.invoke('db:expenses:create', data),
@@ -130,7 +145,9 @@ const api = {
   },
   // Audit Logs
   auditLogs: {
-    create: (data: any) => ipcRenderer.invoke('db:auditLogs:create', data)
+    getAll: (filters?: any) => ipcRenderer.invoke('db:auditLogs:getAll', filters),
+    create: (data: any) => ipcRenderer.invoke('db:auditLogs:create', data),
+    getStats: () => ipcRenderer.invoke('db:auditLogs:getStats')
   }
 }
 

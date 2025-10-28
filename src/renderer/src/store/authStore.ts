@@ -43,6 +43,16 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       logout: () => {
+        const currentUser = useAuthStore.getState().user
+        if (currentUser) {
+          window.api.auditLogs.create({
+            userId: currentUser.id,
+            username: currentUser.username,
+            action: 'logout',
+            entityType: 'auth',
+            entityName: currentUser.fullName
+          })
+        }
         set({ user: null, isAuthenticated: false })
       },
       setUser: (user: User) => {

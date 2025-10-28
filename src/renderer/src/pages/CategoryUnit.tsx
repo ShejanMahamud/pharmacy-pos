@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
+import Pagination from '../components/Pagination'
 
 interface Category {
   id: string
@@ -44,7 +45,7 @@ export default function CategoryUnit(): React.JSX.Element {
 
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
+  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   useEffect(() => {
     loadData()
@@ -377,43 +378,18 @@ export default function CategoryUnit(): React.JSX.Element {
             </div>
 
             {/* Pagination */}
-            {totalCategoryPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-700">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                  {Math.min(currentPage * itemsPerPage, filteredCategories.length)} of{' '}
-                  {filteredCategories.length} categories
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    Previous
-                  </button>
-                  {Array.from({ length: totalCategoryPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded-md ${
-                        currentPage === page
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalCategoryPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+            {filteredCategories.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalCategoryPages}
+                totalItems={filteredCategories.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentPage(page)}
+                onItemsPerPageChange={(items) => {
+                  setItemsPerPage(items)
+                  setCurrentPage(1)
+                }}
+              />
             )}
           </div>
         )}
@@ -541,43 +517,18 @@ export default function CategoryUnit(): React.JSX.Element {
             </div>
 
             {/* Pagination */}
-            {totalUnitPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-700">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
-                  {Math.min(currentPage * itemsPerPage, filteredUnits.length)} of{' '}
-                  {filteredUnits.length} units
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    Previous
-                  </button>
-                  {Array.from({ length: totalUnitPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded-md ${
-                        currentPage === page
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalUnitPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+            {filteredUnits.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalUnitPages}
+                totalItems={filteredUnits.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={(page) => setCurrentPage(page)}
+                onItemsPerPageChange={(items) => {
+                  setItemsPerPage(items)
+                  setCurrentPage(1)
+                }}
+              />
             )}
           </div>
         )}

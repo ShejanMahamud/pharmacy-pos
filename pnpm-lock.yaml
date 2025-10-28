@@ -17,6 +17,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.16
         version: 4.1.16
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
       better-sqlite3:
         specifier: ^12.4.1
         version: 12.4.1
@@ -60,6 +63,9 @@ importers:
       '@electron-toolkit/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0(@types/node@22.18.12)
+      '@types/bcrypt':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@types/better-sqlite3':
         specifier: ^7.6.13
         version: 7.6.13
@@ -956,6 +962,9 @@ packages:
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
 
+  '@types/bcrypt@6.0.0':
+    resolution: {integrity: sha512-/oJGukuH3D2+D+3H4JWLaAsJ/ji86dhRidzZ/Od7H/i8g+aCmvkeCc6Ni/f9uxGLSQVCRZkX2/lqEFG2BvWtlQ==}
+
   '@types/better-sqlite3@7.6.13':
     resolution: {integrity: sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA==}
 
@@ -1282,6 +1291,10 @@ packages:
   baseline-browser-mapping@2.8.20:
     resolution: {integrity: sha512-JMWsdF+O8Orq3EMukbUN1QfbLK9mX2CkUmQBcW2T0s8OmdAUL5LLM/6wFwSrqXzlXB13yhyK9gTKS1rIizOduQ==}
     hasBin: true
+
+  bcrypt@6.0.0:
+    resolution: {integrity: sha512-cU8v/EGSrnH+HnxV2z0J7/blxH8gq7Xh2JFT6Aroax7UohdmiJJlxApMxtKfuI7z68NvvVcmR78k2LbT6efhRg==}
+    engines: {node: '>= 18'}
 
   better-sqlite3@12.4.1:
     resolution: {integrity: sha512-3yVdyZhklTiNrtg+4WqHpJpFDd+WHTg2oM7UcR80GqL05AOV0xEJzc6qNvFYoEtE+hRp1n9MpN6/+4yhlGkDXQ==}
@@ -2790,6 +2803,10 @@ packages:
 
   node-addon-api@3.2.1:
     resolution: {integrity: sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==}
+
+  node-addon-api@8.5.0:
+    resolution: {integrity: sha512-/bRZty2mXUIFY/xU5HLvveNHlswNJej+RnxBjOMkidWfwZzgTbPG1E3K5TOxRLOR+5hX7bSofy8yf1hZevMS8A==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-api-version@0.1.4:
     resolution: {integrity: sha512-KGXihXdUChwJAOHO53bv9/vXcLmdUsZ6jIptbvYvkpKfth+r7jw44JkVxQFA3kX5nQjzjmGu1uAu/xNNLNlI5g==}
@@ -4381,6 +4398,10 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.5
 
+  '@types/bcrypt@6.0.0':
+    dependencies:
+      '@types/node': 22.18.12
+
   '@types/better-sqlite3@7.6.13':
     dependencies:
       '@types/node': 22.18.12
@@ -4815,6 +4836,11 @@ snapshots:
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.8.20: {}
+
+  bcrypt@6.0.0:
+    dependencies:
+      node-addon-api: 8.5.0
+      node-gyp-build: 4.8.4
 
   better-sqlite3@12.4.1:
     dependencies:
@@ -6507,6 +6533,8 @@ snapshots:
     optional: true
 
   node-addon-api@3.2.1: {}
+
+  node-addon-api@8.5.0: {}
 
   node-api-version@0.1.4:
     dependencies:

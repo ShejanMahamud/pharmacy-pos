@@ -1,13 +1,19 @@
+import bcrypt from 'bcrypt'
 import Database from 'better-sqlite3'
+import crypto from 'crypto'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { app } from 'electron'
+import { app, dialog } from 'electron'
+import fs from 'fs'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { addAccountToPurchases } from './migrations/add-account-to-purchases'
 import { addAccountToSales } from './migrations/add-account-to-sales'
+import { runAuditLogsMigration } from './migrations/add-audit-logs-table'
 import { addBankAccountsTable } from './migrations/add-bank-accounts-table'
 import { migrateAddCreatedBy } from './migrations/add-created-by'
+import { addDamagedItemsTable } from './migrations/add-damaged-items-table'
 import { addMissingOpeningBalances } from './migrations/add-missing-opening-balances'
+import { addMustChangePassword } from './migrations/add-must-change-password'
 import { migrateProductShelf } from './migrations/add-product-shelf'
 import { migrateProductUnitConversion } from './migrations/add-product-unit-conversion'
 import { addSupplierAccountingFields } from './migrations/add-supplier-accounting-fields'
@@ -15,6 +21,8 @@ import { migrateSupplierPaymentsLedger } from './migrations/add-supplier-payment
 import { addUnitsTable } from './migrations/add-units-table'
 import { migrateUnitsTable } from './migrations/update-units-table'
 import * as schema from './schema'
+
+const SALT_ROUNDS = 12 // Production-grade bcrypt rounds
 
 let db: ReturnType<typeof drizzle>
 let sqlite: Database.Database | null = null
@@ -50,12 +58,15 @@ function runMigrations(): void {
     addBankAccountsTable()
     addAccountToPurchases()
     addAccountToSales()
+    addMustChangePassword()
     if (sqlite) {
       migrateSupplierPaymentsLedger(sqlite)
       addMissingOpeningBalances(sqlite)
       migrateProductUnitConversion(sqlite)
       migrateUnitsTable(sqlite)
       migrateProductShelf(sqlite)
+      runAuditLogsMigration(sqlite)
+      addDamagedItemsTable(sqlite)
     }
     console.log('Database migrations completed successfully')
   } catch (error) {
@@ -330,97 +341,124 @@ function createTables(sqlite: Database.Database) {
 }
 
 async function initializeDefaultData() {
-  // Check if data already exists
+  const userDataPath = app.getPath('userData')
+  const setupCompletePath = path.join(userDataPath, '.setup-complete')
+
+  // Check if this is the first run
+  const isFirstRun = !fs.existsSync(setupCompletePath)
+
+  // Check if any users exist
   const existingUsers = db.select().from(schema.users).all()
 
   if (existingUsers.length === 0) {
-    // Create default users for each role
-    // Note: In production, use bcrypt or similar for password hashing
+    console.log('No users found. Creating initial super admin account...')
 
-    // Super Admin
+    // Generate secure random password
+    const randomPassword = generateSecurePassword()
     const superAdminId = uuidv4()
+    const timestamp = new Date().toISOString()
+
+    // Hash the password using bcrypt (production-ready)
+    console.log('Hashing password with bcrypt...')
+    const hashedPassword = await bcrypt.hash(randomPassword, SALT_ROUNDS)
+    console.log('Password hashed successfully')
+
+    // Create super admin account with mustChangePassword flag
     db.insert(schema.users)
       .values({
         id: superAdminId,
-        username: 'superadmin',
-        password: 'super123', // Should be hashed in production
-        fullName: 'Super Administrator',
-        email: 'superadmin@pharmacy.com',
-        role: 'super_admin',
-        isActive: true
-      })
-      .run()
-
-    // Admin
-    const adminId = uuidv4()
-    db.insert(schema.users)
-      .values({
-        id: adminId,
         username: 'admin',
-        password: 'admin123', // Should be hashed in production
-        fullName: 'Administrator',
-        email: 'admin@pharmacy.com',
-        role: 'admin',
-        createdBy: superAdminId,
-        isActive: true
+        password: hashedPassword, // Securely hashed password
+        fullName: 'System Administrator',
+        email: 'admin@pharmacy.local',
+        role: 'super_admin',
+        isActive: true,
+        mustChangePassword: true // Force password change on first login
       })
       .run()
 
-    // Manager
-    const managerId = uuidv4()
-    db.insert(schema.users)
-      .values({
-        id: managerId,
-        username: 'manager',
-        password: 'manager123', // Should be hashed in production
-        fullName: 'Store Manager',
-        email: 'manager@pharmacy.com',
-        role: 'manager',
-        createdBy: adminId,
-        isActive: true
-      })
-      .run()
+    console.log('Super admin account created successfully')
 
-    // Pharmacist
-    const pharmacistId = uuidv4()
-    db.insert(schema.users)
-      .values({
-        id: pharmacistId,
-        username: 'pharmacist',
-        password: 'pharma123', // Should be hashed in production
-        fullName: 'John Pharmacist',
-        email: 'pharmacist@pharmacy.com',
-        role: 'pharmacist',
-        createdBy: managerId,
-        isActive: true
-      })
-      .run()
+    // Save credentials to a file (one-time only)
+    if (isFirstRun) {
+      const credentialsPath = path.join(userDataPath, 'INITIAL-CREDENTIALS.txt')
+      const credentialsContent = `
+╔═══════════════════════════════════════════════════════════════╗
+║                   MEDIXPOS - INITIAL SETUP                    ║
+║                      SAVE THESE CREDENTIALS                   ║
+╚═══════════════════════════════════════════════════════════════╝
 
-    // Cashier
-    const cashierId = uuidv4()
-    db.insert(schema.users)
-      .values({
-        id: cashierId,
-        username: 'cashier',
-        password: 'cashier123', // Should be hashed in production
-        fullName: 'Jane Cashier',
-        email: 'cashier@pharmacy.com',
-        role: 'cashier',
-        createdBy: managerId,
-        isActive: true
-      })
-      .run()
+Installation Date: ${new Date().toLocaleString()}
+Installation ID: ${superAdminId}
 
-    // Create default categories
-    const categories = [
-      { name: 'Analgesics', description: 'Pain relievers' },
-      { name: 'Antibiotics', description: 'Antimicrobial medications' },
-      { name: 'Vitamins & Supplements', description: 'Nutritional supplements' },
-      { name: 'First Aid', description: 'First aid supplies' },
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔐 ADMINISTRATOR CREDENTIALS
+
+Username: admin
+Password: ${randomPassword}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  IMPORTANT SECURITY NOTICE:
+
+1. This password is randomly generated and unique to your installation
+2. Please change this password immediately after first login
+3. Store these credentials in a secure location
+4. Delete this file after saving the credentials elsewhere
+5. Never share these credentials with unauthorized personnel
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 NEXT STEPS:
+
+1. Login using the credentials above
+2. Go to Settings → Change Password
+3. Create additional user accounts as needed
+4. Configure your pharmacy settings
+5. Start using MedixPOS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For support, visit: https://medixpos.com/support
+Documentation: https://docs.medixpos.com
+
+This file will NOT be regenerated. Keep it safe!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      `.trim()
+
+      fs.writeFileSync(credentialsPath, credentialsContent, 'utf-8')
+      console.log(`✅ Initial credentials saved to: ${credentialsPath}`)
+
+      // Mark setup as complete
+      fs.writeFileSync(setupCompletePath, timestamp, 'utf-8')
+
+      // Show dialog to user
+      dialog.showMessageBoxSync({
+        type: 'info',
+        title: 'MedixPOS - First Time Setup',
+        message: 'Initial Setup Complete',
+        detail:
+          `Your administrator account has been created.\n\n` +
+          `Username: admin\n` +
+          `Password: ${randomPassword}\n\n` +
+          `⚠️ IMPORTANT: These credentials have been saved to:\n${credentialsPath}\n\n` +
+          `Please save these credentials securely and change the password after first login.\n\n` +
+          `This message will only be shown once!`,
+        buttons: ['I Have Saved The Credentials'],
+        defaultId: 0
+      })
+    }
+
+    // Create essential default categories (minimal set)
+    const essentialCategories = [
+      { name: 'Medicines', description: 'Pharmaceutical products' },
+      { name: 'Supplies', description: 'Medical supplies and equipment' },
       { name: 'Personal Care', description: 'Personal hygiene products' }
     ]
 
-    categories.forEach((cat) => {
+    essentialCategories.forEach((cat) => {
       db.insert(schema.categories)
         .values({
           id: uuidv4(),
@@ -431,21 +469,18 @@ async function initializeDefaultData() {
         .run()
     })
 
-    // Create default settings
+    // Create minimal default settings
     const defaultSettings = [
       { key: 'currency', value: 'USD', description: 'Default currency' },
       { key: 'tax_rate', value: '0', description: 'Default tax rate percentage' },
       { key: 'low_stock_alert', value: '10', description: 'Low stock alert threshold' },
-      {
-        key: 'receipt_header',
-        value: 'Pharmacy Management System',
-        description: 'Receipt header text'
-      },
+      { key: 'receipt_header', value: 'MedixPOS', description: 'Receipt header text' },
       {
         key: 'receipt_footer',
         value: 'Thank you for your business!',
         description: 'Receipt footer text'
-      }
+      },
+      { key: 'store_name', value: 'Pharmacy', description: 'Store name' }
     ]
 
     defaultSettings.forEach((setting) => {
@@ -458,7 +493,25 @@ async function initializeDefaultData() {
         })
         .run()
     })
+
+    console.log('✅ Default data initialization complete')
+  } else {
+    console.log('Users already exist. Skipping default data creation.')
   }
+}
+
+// Generate a secure random password
+function generateSecurePassword(): string {
+  const length = 16
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+  const randomBytes = crypto.randomBytes(length)
+  let password = ''
+
+  for (let i = 0; i < length; i++) {
+    password += charset[randomBytes[i] % charset.length]
+  }
+
+  return password
 }
 
 export function getDatabase() {

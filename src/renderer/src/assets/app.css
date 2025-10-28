@@ -1,5 +1,11 @@
 @import 'tailwindcss';
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}
 
+@utility scrollbar-hide {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}
 * {
   box-sizing: border-box;
 }
