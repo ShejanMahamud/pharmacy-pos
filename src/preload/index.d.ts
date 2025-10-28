@@ -145,6 +145,26 @@ interface API {
       userActivity: any[]
     }>
   }
+  attendance: {
+    getAll: (filters?: { userId?: string; startDate?: string; endDate?: string }) => Promise<any[]>
+    create: (data: any) => Promise<any>
+    update: (id: string, data: any) => Promise<any>
+    delete: (id: string) => Promise<void>
+  }
+  salaries: {
+    getAll: (userId?: string) => Promise<any[]>
+    create: (data: any) => Promise<any>
+    update: (id: string, data: any) => Promise<any>
+  }
+  salaryPayments: {
+    getAll: (userId?: string) => Promise<any[]>
+    create: (data: any) => Promise<any>
+  }
+  leaveRequests: {
+    getAll: (filters?: { userId?: string; status?: string }) => Promise<any[]>
+    create: (data: any) => Promise<any>
+    update: (id: string, data: any) => Promise<any>
+  }
 }
 
 declare global {

@@ -148,6 +148,30 @@ const api = {
     getAll: (filters?: any) => ipcRenderer.invoke('db:auditLogs:getAll', filters),
     create: (data: any) => ipcRenderer.invoke('db:auditLogs:create', data),
     getStats: () => ipcRenderer.invoke('db:auditLogs:getStats')
+  },
+  // Attendance
+  attendance: {
+    getAll: (filters?: any) => ipcRenderer.invoke('db:attendance:getAll', filters),
+    create: (data: any) => ipcRenderer.invoke('db:attendance:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:attendance:update', id, data),
+    delete: (id: string) => ipcRenderer.invoke('db:attendance:delete', id)
+  },
+  // Salaries
+  salaries: {
+    getAll: (userId?: string) => ipcRenderer.invoke('db:salaries:getAll', userId),
+    create: (data: any) => ipcRenderer.invoke('db:salaries:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:salaries:update', id, data)
+  },
+  // Salary Payments
+  salaryPayments: {
+    getAll: (userId?: string) => ipcRenderer.invoke('db:salaryPayments:getAll', userId),
+    create: (data: any) => ipcRenderer.invoke('db:salaryPayments:create', data)
+  },
+  // Leave Requests
+  leaveRequests: {
+    getAll: (filters?: any) => ipcRenderer.invoke('db:leaveRequests:getAll', filters),
+    create: (data: any) => ipcRenderer.invoke('db:leaveRequests:create', data),
+    update: (id: string, data: any) => ipcRenderer.invoke('db:leaveRequests:update', id, data)
   }
 }
 

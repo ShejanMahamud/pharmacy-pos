@@ -447,3 +447,89 @@ export const auditLogs = sqliteTable('audit_logs', {
   userAgent: text('user_agent'),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
 })
+
+// User Salary Information table
+export const userSalaries = sqliteTable('user_salaries', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  basicSalary: real('basic_salary').notNull().default(0), // Base salary
+  allowances: real('allowances').default(0), // Additional allowances
+  deductions: real('deductions').default(0), // Deductions (tax, insurance, etc.)
+  netSalary: real('net_salary').notNull().default(0), // basicSalary + allowances - deductions
+  paymentFrequency: text('payment_frequency').notNull().default('monthly'), // 'daily', 'weekly', 'monthly'
+  bankAccountNumber: text('bank_account_number'),
+  bankName: text('bank_name'),
+  notes: text('notes'),
+  effectiveFrom: text('effective_from').notNull(), // When this salary configuration became effective
+  createdBy: text('created_by').references(() => users.id),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
+// Salary Payments table
+export const salaryPayments = sqliteTable('salary_payments', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  salaryId: text('salary_id')
+    .notNull()
+    .references(() => userSalaries.id),
+  paymentDate: text('payment_date').notNull(),
+  payPeriodStart: text('pay_period_start').notNull(),
+  payPeriodEnd: text('pay_period_end').notNull(),
+  basicAmount: real('basic_amount').notNull(),
+  allowances: real('allowances').default(0),
+  deductions: real('deductions').default(0),
+  bonuses: real('bonuses').default(0),
+  totalAmount: real('total_amount').notNull(), // Net amount paid
+  paymentMethod: text('payment_method').notNull(), // 'cash', 'bank_transfer', 'cheque'
+  accountId: text('account_id').references(() => bankAccounts.id), // Which account money came from
+  transactionReference: text('transaction_reference'),
+  notes: text('notes'),
+  status: text('status').notNull().default('paid'), // 'pending', 'paid', 'cancelled'
+  paidBy: text('paid_by')
+    .notNull()
+    .references(() => users.id),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
+// User Attendance table
+export const attendance = sqliteTable('attendance', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  date: text('date').notNull(), // Date of attendance (YYYY-MM-DD)
+  checkIn: text('check_in'), // Check-in time
+  checkOut: text('check_out'), // Check-out time
+  status: text('status').notNull(), // 'present', 'absent', 'half_day', 'leave', 'holiday'
+  leaveType: text('leave_type'), // 'sick', 'casual', 'annual', null if not on leave
+  workHours: real('work_hours').default(0), // Total hours worked
+  overtime: real('overtime').default(0), // Overtime hours
+  notes: text('notes'),
+  markedBy: text('marked_by').references(() => users.id), // Who marked the attendance
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
+})
+
+// Leave Requests table
+export const leaveRequests = sqliteTable('leave_requests', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  leaveType: text('leave_type').notNull(), // 'sick', 'casual', 'annual', 'emergency'
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date').notNull(),
+  totalDays: integer('total_days').notNull(),
+  reason: text('reason').notNull(),
+  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  approvedBy: text('approved_by').references(() => users.id),
+  approvedAt: text('approved_at'),
+  rejectionReason: text('rejection_reason'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`)
+})

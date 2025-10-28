@@ -8,6 +8,7 @@ import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { addAccountToPurchases } from './migrations/add-account-to-purchases'
 import { addAccountToSales } from './migrations/add-account-to-sales'
+import { addAttendanceSalaryTables } from './migrations/add-attendance-salary-tables'
 import { runAuditLogsMigration } from './migrations/add-audit-logs-table'
 import { addBankAccountsTable } from './migrations/add-bank-accounts-table'
 import { migrateAddCreatedBy } from './migrations/add-created-by'
@@ -67,6 +68,7 @@ function runMigrations(): void {
       migrateProductShelf(sqlite)
       runAuditLogsMigration(sqlite)
       addDamagedItemsTable(sqlite)
+      addAttendanceSalaryTables(sqlite)
     }
     console.log('Database migrations completed successfully')
   } catch (error) {
