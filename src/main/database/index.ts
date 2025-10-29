@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import Database from 'better-sqlite3'
 import crypto from 'crypto'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
