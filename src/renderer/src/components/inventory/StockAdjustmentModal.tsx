@@ -1,3 +1,16 @@
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField
+} from '@mui/material'
 import { InventoryItem, Product, StockAdjustmentFormData } from '../../types/inventory'
 
 interface StockAdjustmentModalProps {
@@ -19,108 +32,74 @@ export default function StockAdjustmentModal({
   onFormDataChange,
   onSubmit
 }: StockAdjustmentModalProps) {
-  if (!isOpen) return null
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit(e)
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/50  z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        {/* Modal Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
-          <h2 className="text-xl font-bold text-gray-900">
-            {editingItem ? 'Adjust Stock' : 'Add Stock'}
-          </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <form onSubmit={onSubmit} className="p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
+    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{editingItem ? 'Adjust Stock' : 'Add Stock'}</DialogTitle>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <FormControl fullWidth required>
+              <InputLabel>Product</InputLabel>
+              <Select
                 value={formData.productId}
                 onChange={(e) => onFormDataChange({ ...formData, productId: e.target.value })}
                 disabled={!!editingItem}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                label="Product"
               >
-                <option value="">Select Product</option>
+                <MenuItem value="">
+                  <em>Select Product</em>
+                </MenuItem>
                 {products.map((product) => (
-                  <option key={product.id} value={product.id}>
+                  <MenuItem key={product.id} value={product.id}>
                     {product.name} ({product.sku})
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </FormControl>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={formData.quantity}
-                onChange={(e) =>
-                  onFormDataChange({ ...formData, quantity: parseInt(e.target.value) || 0 })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter quantity"
-              />
-            </div>
+            <TextField
+              required
+              fullWidth
+              label="Quantity"
+              type="number"
+              value={formData.quantity}
+              onChange={(e) =>
+                onFormDataChange({ ...formData, quantity: parseInt(e.target.value) || 0 })
+              }
+              inputProps={{ min: 0 }}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Batch Number</label>
-              <input
-                type="text"
-                value={formData.batchNumber}
-                onChange={(e) => onFormDataChange({ ...formData, batchNumber: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter batch number"
-              />
-            </div>
+            <TextField
+              fullWidth
+              label="Batch Number"
+              value={formData.batchNumber}
+              onChange={(e) => onFormDataChange({ ...formData, batchNumber: e.target.value })}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-              <input
-                type="date"
-                value={formData.expiryDate}
-                onChange={(e) => onFormDataChange({ ...formData, expiryDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Form Actions */}
-          <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              {editingItem ? 'Update Stock' : 'Add Stock'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            <TextField
+              fullWidth
+              label="Expiry Date"
+              type="date"
+              value={formData.expiryDate}
+              onChange={(e) => onFormDataChange({ ...formData, expiryDate: e.target.value })}
+              InputLabelProps={{
+                shrink: true
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="contained">
+            {editingItem ? 'Update Stock' : 'Add Stock'}
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
   )
 }

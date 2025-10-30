@@ -1,6 +1,8 @@
+import AddIcon from '@mui/icons-material/Add'
+import CategoryIcon from '@mui/icons-material/Category'
+import { Box, Button, Container, Paper, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Link } from 'react-router-dom'
 import ProductFilters from '../components/products/ProductFilters'
 import ProductFormModal from '../components/products/ProductFormModal'
 import ProductsTable from '../components/products/ProductsTable'
@@ -19,8 +21,6 @@ export default function Products(): React.JSX.Element {
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   // Get currency symbol
   const getCurrencySymbol = (): string => {
@@ -120,12 +120,6 @@ export default function Products(): React.JSX.Element {
       (categoryFilter === '' || product.categoryId === categoryFilter)
   )
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-
   const handleSubmit = async (formData: ProductFormData): Promise<void> => {
     if (!formData.name || !formData.sku || formData.sellingPrice <= 0) {
       toast.error('Please fill in all required fields')
@@ -191,32 +185,32 @@ export default function Products(): React.JSX.Element {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       {/* Page Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Products Management</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage your pharmacy products inventory</p>
-        </div>
-        <Link
-          to="/categories-units"
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-            />
-          </svg>
-          Manage Categories & Units
-        </Link>
-      </div>
+      <Box
+        sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+      >
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+            Products Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage your pharmacy products inventory
+          </Typography>
+        </Box>
+      </Box>
 
       {/* Action Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-        <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap'
+          }}
+        >
           <ProductFilters
             searchTerm={searchTerm}
             categoryFilter={categoryFilter}
@@ -224,40 +218,39 @@ export default function Products(): React.JSX.Element {
             onSearchChange={setSearchTerm}
             onCategoryFilterChange={setCategoryFilter}
           />
-          <button
-            onClick={() => {
-              setEditingProduct(null)
-              setShowModal(true)
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Add Product
-          </button>
-        </div>
-      </div>
+          <Box sx={{ display: 'flex', gap: 2, mt: { xs: 2, sm: 0 } }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditingProduct(null)
+                setShowModal(true)
+              }}
+            >
+              Add Product
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<CategoryIcon />}
+              component="a"
+              href="#/categories-units"
+            >
+              Manage Categories & Units
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
 
       {/* Products Table */}
       <ProductsTable
-        products={paginatedProducts}
+        products={filteredProducts}
         categories={categories}
         inventory={inventory}
         currencySymbol={getCurrencySymbol()}
         loading={loading}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={setItemsPerPage}
       />
 
       {/* Product Form Modal */}
@@ -271,6 +264,6 @@ export default function Products(): React.JSX.Element {
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
       />
-    </div>
+    </Container>
   )
 }

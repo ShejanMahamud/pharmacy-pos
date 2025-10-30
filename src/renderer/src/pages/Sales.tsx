@@ -1,3 +1,4 @@
+import { Box, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import SaleDetailsModal from '../components/sales/SaleDetailsModal'
@@ -14,13 +15,11 @@ export default function Sales(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [paymentFilter, setPaymentFilter] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [saleItems, setSaleItems] = useState<SaleItem[]>([])
   const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   // Return form state
   const [returnFormData, setReturnFormData] = useState<ReturnFormData>({
@@ -104,7 +103,6 @@ export default function Sales(): React.JSX.Element {
     }
 
     setFilteredSales(filtered)
-    setCurrentPage(1)
   }
 
   const viewSaleDetails = async (sale: Sale): Promise<void> => {
@@ -420,19 +418,21 @@ export default function Sales(): React.JSX.Element {
     setReturnItems([])
   }
 
-  const totalPages = Math.ceil(filteredSales.length / itemsPerPage)
-  const paginatedSales = filteredSales.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Sales History</h1>
-        <p className="text-sm text-gray-600 mt-1">View and manage all sales transactions</p>
-      </div>
+      <Box
+        sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+      >
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+            Sales History
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            View and manage all sales transactions
+          </Typography>
+        </Box>
+      </Box>
 
       {/* Stats Cards */}
       <SalesStats sales={filteredSales} currencySymbol={getCurrencySymbol()} />
@@ -450,15 +450,10 @@ export default function Sales(): React.JSX.Element {
 
       {/* Sales Table */}
       <SalesTable
-        sales={paginatedSales}
+        sales={filteredSales}
         currencySymbol={getCurrencySymbol()}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
         onViewDetails={viewSaleDetails}
         onPrint={handlePrint}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={setItemsPerPage}
       />
 
       {/* Sale Details Modal */}
@@ -485,6 +480,6 @@ export default function Sales(): React.JSX.Element {
         onReturnItemsChange={setReturnItems}
         onSaleSelect={handleSaleSelect}
       />
-    </div>
+    </Container>
   )
 }

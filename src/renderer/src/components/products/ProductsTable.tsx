@@ -1,5 +1,27 @@
+import { Inventory } from '@mui/icons-material'
+import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit'
+import WarningIcon from '@mui/icons-material/Warning'
+import {
+  Box,
+  Chip,
+  CircularProgress,
+  IconButton,
+  Paper,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Tooltip,
+  Typography
+} from '@mui/material'
+import React from 'react'
 import { Category, Product } from '../../types/product'
-import Pagination from '../Pagination'
 
 interface ProductsTableProps {
   products: Product[]
@@ -7,13 +29,8 @@ interface ProductsTableProps {
   inventory: Record<string, number>
   currencySymbol: string
   loading: boolean
-  currentPage: number
-  totalPages: number
-  itemsPerPage: number
   onEdit: (product: Product) => void
   onDelete: (id: string) => void
-  onPageChange: (page: number) => void
-  onItemsPerPageChange: (items: number) => void
 }
 
 export default function ProductsTable({
@@ -22,96 +39,116 @@ export default function ProductsTable({
   inventory,
   currencySymbol,
   loading,
-  currentPage,
-  totalPages,
-  itemsPerPage,
   onEdit,
-  onDelete,
-  onPageChange,
-  onItemsPerPageChange
+  onDelete
 }: ProductsTableProps): React.JSX.Element {
+  const [page, setPage] = React.useState(0)
+  const [rowsPerPage, setRowsPerPage] = React.useState(25)
+
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.grey[300],
+      color: theme.palette.text.secondary,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      fontSize: '0.75rem',
+      letterSpacing: '0.5px'
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14
+    }
+  }))
+
+  const handleChangePage = (_event: unknown, newPage: number): void => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const paginatedProducts = products.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
+      <Paper sx={{ p: 6, textAlign: 'center' }}>
+        <CircularProgress />
+      </Paper>
     )
   }
 
   if (products.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="text-center py-12">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by adding a new product.</p>
-        </div>
-      </div>
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            bgcolor: 'grey.200',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 2
+          }}
+        >
+          <Typography variant="h5" sx={{ color: 'text.secondary' }}>
+            <Inventory />
+          </Typography>
+        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          No products found
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Start by adding products to your inventory.
+        </Typography>
+      </Paper>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Product
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                SKU / Barcode
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Manufacturer
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Stock
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Shelf
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => {
+    <Box>
+      <TableContainer component={Paper} sx={{ maxHeight: 540 }}>
+        <Table stickyHeader aria-label="sticky table">
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>Product</StyledTableCell>
+              <StyledTableCell>SKU / Barcode</StyledTableCell>
+              <StyledTableCell>Category</StyledTableCell>
+              <StyledTableCell>Manufacturer</StyledTableCell>
+              <StyledTableCell>Price</StyledTableCell>
+              <StyledTableCell>Stock</StyledTableCell>
+              <StyledTableCell>Shelf</StyledTableCell>
+              <StyledTableCell>Status</StyledTableCell>
+              <StyledTableCell align="right">Actions</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedProducts.map((product) => {
               const category = categories.find((c) => c.id === product.categoryId)
               const stock = inventory[product.id] || 0
               const isLowStock = stock <= product.reorderLevel
 
               return (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <TableRow key={product.id} hover>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 2,
+                          bgcolor: 'primary.light',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'primary.main'
+                        }}
+                      >
                         <svg
-                          className="h-6 w-6 text-blue-600"
+                          width="24"
+                          height="24"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -123,137 +160,114 @@ export default function ProductsTable({
                             d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                           />
                         </svg>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" fontWeight="medium">
+                          {product.name}
+                        </Typography>
                         {product.genericName && (
-                          <div className="text-xs text-gray-500">{product.genericName}</div>
+                          <Typography variant="caption" color="text.secondary">
+                            {product.genericName}
+                          </Typography>
                         )}
                         {product.prescriptionRequired && (
-                          <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                            Rx Required
-                          </span>
+                          <Chip
+                            label="Rx Required"
+                            size="small"
+                            color="error"
+                            sx={{ mt: 0.5, height: 20 }}
+                          />
                         )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{product.sku}</div>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{product.sku}</Typography>
                     {product.barcode && (
-                      <div className="text-xs text-gray-500">{product.barcode}</div>
+                      <Typography variant="caption" color="text.secondary">
+                        {product.barcode}
+                      </Typography>
                     )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {category?.name || 'Uncategorized'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{product.manufacturer || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-semibold text-gray-900">
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={category?.name || 'Uncategorized'}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{product.manufacturer || '-'}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="bold">
                       {currencySymbol}
                       {product.sellingPrice.toFixed(2)}
-                    </div>
-                    <div className="text-xs text-gray-500">
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
                       Cost: {currencySymbol}
                       {product.costPrice.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <span
-                        className={`text-sm font-semibold ${isLowStock ? 'text-red-600' : 'text-green-600'}`}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        color={isLowStock ? 'error.main' : 'success.main'}
                       >
                         {stock} {product.unit}
-                      </span>
+                      </Typography>
                       {isLowStock && (
-                        <svg
-                          className="ml-1 h-4 w-4 text-red-500"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <Tooltip title="Low stock alert">
+                          <WarningIcon fontSize="small" color="error" />
+                        </Tooltip>
                       )}
-                    </div>
-                    <div className="text-xs text-gray-500">Reorder at: {product.reorderLevel}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                      {product.shelf}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {product.isActive ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Inactive
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
-                    <button
-                      onClick={() => onEdit(product)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => onDelete(product.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Reorder at: {product.reorderLevel}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={product.shelf} size="small" color="secondary" variant="outlined" />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={product.isActive ? 'Active' : 'Inactive'}
+                      size="small"
+                      color={product.isActive ? 'success' : 'default'}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit">
+                      <IconButton size="small" color="primary" onClick={() => onEdit(product)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton size="small" color="error" onClick={() => onDelete(product.id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
               )
             })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={products.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={onPageChange}
-        onItemsPerPageChange={onItemsPerPageChange}
-      />
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Paper>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          component="div"
+          count={products.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
+    </Box>
   )
 }

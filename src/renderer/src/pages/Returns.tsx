@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../store/authStore'
-import {
-  Product,
-  SalesReturn,
-  PurchaseReturn,
-  DamagedItem,
-  TabType
-} from '../types/return'
+import { Product, SalesReturn, PurchaseReturn, DamagedItem, TabType } from '../types/return'
 import ReturnsTabs from '../components/returns/ReturnsTabs'
 import SalesReturnsTable from '../components/returns/SalesReturnsTable'
 import PurchaseReturnsTable from '../components/returns/PurchaseReturnsTable'

@@ -1,5 +1,6 @@
-appId: com.medixpos.app
+appId: com.johuniq.medixpos
 productName: MedixPOS
+icon: build/icon.png
 directories:
   buildResources: build
 files:
@@ -14,13 +15,20 @@ asarUnpack:
   - node_modules/better-sqlite3/**
 win:
   executableName: MedixPOS
+  icon: build/icon.ico
   signAndEditExecutable: false
 nsis:
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
 mac:
+  icon: build/icon.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -35,7 +43,7 @@ linux:
     - AppImage
     - snap
     - deb
-  maintainer: MedixPOS
+  maintainer: Johuniq
   category: Office
 appImage:
   artifactName: ${name}-${version}.${ext}

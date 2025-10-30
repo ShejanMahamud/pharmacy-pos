@@ -1,19 +1,19 @@
+import { ArrowBack } from '@mui/icons-material'
+import { Box, Button, Typography } from '@mui/material'
 import { Link } from 'react-router-dom'
 
 export default function CategoryUnitHeader() {
   return (
-    <div className="mb-6">
-      <Link
-        to="/products"
-        className="text-blue-600 hover:text-blue-700 mb-4 inline-flex items-center"
-      >
-        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
+    <Box sx={{ mb: 4 }}>
+      <Button component={Link} to="/products" startIcon={<ArrowBack />} sx={{ mb: 2 }}>
         Back to Products
-      </Link>
-      <h2 className="text-2xl font-bold text-gray-900">Categories & Units Management</h2>
-      <p className="mt-1 text-sm text-gray-600">Manage product categories and unit types</p>
-    </div>
+      </Button>
+      <Typography variant="h4" component="h2" sx={{ fontWeight: 'bold', mb: 1 }}>
+        Categories & Units Management
+      </Typography>
+      <Typography variant="body1" color="text.secondary">
+        Manage product categories and unit types
+      </Typography>
+    </Box>
   )
 }

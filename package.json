@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Professional Pharmacy Management System - Licensed POS Software",
   "main": "./out/main/index.js",
-  "author": "MedixPOS",
-  "homepage": "https://medixpos.com",
+  "author": "Johuniq",
+  "homepage": "https://johuniq.xyz",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -23,6 +23,10 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.4",
+    "@mui/material": "^7.3.4",
     "@tailwindcss/postcss": "^4.1.16",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.4.1",

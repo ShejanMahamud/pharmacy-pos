@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { usePermissions } from '../hooks/usePermissions'
 import { useAuthStore } from '../store/authStore'
-import {
-  BankAccount,
-  BankAccountFormData,
-  BalanceAdjustmentData
-} from '../types/bankAccount'
+import { BankAccount, BankAccountFormData, BalanceAdjustmentData } from '../types/bankAccount'
 import BankAccountHeader from '../components/bankAccounts/BankAccountHeader'
 import BankAccountStats from '../components/bankAccounts/BankAccountStats'
 import BankAccountSearchBar from '../components/bankAccounts/BankAccountSearchBar'

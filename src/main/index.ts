@@ -2,9 +2,25 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import fs from 'fs'
 import path, { join } from 'path'
-import icon from '../../resources/icon.png?asset'
 import { initDatabase } from './database'
 import { registerDatabaseHandlers } from './ipc/database-handlers'
+
+// Get the correct path for resources in both dev and production
+function getResourcePath(): string {
+  if (process.env.NODE_ENV === 'development' || is.dev) {
+    // In development, resources are in the project directory
+    return join(__dirname, '..', '..', 'resources')
+  } else {
+    // In production, use process.resourcesPath
+    return process.resourcesPath
+  }
+}
+
+// Get icon path
+function getIconPath(): string {
+  const resourcePath = getResourcePath()
+  return join(resourcePath, 'icon.png')
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -13,7 +29,7 @@ function createWindow(): void {
     height: 900,
     show: false,
     autoHideMenuBar: true,
-    icon: icon,
+    icon: getIconPath(),
     title: 'MedixPOS - Professional Pharmacy Management',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -44,7 +60,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.medixpos.app')
+  electronApp.setAppUserModelId('com.johuniq.medixpos')
 
   // Check for pending restore operation
   const userDataPath = app.getPath('userData')

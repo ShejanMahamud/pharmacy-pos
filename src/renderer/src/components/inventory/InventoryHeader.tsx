@@ -1,10 +1,14 @@
+import { Box, Typography } from '@mui/material'
+
 export default function InventoryHeader() {
   return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-bold text-gray-800">Inventory Management</h1>
-      <p className="text-sm text-gray-600 mt-1">
+    <Box sx={{ mb: 3 }}>
+      <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+        Inventory Management
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
         Track and manage stock levels across your pharmacy
-      </p>
-    </div>
+      </Typography>
+    </Box>
   )
 }

@@ -1,3 +1,23 @@
+import { Close, Print } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography
+} from '@mui/material'
 import { Sale, SaleItem } from '../../types/sale'
 
 interface SaleDetailsModalProps {
@@ -17,147 +37,147 @@ export default function SaleDetailsModal({
   onClose,
   onPrint
 }: SaleDetailsModalProps): React.JSX.Element | null {
-  if (!isOpen || !sale) return null
+  if (!sale) return null
+
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.grey[100],
+      color: theme.palette.text.secondary,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      fontSize: '0.75rem',
+      letterSpacing: '0.5px'
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14
+    }
+  }))
 
   return (
-    <div className="fixed inset-0 bg-black/50  z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Modal Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg z-10">
-          <h2 className="text-xl font-bold text-gray-900">Sale Details</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Sale Details
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
+        </Box>
+      </DialogTitle>
 
-        {/* Modal Body */}
-        <div className="p-6">
-          {/* Sale Info */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <p className="text-sm text-gray-600">Invoice Number</p>
-              <p className="text-lg font-semibold text-gray-900">{sale.invoiceNumber}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Date & Time</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {new Date(sale.createdAt).toLocaleString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Customer</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {sale.customerName || 'Walk-in Customer'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Payment Method</p>
-              <p className="text-lg font-semibold text-gray-900 capitalize">{sale.paymentMethod}</p>
-            </div>
-          </div>
+      <DialogContent dividers>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Invoice Number
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {sale.invoiceNumber}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Date & Time
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {new Date(sale.createdAt).toLocaleString()}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Customer
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {sale.customerName || 'Walk-in Customer'}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Payment Method
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600, textTransform: 'capitalize' }}>
+              {sale.paymentMethod}
+            </Typography>
+          </Box>
+        </Box>
 
-          {/* Items Table */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Items</h3>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      Product
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      Qty
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      Price
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      Discount
-                    </th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      Subtotal
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {saleItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-4 py-2 text-sm text-gray-900">{item.productName}</td>
-                      <td className="px-4 py-2 text-sm text-gray-900">{item.quantity}</td>
-                      <td className="px-4 py-2 text-sm text-gray-900">
-                        {currencySymbol}
-                        {item.unitPrice.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-900">{item.discountPercent}%</td>
-                      <td className="px-4 py-2 text-sm text-gray-900 text-right">
-                        {currencySymbol}
-                        {item.subtotal.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          Items
+        </Typography>
+        <TableContainer sx={{ mb: 3 }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>Product</StyledTableCell>
+                <StyledTableCell>Qty</StyledTableCell>
+                <StyledTableCell>Price</StyledTableCell>
+                <StyledTableCell>Discount</StyledTableCell>
+                <StyledTableCell align="right">Subtotal</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {saleItems.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.productName}</TableCell>
+                  <TableCell>{item.quantity}</TableCell>
+                  <TableCell>
+                    {currencySymbol}
+                    {item.unitPrice.toFixed(2)}
+                  </TableCell>
+                  <TableCell>{item.discountPercent}%</TableCell>
+                  <TableCell align="right">
+                    {currencySymbol}
+                    {item.subtotal.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-          {/* Totals */}
-          <div className="border-t border-gray-200 pt-4">
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Paid Amount:</span>
-              <span className="font-semibold text-gray-900">
-                {currencySymbol}
-                {sale.paidAmount.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Change:</span>
-              <span className="font-semibold text-gray-900">
-                {currencySymbol}
-                {sale.changeAmount.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2 mt-2">
-              <span className="text-gray-900">Total Amount:</span>
-              <span className="text-blue-600">
-                {currencySymbol}
-                {sale.totalAmount.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </div>
+        <Divider sx={{ my: 2 }} />
 
-        {/* Modal Footer */}
-        <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3 rounded-b-lg border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-          >
-            Close
-          </button>
-          <button
-            onClick={() => onPrint(sale)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-              />
-            </svg>
-            Print Invoice
-          </button>
-        </div>
-      </div>
-    </div>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Paid Amount:
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {currencySymbol}
+              {sale.paidAmount.toFixed(2)}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Change:
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {currencySymbol}
+              {sale.changeAmount.toFixed(2)}
+            </Typography>
+          </Box>
+          <Divider sx={{ my: 1 }} />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Total Amount:
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+              {currencySymbol}
+              {sale.totalAmount.toFixed(2)}
+            </Typography>
+          </Box>
+        </Box>
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, gap: 1 }}>
+        <Button onClick={onClose} variant="outlined">
+          Close
+        </Button>
+        <Button onClick={() => onPrint(sale)} variant="contained" startIcon={<Print />}>
+          Print Invoice
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

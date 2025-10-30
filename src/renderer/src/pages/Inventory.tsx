@@ -1,18 +1,18 @@
+import { Box, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import {
-  InventoryItem,
-  Product,
-  Category,
-  InventoryWithProduct,
-  StockAdjustmentFormData
-} from '../types/inventory'
-import { useSettingsStore } from '../store/settingsStore'
-import InventoryHeader from '../components/inventory/InventoryHeader'
-import InventoryStats from '../components/inventory/InventoryStats'
 import InventoryFilters from '../components/inventory/InventoryFilters'
+import InventoryStats from '../components/inventory/InventoryStats'
 import InventoryTable from '../components/inventory/InventoryTable'
 import StockAdjustmentModal from '../components/inventory/StockAdjustmentModal'
+import { useSettingsStore } from '../store/settingsStore'
+import {
+  Category,
+  InventoryItem,
+  InventoryWithProduct,
+  Product,
+  StockAdjustmentFormData
+} from '../types/inventory'
 
 export default function Inventory(): React.JSX.Element {
   const currency = useSettingsStore((state) => state.currency)
@@ -24,8 +24,6 @@ export default function Inventory(): React.JSX.Element {
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
   const [loading, setLoading] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   // Get currency symbol
   const getCurrencySymbol = (): string => {
@@ -97,12 +95,6 @@ export default function Inventory(): React.JSX.Element {
     return matchesSearch
   })
 
-  const totalPages = Math.ceil(filteredInventory.length / itemsPerPage)
-  const paginatedInventory = filteredInventory.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
 
@@ -151,12 +143,10 @@ export default function Inventory(): React.JSX.Element {
 
   const handleSearchChange = (value: string): void => {
     setSearchTerm(value)
-    setCurrentPage(1)
   }
 
   const handleFilterChange = (value: 'all' | 'low' | 'out'): void => {
     setFilterType(value)
-    setCurrentPage(1)
   }
 
   // Calculate stats
@@ -171,9 +161,22 @@ export default function Inventory(): React.JSX.Element {
   }, 0)
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <InventoryHeader />
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+      {/* Page Header */}
+      <Box
+        sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+      >
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+            Inventory Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Track and manage stock levels across your pharmacy
+          </Typography>
+        </Box>
+      </Box>
 
+      {/* Stats Cards */}
       <InventoryStats
         totalItems={inventoryWithProducts.length}
         lowStockCount={lowStockCount}
@@ -182,6 +185,7 @@ export default function Inventory(): React.JSX.Element {
         currencySymbol={getCurrencySymbol()}
       />
 
+      {/* Action Bar */}
       <InventoryFilters
         searchTerm={searchTerm}
         filterType={filterType}
@@ -190,23 +194,16 @@ export default function Inventory(): React.JSX.Element {
         onAdjustStock={() => setShowModal(true)}
       />
 
+      {/* Inventory Table */}
       <InventoryTable
-        inventory={paginatedInventory}
+        inventory={filteredInventory}
         categories={categories}
         loading={loading}
         currencySymbol={getCurrencySymbol()}
         onEdit={handleEdit}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={filteredInventory.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(items) => {
-          setItemsPerPage(items)
-          setCurrentPage(1)
-        }}
       />
 
+      {/* Stock Adjustment Modal */}
       <StockAdjustmentModal
         isOpen={showModal}
         onClose={handleCloseModal}
@@ -216,6 +213,6 @@ export default function Inventory(): React.JSX.Element {
         onFormDataChange={setFormData}
         onSubmit={handleSubmit}
       />
-    </div>
+    </Container>
   )
 }

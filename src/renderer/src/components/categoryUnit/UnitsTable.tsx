@@ -1,5 +1,31 @@
+import { Add, Delete, Edit, Inventory, Search } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  InputAdornment,
+  Paper,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography
+} from '@mui/material'
+import { useState } from 'react'
 import { Unit } from '../../types/categoryUnit'
-import Pagination from '../Pagination'
 
 interface UnitsTableProps {
   units: Unit[]
@@ -8,10 +34,6 @@ interface UnitsTableProps {
   onAddClick: () => void
   onEditClick: (unit: Unit) => void
   onDeleteClick: (id: number) => void
-  currentPage: number
-  itemsPerPage: number
-  onPageChange: (page: number) => void
-  onItemsPerPageChange: (itemsPerPage: number) => void
 }
 
 export default function UnitsTable({
@@ -20,130 +42,216 @@ export default function UnitsTable({
   onSearchChange,
   onAddClick,
   onEditClick,
-  onDeleteClick,
-  currentPage,
-  itemsPerPage,
-  onPageChange,
-  onItemsPerPageChange
+  onDeleteClick
 }: UnitsTableProps) {
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [unitToDelete, setUnitToDelete] = useState<number | null>(null)
+
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.grey[300],
+      color: theme.palette.text.secondary,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      fontSize: '0.75rem',
+      letterSpacing: '0.5px'
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14
+    }
+  }))
+
+  const StyledTableRow = styled(TableRow)(() => ({
+    '&:hover': {
+      backgroundColor: 'rgba(0, 0, 0, 0.04)'
+    },
+    // hide last border
+    '&:last-child td, &:last-child th': {
+      border: 0
+    }
+  }))
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const handleDeleteClick = (id: number) => {
+    setUnitToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (unitToDelete !== null) {
+      onDeleteClick(unitToDelete)
+    }
+    setDeleteDialogOpen(false)
+    setUnitToDelete(null)
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+    setUnitToDelete(null)
+  }
+
   const filteredUnits = units.filter((unit) =>
     unit.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedUnits = filteredUnits.slice(startIndex, startIndex + itemsPerPage)
-  const totalPages = Math.ceil(filteredUnits.length / itemsPerPage)
+  const paginatedUnits = filteredUnits.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  if (paginatedUnits.length === 0) {
+    return (
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            bgcolor: 'grey.200',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 2
+          }}
+        >
+          <Typography variant="h5" sx={{ color: 'text.secondary' }}>
+            <Inventory />
+          </Typography>
+        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          No unit items found
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Start by adding units to your inventory.
+        </Typography>
+      </Paper>
+    )
+  }
 
   return (
-    <div>
-      {/* Search and Add Section */}
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex-1 max-w-md">
-          <input
-            type="text"
+    <Box>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Box
+          sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}
+        >
+          <TextField
             placeholder="Search units..."
             value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={(e) => {
+              onSearchChange(e.target.value)
+              setPage(0)
+            }}
+            size="small"
+            sx={{ flex: 1, maxWidth: 400 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              )
+            }}
           />
-        </div>
-        <button
-          onClick={onAddClick}
-          className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Unit
-        </button>
-      </div>
-
-      {/* Units Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Abbreviation
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Description
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <Button variant="contained" startIcon={<Add />} onClick={onAddClick}>
+            Add Unit
+          </Button>
+        </Box>
+      </Paper>
+      <TableContainer component={Paper} sx={{ maxHeight: 540 }}>
+        <Table stickyHeader aria-label="sticky table">
+          <TableHead>
+            <TableRow>
+              <StyledTableCell sx={{ textTransform: 'uppercase' }}>Name</StyledTableCell>
+              <StyledTableCell sx={{ textTransform: 'uppercase' }}>Abbreviation</StyledTableCell>
+              <StyledTableCell sx={{ textTransform: 'uppercase' }}>Type</StyledTableCell>
+              <StyledTableCell sx={{ textTransform: 'uppercase' }}>Description</StyledTableCell>
+              <StyledTableCell align="right" sx={{ textTransform: 'uppercase' }}>
                 Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedUnits.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  No units found
-                </td>
-              </tr>
-            ) : (
+              </StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedUnits.length > 0 ? (
               paginatedUnits.map((unit) => (
-                <tr key={unit.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{unit.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{unit.abbreviation}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        unit.type === 'base'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {unit.type === 'base' ? 'Base Unit' : 'Package Unit'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{unit.description}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => onEditClick(unit)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDeleteClick(unit.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+                <StyledTableRow key={unit.id} hover>
+                  <StyledTableCell>{unit.name}</StyledTableCell>
+                  <StyledTableCell>{unit.abbreviation}</StyledTableCell>
+                  <StyledTableCell>
+                    <Chip
+                      label={unit.type === 'base' ? 'Base Unit' : 'Package Unit'}
+                      color={unit.type === 'base' ? 'success' : 'primary'}
+                      size="small"
+                    />
+                  </StyledTableCell>
+                  <TableCell>{unit.description}</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit">
+                      <IconButton size="small" color="primary" onClick={() => onEditClick(unit)}>
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(unit.id)}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </StyledTableRow>
               ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No units found
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Paper>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 100]}
+          component="div"
+          count={filteredUnits.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={filteredUnits.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={onPageChange}
-            onItemsPerPageChange={onItemsPerPageChange}
-          />
-        </div>
-      )}
-    </div>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete this unit? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   )
 }
