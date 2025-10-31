@@ -1,8 +1,16 @@
+import { Box, Typography } from '@mui/material'
+
 export default function CustomerHeader() {
   return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-bold text-gray-800">Customer Management</h1>
-      <p className="text-sm text-gray-600 mt-1">Manage customer information and loyalty points</p>
-    </div>
+    <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <Box>
+        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+          Customer Management
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Manage customer information and loyalty points
+        </Typography>
+      </Box>
+    </Box>
   )
 }

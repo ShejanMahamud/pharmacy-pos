@@ -1,3 +1,5 @@
+import { Paper, Box, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material'
+
 interface SystemSettingsFormProps {
   taxRate: string
   currency: string
@@ -16,68 +18,72 @@ export default function SystemSettingsForm({
   onCurrencyChange,
   onLowStockThresholdChange,
   onSubmit
-}: SystemSettingsFormProps) {
+}: SystemSettingsFormProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">System Configuration</h2>
-        <p className="text-sm text-gray-600 mt-1">Configure system-wide settings</p>
-      </div>
+    <Paper sx={{ p: 3 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" fontWeight="semibold" gutterBottom>
+          System Configuration
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Configure system-wide settings
+        </Typography>
+      </Box>
 
-      <form onSubmit={onSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Default Tax Rate (%)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={taxRate}
-              onChange={(e) => onTaxRateChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter tax rate"
-            />
-          </div>
+      <Box component="form" onSubmit={onSubmit}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+            gap: 3
+          }}
+        >
+          <TextField
+            label="Default Tax Rate (%)"
+            type="number"
+            value={taxRate}
+            onChange={(e) => onTaxRateChange(e.target.value)}
+            placeholder="Enter tax rate"
+            inputProps={{ step: '0.01' }}
+            fullWidth
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
-            <select
-              value={currency}
-              onChange={(e) => onCurrencyChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="USD">USD - US Dollar</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="GBP">GBP - British Pound</option>
-              <option value="BDT">BDT - Bangladeshi Taka</option>
-              <option value="INR">INR - Indian Rupee</option>
-            </select>
-          </div>
+          <FormControl fullWidth>
+            <InputLabel>Currency</InputLabel>
+            <Select value={currency} onChange={(e) => onCurrencyChange(e.target.value)} label="Currency">
+              <MenuItem value="USD">USD - US Dollar</MenuItem>
+              <MenuItem value="EUR">EUR - Euro</MenuItem>
+              <MenuItem value="GBP">GBP - British Pound</MenuItem>
+              <MenuItem value="BDT">BDT - Bangladeshi Taka</MenuItem>
+              <MenuItem value="INR">INR - Indian Rupee</MenuItem>
+            </Select>
+          </FormControl>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Low Stock Threshold
-            </label>
-            <input
-              type="number"
-              value={lowStockThreshold}
-              onChange={(e) => onLowStockThresholdChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter threshold quantity"
-            />
-          </div>
-        </div>
+          <TextField
+            label="Low Stock Threshold"
+            type="number"
+            value={lowStockThreshold}
+            onChange={(e) => onLowStockThresholdChange(e.target.value)}
+            placeholder="Enter threshold quantity"
+            fullWidth
+          />
+        </Box>
 
-        <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end">
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
+        <Box
+          sx={{
+            mt: 4,
+            pt: 3,
+            borderTop: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}
+        >
+          <Button type="submit" variant="contained" size="large">
             Save Changes
-          </button>
-        </div>
-      </form>
-    </div>
+          </Button>
+        </Box>
+      </Box>
+    </Paper>
   )
 }

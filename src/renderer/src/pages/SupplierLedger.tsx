@@ -1,12 +1,13 @@
+import { Container } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useSettingsStore } from '../store/settingsStore'
-import { Supplier, LedgerEntry } from '../types/supplierLedger'
-import SupplierLedgerHeader from '../components/supplierLedger/SupplierLedgerHeader'
-import SupplierLedgerFilters from '../components/supplierLedger/SupplierLedgerFilters'
-import SupplierInfoCard from '../components/supplierLedger/SupplierInfoCard'
 import LedgerEntriesTable from '../components/supplierLedger/LedgerEntriesTable'
+import SupplierInfoCard from '../components/supplierLedger/SupplierInfoCard'
+import SupplierLedgerFilters from '../components/supplierLedger/SupplierLedgerFilters'
+import SupplierLedgerHeader from '../components/supplierLedger/SupplierLedgerHeader'
 import { usePdfExport } from '../hooks/usePdfExport'
+import { useSettingsStore } from '../store/settingsStore'
+import { LedgerEntry, Supplier } from '../types/supplierLedger'
 
 export default function SupplierLedger(): React.JSX.Element {
   const { storeName, storePhone, storeEmail, storeAddress, currency } = useSettingsStore()
@@ -137,7 +138,7 @@ export default function SupplierLedger(): React.JSX.Element {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       <SupplierLedgerHeader
         onExportPdf={handleExportPdf}
         canExport={!!selectedSupplier && ledgerEntries.length > 0}
@@ -176,6 +177,6 @@ export default function SupplierLedger(): React.JSX.Element {
         onPageChange={setCurrentPage}
         onItemsPerPageChange={setItemsPerPage}
       />
-    </div>
+    </Container>
   )
 }

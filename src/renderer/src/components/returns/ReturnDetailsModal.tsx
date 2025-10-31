@@ -1,3 +1,24 @@
+import { Close } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography
+} from '@mui/material'
 import { PurchaseReturn, SalesReturn } from '../../types/return'
 
 interface ReturnDetailsModalProps {
@@ -10,11 +31,7 @@ export default function ReturnDetailsModal({
   isOpen,
   onClose,
   returnItem
-}: ReturnDetailsModalProps): React.JSX.Element | null {
-  if (!isOpen || !returnItem) return null
-
-  const isSalesReturn = 'customerName' in returnItem
-
+}: ReturnDetailsModalProps): React.JSX.Element {
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -22,125 +39,166 @@ export default function ReturnDetailsModal({
     }).format(amount)
   }
 
-  const getRefundStatusBadge = (status: string): React.JSX.Element => {
-    const styles = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      partial: 'bg-blue-100 text-blue-800',
-      refunded: 'bg-green-100 text-green-800'
+  const getRefundStatusColor = (status: string): 'warning' | 'info' | 'success' | 'default' => {
+    switch (status) {
+      case 'pending':
+        return 'warning'
+      case 'partial':
+        return 'info'
+      case 'refunded':
+        return 'success'
+      default:
+        return 'default'
     }
+  }
 
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.grey[100],
+      color: theme.palette.text.secondary,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      fontSize: '0.75rem',
+      letterSpacing: '0.5px'
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14
+    }
+  }))
+
+  if (!returnItem) {
     return (
-      <span
-        className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status] || 'bg-gray-100 text-gray-800'}`}
-      >
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
+      <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogContent>
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1">Loading return details...</Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
     )
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">
-            {isSalesReturn ? 'Sales Return Details' : 'Purchase Return Details'}
-          </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+  const isSalesReturn = 'customerName' in returnItem
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <p className="text-sm text-gray-500">Return Number</p>
-            <p className="font-medium">{returnItem.returnNumber}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">{isSalesReturn ? 'Customer' : 'Supplier'}</p>
-            <p className="font-medium">
+  return (
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            {isSalesReturn ? 'Sales Return Details' : 'Purchase Return Details'}
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+
+      <DialogContent dividers>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Return Number
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {returnItem.returnNumber}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              {isSalesReturn ? 'Customer' : 'Supplier'}
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
               {isSalesReturn
                 ? (returnItem as SalesReturn).customerName || 'Walk-in'
                 : (returnItem as PurchaseReturn).supplierName}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Total Amount</p>
-            <p className="font-medium">{formatCurrency(returnItem.totalAmount)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Refund Status</p>
-            <div className="mt-1">{getRefundStatusBadge(returnItem.refundStatus)}</div>
-          </div>
-          <div className="col-span-2">
-            <p className="text-sm text-gray-500">Reason</p>
-            <p className="font-medium">{returnItem.reason || '-'}</p>
-          </div>
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Total Amount
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {formatCurrency(returnItem.totalAmount)}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Refund Status
+            </Typography>
+            <Box sx={{ mt: 1 }}>
+              <Chip
+                label={
+                  returnItem.refundStatus.charAt(0).toUpperCase() + returnItem.refundStatus.slice(1)
+                }
+                size="small"
+                color={getRefundStatusColor(returnItem.refundStatus)}
+              />
+            </Box>
+          </Box>
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Reason
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {returnItem.reason || '-'}
+            </Typography>
+          </Box>
           {returnItem.notes && (
-            <div className="col-span-2">
-              <p className="text-sm text-gray-500">Notes</p>
-              <p className="font-medium">{returnItem.notes}</p>
-            </div>
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                Notes
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                {returnItem.notes}
+              </Typography>
+            </Box>
           )}
-        </div>
+        </Box>
 
-        <div className="border-t border-gray-200 pt-4">
-          <h3 className="text-lg font-semibold mb-3">Return Items</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    Product
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    Quantity
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    Unit Price
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    Subtotal
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    Reason
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+        <Divider sx={{ my: 2 }} />
+
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          Return Items
+        </Typography>
+        {returnItem.items && returnItem.items.length > 0 ? (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>Product</StyledTableCell>
+                  <StyledTableCell>Quantity</StyledTableCell>
+                  <StyledTableCell>Unit Price</StyledTableCell>
+                  <StyledTableCell>Subtotal</StyledTableCell>
+                  <StyledTableCell>Reason</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {returnItem.items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{item.productName}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">{item.quantity}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">
-                      {formatCurrency(item.unitPrice)}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-900">
-                      {formatCurrency(item.subtotal)}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-900">{item.reason || '-'}</td>
-                  </tr>
+                  <TableRow key={item.id}>
+                    <TableCell>{item.productName}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                    <TableCell>{formatCurrency(item.subtotal)}</TableCell>
+                    <TableCell>{item.reason || '-'}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              No items found for this return
+            </Typography>
+          </Box>
+        )}
+      </DialogContent>
 
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} variant="outlined">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

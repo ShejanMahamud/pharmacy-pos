@@ -36,6 +36,7 @@ export interface BankAccount {
 
 export interface CartItem {
   id: string
+  barcode: string
   productId: string
   name: string
   price: number

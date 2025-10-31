@@ -15,11 +15,12 @@ export default function InventoryStats({
   outOfStockCount,
   totalValue,
   currencySymbol
-}: InventoryStatsProps) {
+}: InventoryStatsProps): React.JSX.Element {
   const stats = [
     {
       title: 'Total Items',
       value: totalItems,
+      subtitle: 'Products in inventory',
       icon: <Inventory sx={{ color: 'white' }} />,
       color: 'primary.main',
       bgColor: 'primary.light'
@@ -27,6 +28,7 @@ export default function InventoryStats({
     {
       title: 'Low Stock',
       value: lowStockCount,
+      subtitle: 'Items need restocking',
       icon: <Warning sx={{ color: 'white' }} />,
       color: 'warning.main',
       bgColor: 'warning.light'
@@ -34,6 +36,7 @@ export default function InventoryStats({
     {
       title: 'Out of Stock',
       value: outOfStockCount,
+      subtitle: 'Items unavailable',
       icon: <Close sx={{ color: 'white' }} />,
       color: 'error.main',
       bgColor: 'error.light'
@@ -41,6 +44,7 @@ export default function InventoryStats({
     {
       title: 'Total Value',
       value: `${currencySymbol}${totalValue.toFixed(2)}`,
+      subtitle: 'Current inventory worth',
       icon: <AttachMoney sx={{ color: 'white' }} />,
       color: 'success.main',
       bgColor: 'success.light'
@@ -65,6 +69,9 @@ export default function InventoryStats({
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: 'bold', color: stat.color }}>
                 {stat.value}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                {stat.subtitle}
               </Typography>
             </Box>
             <Avatar sx={{ width: 48, height: 48, bgcolor: stat.bgColor, color: stat.color }}>

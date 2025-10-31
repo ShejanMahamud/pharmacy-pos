@@ -1,3 +1,24 @@
+import { Close } from '@mui/icons-material'
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  List,
+  ListItemButton,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography
+} from '@mui/material'
 import { Product } from '../../types/return'
 
 interface DamagedItemModalProps {
@@ -42,145 +63,131 @@ export default function DamagedItemModal({
   onExpiryDateChange,
   onNotesChange,
   onSubmit
-}: DamagedItemModalProps): React.JSX.Element | null {
-  if (!isOpen) return null
-
+}: DamagedItemModalProps): React.JSX.Element {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">Report Damaged/Expired Item</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Report Damaged/Expired Item
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
+        </Box>
+      </DialogTitle>
 
-        <div className="space-y-4">
+      <DialogContent dividers>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Product Search */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={selectedProduct ? selectedProduct.name : productSearchTerm}
-                onChange={(e) => onProductSearchChange(e.target.value)}
-                placeholder="Search for product..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              {showProductDropdown && products.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <Box sx={{ position: 'relative' }}>
+            <TextField
+              fullWidth
+              label="Product"
+              value={selectedProduct ? selectedProduct.name : productSearchTerm}
+              onChange={(e) => onProductSearchChange(e.target.value)}
+              placeholder="Search for product..."
+            />
+            {showProductDropdown && products.length > 0 && (
+              <Paper
+                sx={{
+                  position: 'absolute',
+                  zIndex: 10,
+                  width: '100%',
+                  mt: 1,
+                  maxHeight: 240,
+                  overflow: 'auto'
+                }}
+              >
+                <List>
                   {products.map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => onProductSelect(product)}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="font-medium text-gray-900">{product.name}</div>
-                      <div className="text-sm text-gray-500">SKU: {product.sku}</div>
-                    </button>
+                    <ListItemButton key={product.id} onClick={() => onProductSelect(product)}>
+                      <ListItemText
+                        primary={product.name}
+                        secondary={`SKU: ${product.sku}`}
+                        primaryTypographyProps={{ fontWeight: 600 }}
+                      />
+                    </ListItemButton>
                   ))}
-                </div>
-              )}
-            </div>
-            {selectedProduct && (
-              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm text-blue-800 font-medium">{selectedProduct.name}</p>
-                <p className="text-xs text-blue-600">SKU: {selectedProduct.sku}</p>
-              </div>
+                </List>
+              </Paper>
             )}
-          </div>
+          </Box>
+          {selectedProduct && (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {selectedProduct.name}
+              </Typography>
+              <Typography variant="caption">SKU: {selectedProduct.sku}</Typography>
+            </Alert>
+          )}
 
           {/* Quantity */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Quantity"
+            type="number"
+            value={quantity}
+            onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
+            inputProps={{ min: 1 }}
+          />
 
           {/* Reason */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
-            <select
+          <FormControl fullWidth>
+            <InputLabel>Reason</InputLabel>
+            <Select
               value={reason}
+              label="Reason"
               onChange={(e) =>
                 onReasonChange(e.target.value as 'expired' | 'damaged' | 'defective')
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="expired">Expired</option>
-              <option value="damaged">Damaged</option>
-              <option value="defective">Defective</option>
-            </select>
-          </div>
+              <MenuItem value="expired">Expired</MenuItem>
+              <MenuItem value="damaged">Damaged</MenuItem>
+              <MenuItem value="defective">Defective</MenuItem>
+            </Select>
+          </FormControl>
 
           {/* Batch Number */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Batch Number (Optional)
-            </label>
-            <input
-              type="text"
-              value={batchNumber}
-              onChange={(e) => onBatchNumberChange(e.target.value)}
-              placeholder="Enter batch number"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Batch Number (Optional)"
+            value={batchNumber}
+            onChange={(e) => onBatchNumberChange(e.target.value)}
+            placeholder="Enter batch number"
+          />
 
           {/* Expiry Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Expiry Date (Optional)
-            </label>
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => onExpiryDateChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Expiry Date (Optional)"
+            type="date"
+            value={expiryDate}
+            onChange={(e) => onExpiryDateChange(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
 
           {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
-            <textarea
-              value={notes}
-              onChange={(e) => onNotesChange(e.target.value)}
-              placeholder="Add any additional notes..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Notes (Optional)"
+            value={notes}
+            onChange={(e) => onNotesChange(e.target.value)}
+            placeholder="Add any additional notes..."
+            multiline
+            rows={3}
+          />
+        </Box>
+      </DialogContent>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onSubmit}
-              className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Report Item
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      <DialogActions sx={{ p: 2, gap: 1 }}>
+        <Button onClick={onClose} variant="outlined">
+          Cancel
+        </Button>
+        <Button onClick={onSubmit} variant="contained" color="error">
+          Report Item
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

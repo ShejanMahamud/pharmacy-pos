@@ -18,6 +18,7 @@ export default function SalesStats({ sales, currencySymbol }: SalesStatsProps): 
     {
       title: 'Total Sales',
       value: `${currencySymbol}${totalSales.toFixed(2)}`,
+      subtitle: 'Revenue from all sales',
       icon: <AttachMoney sx={{ color: 'white' }} />,
       color: 'primary.main',
       bgColor: 'primary.main'
@@ -25,6 +26,7 @@ export default function SalesStats({ sales, currencySymbol }: SalesStatsProps): 
     {
       title: 'Transactions',
       value: totalTransactions.toString(),
+      subtitle: 'Total number of sales',
       icon: <Receipt sx={{ color: 'white' }} />,
       color: 'primary.light',
       bgColor: 'primary.light'
@@ -32,6 +34,7 @@ export default function SalesStats({ sales, currencySymbol }: SalesStatsProps): 
     {
       title: 'Completed',
       value: completedSales.toString(),
+      subtitle: 'Completed sales',
       icon: <CheckCircle sx={{ color: 'white' }} />,
       color: 'secondary.main',
       bgColor: 'secondary.light'
@@ -39,6 +42,7 @@ export default function SalesStats({ sales, currencySymbol }: SalesStatsProps): 
     {
       title: 'Avg Sale Value',
       value: `${currencySymbol}${avgSaleValue.toFixed(2)}`,
+      subtitle: 'Average per transaction',
       icon: <TrendingUp sx={{ color: 'white' }} />,
       color: 'warning.main',
       bgColor: 'warning.light'
@@ -63,6 +67,9 @@ export default function SalesStats({ sales, currencySymbol }: SalesStatsProps): 
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: 'bold', color: stat.color }}>
                 {stat.value}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                {stat.subtitle}
               </Typography>
             </Box>
             <Avatar sx={{ width: 48, height: 48, bgcolor: stat.bgColor, color: stat.color }}>

@@ -1,3 +1,16 @@
+import { Add, AssignmentReturn, Search } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField
+} from '@mui/material'
+
 interface PurchaseFiltersProps {
   searchTerm: string
   statusFilter: string
@@ -5,6 +18,8 @@ interface PurchaseFiltersProps {
   onSearchChange: (value: string) => void
   onStatusFilterChange: (value: string) => void
   onPaymentFilterChange: (value: string) => void
+  onAddPurchase: () => void
+  onPurchaseReturn: () => void
 }
 
 export default function PurchaseFilters({
@@ -13,65 +28,88 @@ export default function PurchaseFilters({
   paymentFilter,
   onSearchChange,
   onStatusFilterChange,
-  onPaymentFilterChange
+  onPaymentFilterChange,
+  onAddPurchase,
+  onPurchaseReturn
 }: PurchaseFiltersProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Search */}
-        <div className="flex-1">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by invoice or supplier..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            />
-            <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+    <Paper sx={{ p: 2, mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 2,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap'
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            flex: 1
+          }}
+        >
+          <TextField
+            size="small"
+            placeholder="Search by invoice or supplier..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            sx={{ flex: 1, minWidth: 300, maxWidth: 500 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              )
+            }}
+          />
+
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusFilter}
+              label="Status"
+              onChange={(e) => onStatusFilterChange(e.target.value)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-        </div>
+              <MenuItem value="all">All Status</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="received">Received</MenuItem>
+              <MenuItem value="cancelled">Cancelled</MenuItem>
+            </Select>
+          </FormControl>
 
-        {/* Status Filter */}
-        <div className="w-full md:w-48">
-          <select
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="received">Received</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Payment</InputLabel>
+            <Select
+              value={paymentFilter}
+              label="Payment"
+              onChange={(e) => onPaymentFilterChange(e.target.value)}
+            >
+              <MenuItem value="all">All Payments</MenuItem>
+              <MenuItem value="paid">Paid</MenuItem>
+              <MenuItem value="partial">Partial</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
-        {/* Payment Filter */}
-        <div className="w-full md:w-48">
-          <select
-            value={paymentFilter}
-            onChange={(e) => onPaymentFilterChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button variant="contained" startIcon={<Add />} onClick={onAddPurchase}>
+            New Purchase
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<AssignmentReturn />}
+            onClick={onPurchaseReturn}
           >
-            <option value="all">All Payments</option>
-            <option value="paid">Paid</option>
-            <option value="partial">Partial</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-      </div>
-    </div>
+            Purchase Return
+          </Button>
+        </Box>
+      </Box>
+    </Paper>
   )
 }

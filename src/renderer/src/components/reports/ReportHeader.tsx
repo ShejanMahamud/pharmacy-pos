@@ -1,3 +1,5 @@
+import { Box, Typography } from '@mui/material'
+
 interface ReportHeaderProps {
   title: string
   description: string
@@ -5,9 +7,13 @@ interface ReportHeaderProps {
 
 export default function ReportHeader({ title, description }: ReportHeaderProps): React.JSX.Element {
   return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-      <p className="text-sm text-gray-600 mt-1">{description}</p>
-    </div>
+    <Box sx={{ mb: 4 }}>
+      <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+        {title}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {description}
+      </Typography>
+    </Box>
   )
 }

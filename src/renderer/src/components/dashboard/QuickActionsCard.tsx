@@ -1,106 +1,115 @@
+import { Add, BarChart, PersonAdd, ShoppingCart } from '@mui/icons-material'
+import { Avatar, Box, ButtonBase, Card, CardContent, Typography } from '@mui/material'
 import { Link } from 'react-router-dom'
 
-export default function QuickActionsCard() {
+export default function QuickActionsCard(): React.JSX.Element {
+  const actions = [
+    {
+      to: '/pos',
+      label: 'New Sale',
+      icon: ShoppingCart,
+      color: '#2196f3',
+      bgColor: '#e3f2fd',
+      hoverBg: '#bbdefb'
+    },
+    {
+      to: '/products',
+      label: 'Add Product',
+      icon: Add,
+      color: '#4caf50',
+      bgColor: '#e8f5e9',
+      hoverBg: '#c8e6c9'
+    },
+    {
+      to: '/customers',
+      label: 'Add Customer',
+      icon: PersonAdd,
+      color: '#9c27b0',
+      bgColor: '#f3e5f5',
+      hoverBg: '#e1bee7'
+    },
+    {
+      to: '/reports',
+      label: 'View Reports',
+      icon: BarChart,
+      color: '#ff9800',
+      bgColor: '#fff3e0',
+      hoverBg: '#ffe0b2'
+    }
+  ]
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Link
-          to="/pos"
-          className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group"
+    <Card
+      sx={{
+        borderRadius: 2,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+        border: '1px solid #e0e0e0'
+      }}
+    >
+      <CardContent>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+          Quick Actions
+        </Typography>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+            gap: 2
+          }}
         >
-          <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
-            <svg
-              className="h-6 w-6 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {actions.map((action) => (
+            <ButtonBase
+              key={action.to}
+              component={Link}
+              to={action.to}
+              sx={{
+                borderRadius: 2,
+                border: '2px solid #e0e0e0',
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  borderColor: action.color,
+                  bgcolor: action.bgColor,
+                  '& .action-avatar': {
+                    bgcolor: action.hoverBg
+                  },
+                  '& .action-label': {
+                    color: action.color
+                  }
+                }
+              }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          </div>
-          <span className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-            New Sale
-          </span>
-        </Link>
-
-        <Link
-          to="/products"
-          className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group"
-        >
-          <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
-            <svg
-              className="h-6 w-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          </div>
-          <span className="font-medium text-gray-900 group-hover:text-green-600 transition-colors">
-            Add Product
-          </span>
-        </Link>
-
-        <Link
-          to="/customers"
-          className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group"
-        >
-          <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
-            <svg
-              className="h-6 w-6 text-purple-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-              />
-            </svg>
-          </div>
-          <span className="font-medium text-gray-900 group-hover:text-purple-600 transition-colors">
-            Add Customer
-          </span>
-        </Link>
-
-        <Link
-          to="/reports"
-          className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all group"
-        >
-          <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-orange-200 transition-colors">
-            <svg
-              className="h-6 w-6 text-orange-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          </div>
-          <span className="font-medium text-gray-900 group-hover:text-orange-600 transition-colors">
-            View Reports
-          </span>
-        </Link>
-      </div>
-    </div>
+              <Avatar
+                className="action-avatar"
+                sx={{
+                  bgcolor: action.bgColor,
+                  width: 56,
+                  height: 56,
+                  mb: 2,
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                <action.icon sx={{ color: action.color, fontSize: 28 }} />
+              </Avatar>
+              <Typography
+                className="action-label"
+                variant="body2"
+                sx={{
+                  fontWeight: 500,
+                  color: 'text.primary',
+                  transition: 'color 0.2s'
+                }}
+              >
+                {action.label}
+              </Typography>
+            </ButtonBase>
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,3 +1,4 @@
+import { Box } from '@mui/material'
 import { ReportData, StatCard } from '../../types/report'
 import RecentSalesList from './RecentSalesList'
 import SalesChart from './SalesChart'
@@ -47,17 +48,23 @@ export default function SalesReport({
         data={reportData.monthlySales}
         currencySymbol={currencySymbol}
         title="Sales Trend"
-        barColor="#10b981"
+        barColor="#2e7d32"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' },
+          gap: 3
+        }}
+      >
         <TopProductsList products={reportData.topSellingProducts} currencySymbol={currencySymbol} />
         <RecentSalesList
           sales={reportData.recentSales}
           currencySymbol={currencySymbol}
           title="Recent Transactions"
         />
-      </div>
+      </Box>
     </>
   )
 }

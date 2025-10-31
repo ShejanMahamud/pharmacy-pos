@@ -1,3 +1,16 @@
+import { AutoAwesome, Close } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  TextField,
+  Typography
+} from '@mui/material'
 import { Supplier, SupplierFormData } from '../../types/supplier'
 
 interface SupplierFormModalProps {
@@ -20,209 +33,165 @@ export default function SupplierFormModal({
   onSubmit,
   onFormChange,
   onGenerateCode
-}: SupplierFormModalProps): React.JSX.Element | null {
-  if (!show) return null
-
+}: SupplierFormModalProps): React.JSX.Element {
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
-              {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
-            </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+    <Dialog open={show} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6" component="div" fontWeight="bold">
+            {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Box component="form" id="supplier-form" onSubmit={onSubmit}>
+          <Box sx={{ display: 'grid', gap: 3 }}>
+            {/* Basic Information */}
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
+              <TextField
+                fullWidth
+                required
+                label="Supplier Name"
+                value={formData.name}
+                onChange={(e) => onFormChange({ name: e.target.value })}
+                placeholder="ABC Pharmaceuticals"
+              />
 
-          <form onSubmit={onSubmit}>
-            <div className="space-y-4">
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Supplier Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => onFormChange({ name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="ABC Pharmaceuticals"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Supplier Code *
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      required
-                      value={formData.code}
-                      onChange={(e) => onFormChange({ code: e.target.value })}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="SUP001"
-                    />
-                    <button
-                      type="button"
+              <TextField
+                fullWidth
+                required
+                label="Supplier Code"
+                value={formData.code}
+                onChange={(e) => onFormChange({ code: e.target.value })}
+                placeholder="SUP001"
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
                       onClick={onGenerateCode}
-                      className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                      size="small"
+                      sx={{
+                        color: 'primary.main',
+                        '&:hover': { bgcolor: 'primary.50' }
+                      }}
+                      title="Generate Code"
                     >
-                      Generate
-                    </button>
-                  </div>
-                </div>
-              </div>
+                      <AutoAwesome fontSize="small" />
+                    </IconButton>
+                  )
+                }}
+              />
+            </Box>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Person
-                </label>
-                <input
-                  type="text"
-                  value={formData.contactPerson}
-                  onChange={(e) => onFormChange({ contactPerson: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="John Doe"
-                />
-              </div>
+            <TextField
+              fullWidth
+              label="Contact Person"
+              value={formData.contactPerson}
+              onChange={(e) => onFormChange({ contactPerson: e.target.value })}
+              placeholder="John Doe"
+            />
 
-              {/* Contact Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => onFormChange({ phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="+1 234 567 8900"
-                  />
-                </div>
+            {/* Contact Information */}
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
+              <TextField
+                fullWidth
+                label="Phone Number"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => onFormChange({ phone: e.target.value })}
+                placeholder="+1 234 567 8900"
+              />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => onFormChange({ email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="supplier@example.com"
-                  />
-                </div>
-              </div>
+              <TextField
+                fullWidth
+                label="Email Address"
+                type="email"
+                value={formData.email}
+                onChange={(e) => onFormChange({ email: e.target.value })}
+                placeholder="supplier@example.com"
+              />
+            </Box>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea
-                  value={formData.address}
-                  onChange={(e) => onFormChange({ address: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="123 Main Street, City, Country"
-                />
-              </div>
+            <TextField
+              fullWidth
+              label="Address"
+              multiline
+              rows={3}
+              value={formData.address}
+              onChange={(e) => onFormChange({ address: e.target.value })}
+              placeholder="123 Main Street, City, Country"
+            />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tax Number / VAT ID
-                </label>
-                <input
-                  type="text"
-                  value={formData.taxNumber}
-                  onChange={(e) => onFormChange({ taxNumber: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="TAX123456"
-                />
-              </div>
+            <TextField
+              fullWidth
+              label="Tax Number / VAT ID"
+              value={formData.taxNumber}
+              onChange={(e) => onFormChange({ taxNumber: e.target.value })}
+              placeholder="TAX123456"
+            />
 
-              {/* Accounting Information */}
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Accounting Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Opening Balance
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.openingBalance}
-                      onChange={(e) => onFormChange({ openingBalance: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0.00"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Positive = Payable, Negative = Receivable
-                    </p>
-                  </div>
+            {/* Accounting Information */}
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle1" fontWeight="bold">
+              Accounting Information
+            </Typography>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Credit Limit
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.creditLimit}
-                      onChange={(e) => onFormChange({ creditLimit: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0.00"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Maximum credit allowed</p>
-                  </div>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+                gap: 2
+              }}
+            >
+              <TextField
+                fullWidth
+                label="Opening Balance"
+                type="number"
+                inputProps={{ step: '0.01' }}
+                value={formData.openingBalance}
+                onChange={(e) => onFormChange({ openingBalance: e.target.value })}
+                placeholder="0.00"
+                helperText="Positive = Payable, Negative = Receivable"
+              />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Credit Days
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.creditDays}
-                      onChange={(e) => onFormChange({ creditDays: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Payment terms in days</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <TextField
+                fullWidth
+                label="Credit Limit"
+                type="number"
+                inputProps={{ step: '0.01' }}
+                value={formData.creditLimit}
+                onChange={(e) => onFormChange({ creditLimit: e.target.value })}
+                placeholder="0.00"
+                helperText="Maximum credit allowed"
+              />
 
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? 'Saving...' : editingSupplier ? 'Update Supplier' : 'Add Supplier'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+              <TextField
+                fullWidth
+                label="Credit Days"
+                type="number"
+                value={formData.creditDays}
+                onChange={(e) => onFormChange({ creditDays: e.target.value })}
+                placeholder="0"
+                helperText="Payment terms in days"
+              />
+            </Box>
+          </Box>
+        </Box>
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} variant="outlined" disabled={loading}>
+          Cancel
+        </Button>
+        <Button type="submit" form="supplier-form" variant="contained" disabled={loading}>
+          {loading ? 'Saving...' : editingSupplier ? 'Update Supplier' : 'Add Supplier'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

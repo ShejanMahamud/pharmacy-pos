@@ -1,14 +1,22 @@
+import { Box, Typography } from '@mui/material'
+
 interface DashboardHeaderProps {
   userName: string
 }
 
-export default function DashboardHeader({ userName }: DashboardHeaderProps) {
+export default function DashboardHeader({ userName }: DashboardHeaderProps): React.JSX.Element {
   return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-      <p className="text-sm text-gray-600 mt-1">
+    <Box sx={{ mb: 4 }}>
+      <Typography
+        variant="h4"
+        component="h1"
+        sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}
+      >
+        Dashboard
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         Welcome back, {userName}! Here&apos;s what&apos;s happening today.
-      </p>
-    </div>
+      </Typography>
+    </Box>
   )
 }

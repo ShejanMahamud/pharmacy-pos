@@ -1,3 +1,4 @@
+import { Box } from '@mui/material'
 import { ReportData, StatCard } from '../../types/report'
 import InventoryAlerts from './InventoryAlerts'
 import StatsCards from './StatsCards'
@@ -32,13 +33,13 @@ export default function InventoryReport({ reportData }: InventoryReportProps): R
   ]
 
   return (
-    <>
+    <Box>
       <StatsCards stats={stats} />
 
       <InventoryAlerts
         lowStockCount={reportData.lowStockItems}
         outOfStockCount={reportData.outOfStockItems}
       />
-    </>
+    </Box>
   )
 }

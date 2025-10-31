@@ -1,8 +1,10 @@
 import AddIcon from '@mui/icons-material/Add'
 import CategoryIcon from '@mui/icons-material/Category'
+import UploadIcon from '@mui/icons-material/Upload'
 import { Box, Button, Container, Paper, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import BulkImportModal from '../components/products/BulkImportModal'
 import ProductBarcodeModal from '../components/products/ProductBarcodeModal'
 import ProductFilters from '../components/products/ProductFilters'
 import ProductFormModal from '../components/products/ProductFormModal'
@@ -21,6 +23,7 @@ export default function Products(): React.JSX.Element {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [showBarcodeModal, setShowBarcodeModal] = useState(false)
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(false)
@@ -255,6 +258,17 @@ export default function Products(): React.JSX.Element {
         </Box>
       </Paper>
 
+      {/* Table Header with Bulk Import */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<UploadIcon />}
+          onClick={() => setShowBulkImportModal(true)}
+        >
+          Bulk Import
+        </Button>
+      </Box>
+
       {/* Products Table */}
       <ProductsTable
         products={filteredProducts}
@@ -285,6 +299,13 @@ export default function Products(): React.JSX.Element {
         product={selectedProduct}
         currencySymbol={getCurrencySymbol()}
         onClose={handleCloseBarcodeModal}
+      />
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        onImportComplete={reloadData}
       />
     </Container>
   )

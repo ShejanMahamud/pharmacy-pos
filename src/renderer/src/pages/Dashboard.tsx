@@ -1,3 +1,4 @@
+import { Box, CircularProgress } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import DashboardHeader from '../components/dashboard/DashboardHeader'
@@ -133,27 +134,41 @@ export default function Dashboard(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-xl text-gray-600">Loading...</div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh'
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
     )
   }
 
   const currencySymbol = getCurrencySymbol()
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Box sx={{ p: 3, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
       <DashboardHeader userName={user?.fullName || 'User'} />
 
       <DashboardStats stats={stats} currencySymbol={currencySymbol} />
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+          gap: 3,
+          mb: 3
+        }}
+      >
         <RecentSalesCard sales={recentSales} currencySymbol={currencySymbol} />
         <LowStockAlertsCard items={lowStockItems} currencySymbol={currencySymbol} />
-      </div>
+      </Box>
 
       <QuickActionsCard />
-    </div>
+    </Box>
   )
 }

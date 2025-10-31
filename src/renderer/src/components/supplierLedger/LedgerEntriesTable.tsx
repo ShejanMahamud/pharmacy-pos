@@ -1,5 +1,22 @@
+import { Receipt } from '@mui/icons-material'
+import {
+  Box,
+  Chip,
+  CircularProgress,
+  Paper,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Typography
+} from '@mui/material'
+import { useState } from 'react'
 import { LedgerEntry } from '../../types/supplierLedger'
-import Pagination from '../Pagination'
 
 interface LedgerEntriesTableProps {
   entries: LedgerEntry[]
@@ -27,148 +44,195 @@ export default function LedgerEntriesTable({
   getTypeColor,
   onPageChange,
   onItemsPerPageChange
-}: LedgerEntriesTableProps) {
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Reference No
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Description
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Debit
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Credit
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Balance
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                </td>
-              </tr>
-            ) : !selectedSupplier ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                  <div className="flex flex-col items-center">
-                    <svg
-                      className="h-12 w-12 text-gray-400 mb-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    <p>Please select a supplier to view ledger</p>
-                  </div>
-                </td>
-              </tr>
-            ) : entries.length > 0 ? (
-              entries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(entry.transactionDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getTypeColor(entry.type)}`}
-                    >
-                      {entry.type.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{entry.referenceNumber}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{entry.description}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="text-sm font-medium text-red-600">
-                      {entry.debit > 0 ? formatCurrency(entry.debit) : '-'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="text-sm font-medium text-green-600">
-                      {entry.credit > 0 ? formatCurrency(entry.credit) : '-'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="text-sm font-bold text-gray-900">
-                      {formatCurrency(entry.balance)}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                  <div className="flex flex-col items-center">
-                    <svg
-                      className="h-12 w-12 text-gray-400 mb-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                      />
-                    </svg>
-                    <p>No ledger entries found for the selected period</p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+}: LedgerEntriesTableProps): React.JSX.Element {
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(25)
 
-      {/* Pagination */}
-      {totalItems > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={onPageChange}
-          onItemsPerPageChange={(items) => {
-            onItemsPerPageChange(items)
-            onPageChange(1)
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.grey[300],
+      color: theme.palette.text.secondary,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      fontSize: '0.75rem',
+      letterSpacing: '0.5px'
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14
+    }
+  }))
+
+  const handleChangePage = (_: unknown, newPage: number): void => {
+    setPage(newPage)
+    onPageChange(newPage + 1)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const newRowsPerPage = parseInt(event.target.value, 10)
+    setRowsPerPage(newRowsPerPage)
+    onItemsPerPageChange(newRowsPerPage)
+    setPage(0)
+    onPageChange(1)
+  }
+
+  const getTypeChipColor = (
+    type: string
+  ): 'primary' | 'success' | 'warning' | 'secondary' | 'default' => {
+    switch (type) {
+      case 'purchase':
+        return 'primary'
+      case 'payment':
+        return 'success'
+      case 'return':
+        return 'warning'
+      case 'adjustment':
+        return 'secondary'
+      default:
+        return 'default'
+    }
+  }
+
+  if (loading) {
+    return (
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+          Loading ledger entries...
+        </Typography>
+      </Paper>
+    )
+  }
+
+  if (!selectedSupplier) {
+    return (
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            bgcolor: 'grey.200',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 2
           }}
+        >
+          <Receipt sx={{ color: 'text.secondary' }} />
+        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          No Supplier Selected
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Please select a supplier to view ledger
+        </Typography>
+      </Paper>
+    )
+  }
+
+  if (entries.length === 0) {
+    return (
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            bgcolor: 'grey.200',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 2
+          }}
+        >
+          <Receipt sx={{ color: 'text.secondary' }} />
+        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          No Entries Found
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          No ledger entries found for the selected period
+        </Typography>
+      </Paper>
+    )
+  }
+
+  return (
+    <Box>
+      <TableContainer component={Paper} sx={{ maxHeight: 540, bgcolor: 'white' }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>Date</StyledTableCell>
+              <StyledTableCell>Type</StyledTableCell>
+              <StyledTableCell>Reference No</StyledTableCell>
+              <StyledTableCell>Description</StyledTableCell>
+              <StyledTableCell align="right">Debit</StyledTableCell>
+              <StyledTableCell align="right">Credit</StyledTableCell>
+              <StyledTableCell align="right">Balance</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {entries.map((entry) => (
+              <TableRow key={entry.id} hover>
+                <TableCell>
+                  <Typography variant="body2">
+                    {new Date(entry.transactionDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={entry.type.replace('_', ' ')}
+                    size="small"
+                    color={getTypeChipColor(entry.type)}
+                    sx={{ textTransform: 'capitalize' }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" fontWeight={600}>
+                    {entry.referenceNumber}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">{entry.description}</Typography>
+                </TableCell>
+                <TableCell align="right">
+                  <Typography variant="body2" fontWeight={600} color="error.main">
+                    {entry.debit > 0 ? formatCurrency(entry.debit) : '-'}
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">
+                  <Typography variant="body2" fontWeight={600} color="success.main">
+                    {entry.credit > 0 ? formatCurrency(entry.credit) : '-'}
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">
+                  <Typography variant="body2" fontWeight="bold">
+                    {formatCurrency(entry.balance)}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Paper>
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
         />
-      )}
-    </div>
+      </Paper>
+    </Box>
   )
 }

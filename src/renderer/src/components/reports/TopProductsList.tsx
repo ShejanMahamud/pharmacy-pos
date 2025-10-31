@@ -1,3 +1,4 @@
+import { Avatar, Box, Paper, Typography } from '@mui/material'
 import { TopProduct } from '../../types/report'
 
 interface TopProductsListProps {
@@ -12,37 +13,64 @@ export default function TopProductsList({
   title = 'Top Selling Products'
 }: TopProductsListProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-      </div>
-      <div className="p-6">
-        <div className="space-y-4">
+    <Paper>
+      <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Typography variant="h6" fontWeight="semibold">
+          {title}
+        </Typography>
+      </Box>
+      <Box sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {products.length > 0 ? (
             products.map((product, index) => (
-              <div key={product.id} className="flex items-center justify-between">
-                <div className="flex items-center flex-1">
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 font-semibold rounded-lg mr-3">
+              <Box
+                key={product.id}
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      mr: 2,
+                      fontSize: '0.875rem'
+                    }}
+                  >
                     {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                    <p className="text-xs text-gray-500">{product.quantity} units sold</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
-                    {currencySymbol}
-                    {product.revenue.toFixed(2)}
-                  </p>
-                </div>
-              </div>
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" fontWeight="medium">
+                      {product.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {product.quantity} units sold
+                    </Typography>
+                  </Box>
+                </Box>
+                <Typography
+                  variant="body2"
+                  fontWeight="semibold"
+                  sx={{
+                    color: 'primary.main'
+                  }}
+                >
+                  {currencySymbol}
+                  {product.revenue.toFixed(2)}
+                </Typography>
+              </Box>
             ))
           ) : (
-            <div className="text-center py-8 text-gray-500">No products sold in this period</div>
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                No products sold in this period
+              </Typography>
+            </Box>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Paper>
   )
 }

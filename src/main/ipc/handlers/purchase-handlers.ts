@@ -255,8 +255,9 @@ export function registerPurchaseHandlers(): void {
 
   // Get all purchase returns (with optional date range)
   ipcMain.handle('db:purchaseReturns:getAll', async (_, { startDate, endDate }) => {
+    let purchaseReturns
     if (startDate && endDate) {
-      return db
+      purchaseReturns = db
         .select()
         .from(schema.purchaseReturns)
         .where(
@@ -267,13 +268,51 @@ export function registerPurchaseHandlers(): void {
         )
         .orderBy(desc(schema.purchaseReturns.createdAt))
         .all()
+    } else {
+      purchaseReturns = db
+        .select()
+        .from(schema.purchaseReturns)
+        .orderBy(desc(schema.purchaseReturns.createdAt))
+        .all()
     }
 
-    return db
-      .select()
-      .from(schema.purchaseReturns)
-      .orderBy(desc(schema.purchaseReturns.createdAt))
-      .all()
+    // Enrich with related names
+    return purchaseReturns.map((purchaseReturn) => {
+      // Get user name
+      let userName = ''
+      if (purchaseReturn.userId) {
+        const user = db
+          .select({ username: schema.users.username })
+          .from(schema.users)
+          .where(eq(schema.users.id, purchaseReturn.userId))
+          .get()
+        userName = user?.username || ''
+      }
+
+      // Get supplier name
+      let supplierName = ''
+      if (purchaseReturn.supplierId) {
+        const supplier = db
+          .select({ name: schema.suppliers.name })
+          .from(schema.suppliers)
+          .where(eq(schema.suppliers.id, purchaseReturn.supplierId))
+          .get()
+        supplierName = supplier?.name || ''
+      }
+
+      // Get account name
+      let accountName: string | null = null
+      if (purchaseReturn.accountId) {
+        const account = db
+          .select({ name: schema.bankAccounts.name })
+          .from(schema.bankAccounts)
+          .where(eq(schema.bankAccounts.id, purchaseReturn.accountId))
+          .get()
+        accountName = account?.name || null
+      }
+
+      return { ...purchaseReturn, userName, supplierName, accountName }
+    })
   })
 
   // Get purchase return by ID with items
@@ -290,7 +329,41 @@ export function registerPurchaseHandlers(): void {
         .from(schema.purchaseReturnItems)
         .where(eq(schema.purchaseReturnItems.returnId, id))
         .all()
-      return { ...purchaseReturn, items }
+
+      // Get user name
+      let userName = ''
+      if (purchaseReturn.userId) {
+        const user = db
+          .select({ username: schema.users.username })
+          .from(schema.users)
+          .where(eq(schema.users.id, purchaseReturn.userId))
+          .get()
+        userName = user?.username || ''
+      }
+
+      // Get supplier name
+      let supplierName = ''
+      if (purchaseReturn.supplierId) {
+        const supplier = db
+          .select({ name: schema.suppliers.name })
+          .from(schema.suppliers)
+          .where(eq(schema.suppliers.id, purchaseReturn.supplierId))
+          .get()
+        supplierName = supplier?.name || ''
+      }
+
+      // Get account name
+      let accountName: string | null = null
+      if (purchaseReturn.accountId) {
+        const account = db
+          .select({ name: schema.bankAccounts.name })
+          .from(schema.bankAccounts)
+          .where(eq(schema.bankAccounts.id, purchaseReturn.accountId))
+          .get()
+        accountName = account?.name || null
+      }
+
+      return { ...purchaseReturn, items, userName, supplierName, accountName }
     }
     return null
   })

@@ -100,7 +100,7 @@ export default function CartList({
                       {item.name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {item.productId.substring(0, 8)}
+                      {item.barcode}
                     </Typography>
                   </Box>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#1976d2' }}>

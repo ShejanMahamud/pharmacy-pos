@@ -1,20 +1,21 @@
+import { Container } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import PaymentModal, { generatePaymentPDF } from '../components/suppliers/PaymentModal'
+import SupplierFormModal from '../components/suppliers/SupplierFormModal'
+import SupplierHeader from '../components/suppliers/SupplierHeader'
+import SupplierSearchBar from '../components/suppliers/SupplierSearchBar'
+import SuppliersTable from '../components/suppliers/SuppliersTable'
+import SupplierStats from '../components/suppliers/SupplierStats'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import {
-  Supplier,
   BankAccount,
-  SupplierFormData,
   PaymentFormData,
-  PaymentReceipt
+  PaymentReceipt,
+  Supplier,
+  SupplierFormData
 } from '../types/supplier'
-import SupplierHeader from '../components/suppliers/SupplierHeader'
-import SupplierStats from '../components/suppliers/SupplierStats'
-import SupplierSearchBar from '../components/suppliers/SupplierSearchBar'
-import SuppliersTable from '../components/suppliers/SuppliersTable'
-import SupplierFormModal from '../components/suppliers/SupplierFormModal'
-import PaymentModal, { generatePaymentPDF } from '../components/suppliers/PaymentModal'
 
 export default function Suppliers(): React.JSX.Element {
   const { user } = useAuthStore()
@@ -286,22 +287,19 @@ export default function Suppliers(): React.JSX.Element {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+      {/* Page Header */}
       <SupplierHeader />
 
-      {/* Action Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <SupplierSearchBar
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          onAddClick={() => setShowModal(true)}
-        />
+      {/* Stats Cards */}
+      <SupplierStats suppliers={suppliers} />
 
-        {/* Stats */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <SupplierStats suppliers={suppliers} />
-        </div>
-      </div>
+      {/* Search Bar */}
+      <SupplierSearchBar
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        onAddClick={() => setShowModal(true)}
+      />
 
       {/* Suppliers Table */}
       <SuppliersTable
@@ -345,6 +343,6 @@ export default function Suppliers(): React.JSX.Element {
         onSubmit={handlePaymentSubmit}
         onPaymentDataChange={handlePaymentDataChange}
       />
-    </div>
+    </Container>
   )
 }

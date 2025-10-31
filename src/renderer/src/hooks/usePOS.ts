@@ -130,6 +130,7 @@ export function usePOS() {
 
       cart.addItem({
         productId: product.id,
+        barcode: product.barcode || product.sku,
         name: product.name,
         price: product.sellingPrice,
         quantity: 1,
@@ -261,6 +262,7 @@ export function usePOS() {
       }
 
       const items = cart.items.map((item) => ({
+        barcode: item.barcode,
         productId: item.productId,
         productName: item.name,
         quantity: item.quantity,

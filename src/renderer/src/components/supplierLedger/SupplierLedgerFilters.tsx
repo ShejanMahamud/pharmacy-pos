@@ -1,3 +1,4 @@
+import { Box, FormControl, InputLabel, MenuItem, Paper, Select, TextField } from '@mui/material'
 import { Supplier } from '../../types/supplierLedger'
 
 interface SupplierLedgerFiltersProps {
@@ -18,46 +19,52 @@ export default function SupplierLedgerFilters({
   onSupplierChange,
   onDateFromChange,
   onDateToChange
-}: SupplierLedgerFiltersProps) {
+}: SupplierLedgerFiltersProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Supplier *</label>
-          <select
-            value={selectedSupplier}
-            onChange={(e) => onSupplierChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">-- Select a supplier --</option>
-            {suppliers.map((supplier) => (
-              <option key={supplier.id} value={supplier.id}>
-                {supplier.name} ({supplier.code})
-              </option>
-            ))}
-          </select>
-        </div>
+    <Paper sx={{ p: 3, mb: 3 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' },
+          gap: 2
+        }}
+      >
+        <Box sx={{ gridColumn: { xs: '1', md: 'span 2' } }}>
+          <FormControl fullWidth required>
+            <InputLabel>Select Supplier</InputLabel>
+            <Select
+              value={selectedSupplier}
+              label="Select Supplier"
+              onChange={(e) => onSupplierChange(e.target.value)}
+            >
+              <MenuItem value="">-- Select a supplier --</MenuItem>
+              {suppliers.map((supplier) => (
+                <MenuItem key={supplier.id} value={supplier.id}>
+                  {supplier.name} ({supplier.code})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => onDateFromChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+        <TextField
+          fullWidth
+          label="From Date"
+          type="date"
+          value={dateFrom}
+          onChange={(e) => onDateFromChange(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => onDateToChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-      </div>
-    </div>
+        <TextField
+          fullWidth
+          label="To Date"
+          type="date"
+          value={dateTo}
+          onChange={(e) => onDateToChange(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+      </Box>
+    </Paper>
   )
 }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Container, Box, Typography, CircularProgress } from '@mui/material'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
-import SettingsHeader from '../components/settings/SettingsHeader'
 import SettingsTabs from '../components/settings/SettingsTabs'
 import GeneralSettingsForm from '../components/settings/GeneralSettingsForm'
 import SystemSettingsForm from '../components/settings/SystemSettingsForm'
@@ -196,20 +196,40 @@ export default function Settings(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading settings...</p>
-          </div>
-        </div>
-      </div>
+      <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px'
+          }}
+        >
+          <CircularProgress size={48} />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            Loading settings...
+          </Typography>
+        </Box>
+      </Container>
     )
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <SettingsHeader />
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+      {/* Page Header */}
+      <Box
+        sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+      >
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+            Settings
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage your pharmacy system settings
+          </Typography>
+        </Box>
+      </Box>
 
       <SettingsTabs
         activeTab={activeTab}
@@ -262,6 +282,6 @@ export default function Settings(): React.JSX.Element {
           onRestore={handleRestore}
         />
       )}
-    </div>
+    </Container>
   )
 }

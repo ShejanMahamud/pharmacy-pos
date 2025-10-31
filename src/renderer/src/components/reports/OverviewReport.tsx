@@ -1,3 +1,4 @@
+import { Box } from '@mui/material'
 import { ReportData, StatCard } from '../../types/report'
 import InventoryAlerts from './InventoryAlerts'
 import RecentSalesList from './RecentSalesList'
@@ -51,10 +52,17 @@ export default function OverviewReport({
     <>
       <StatsCards stats={stats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' },
+          gap: 3,
+          mb: 3
+        }}
+      >
         <TopProductsList products={reportData.topSellingProducts} currencySymbol={currencySymbol} />
         <RecentSalesList sales={reportData.recentSales} currencySymbol={currencySymbol} />
-      </div>
+      </Box>
 
       <SalesChart data={reportData.monthlySales} currencySymbol={currencySymbol} />
 

@@ -1,14 +1,15 @@
+import { Container } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { usePermissions } from '../hooks/usePermissions'
-import { useAuthStore } from '../store/authStore'
-import { BankAccount, BankAccountFormData, BalanceAdjustmentData } from '../types/bankAccount'
+import BalanceAdjustmentModal from '../components/bankAccounts/BalanceAdjustmentModal'
+import BankAccountFormModal from '../components/bankAccounts/BankAccountFormModal'
 import BankAccountHeader from '../components/bankAccounts/BankAccountHeader'
-import BankAccountStats from '../components/bankAccounts/BankAccountStats'
 import BankAccountSearchBar from '../components/bankAccounts/BankAccountSearchBar'
 import BankAccountsTable from '../components/bankAccounts/BankAccountsTable'
-import BankAccountFormModal from '../components/bankAccounts/BankAccountFormModal'
-import BalanceAdjustmentModal from '../components/bankAccounts/BalanceAdjustmentModal'
+import BankAccountStats from '../components/bankAccounts/BankAccountStats'
+import { usePermissions } from '../hooks/usePermissions'
+import { useAuthStore } from '../store/authStore'
+import { BalanceAdjustmentData, BankAccount, BankAccountFormData } from '../types/bankAccount'
 
 export default function BankAccounts(): React.JSX.Element {
   const { hasPermission } = usePermissions()
@@ -20,8 +21,6 @@ export default function BankAccounts(): React.JSX.Element {
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null)
   const [adjustingAccount, setAdjustingAccount] = useState<BankAccount | null>(null)
   const [loading, setLoading] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   const [formData, setFormData] = useState<BankAccountFormData>({
     name: '',
@@ -197,7 +196,6 @@ export default function BankAccounts(): React.JSX.Element {
 
   const handleSearchChange = (value: string): void => {
     setSearchTerm(value)
-    setCurrentPage(1)
   }
 
   const handleFormChange = (data: Partial<BankAccountFormData>): void => {
@@ -209,38 +207,26 @@ export default function BankAccounts(): React.JSX.Element {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       <BankAccountHeader />
 
-      {/* Action Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <BankAccountSearchBar
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          onAddClick={() => setShowModal(true)}
-        />
+      <BankAccountStats accounts={accounts} />
 
-        {/* Stats */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <BankAccountStats accounts={accounts} />
-        </div>
-      </div>
+      <BankAccountSearchBar
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        onAddClick={() => setShowModal(true)}
+      />
 
-      {/* Accounts Table */}
       <BankAccountsTable
         accounts={filteredAccounts}
         loading={loading}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
         hasAdjustPermission={hasPermission('manage_roles')}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={setItemsPerPage}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onAdjustBalance={handleAdjustBalance}
       />
 
-      {/* Add/Edit Modal */}
       <BankAccountFormModal
         show={showModal}
         editingAccount={editingAccount}
@@ -251,7 +237,6 @@ export default function BankAccounts(): React.JSX.Element {
         onFormChange={handleFormChange}
       />
 
-      {/* Adjust Balance Modal */}
       <BalanceAdjustmentModal
         show={showAdjustmentModal}
         account={adjustingAccount}
@@ -261,6 +246,6 @@ export default function BankAccounts(): React.JSX.Element {
         onSubmit={handleSubmitAdjustment}
         onAdjustmentDataChange={handleAdjustmentDataChange}
       />
-    </div>
+    </Container>
   )
 }

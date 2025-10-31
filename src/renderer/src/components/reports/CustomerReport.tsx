@@ -1,3 +1,4 @@
+import { Box } from '@mui/material'
 import { ReportData, StatCard } from '../../types/report'
 import RecentSalesList from './RecentSalesList'
 import StatsCards from './StatsCards'
@@ -36,7 +37,7 @@ export default function CustomerReport({
   ]
 
   return (
-    <>
+    <Box>
       <StatsCards stats={stats} />
 
       <RecentSalesList
@@ -45,6 +46,6 @@ export default function CustomerReport({
         title="Recent Customer Transactions"
         showCustomerIcon={true}
       />
-    </>
+    </Box>
   )
 }

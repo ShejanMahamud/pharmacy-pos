@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { Container } from '@mui/material'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import CustomerFilters from '../components/customers/CustomerFilters'
 import CustomerFormModal from '../components/customers/CustomerFormModal'
@@ -13,10 +14,8 @@ export default function Customers(): React.JSX.Element {
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   const currency = useSettingsStore((state) => state.currency)
 
@@ -104,7 +103,6 @@ export default function Customers(): React.JSX.Element {
     }
 
     setFilteredCustomers(filtered)
-    setCurrentPage(1)
   }
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -156,12 +154,6 @@ export default function Customers(): React.JSX.Element {
     })
   }
 
-  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage)
-  const paginatedCustomers = filteredCustomers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
-
   // Calculate stats
   const totalCustomers = filteredCustomers.length
   const activeCustomers = filteredCustomers.filter((c) => c.status === 'active').length
@@ -169,7 +161,7 @@ export default function Customers(): React.JSX.Element {
   const totalPurchaseValue = filteredCustomers.reduce((sum, c) => sum + c.totalPurchases, 0)
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       <CustomerHeader />
 
       <CustomerStats
@@ -189,18 +181,9 @@ export default function Customers(): React.JSX.Element {
       />
 
       <CustomersTable
-        customers={paginatedCustomers}
+        customers={filteredCustomers}
         currencySymbol={getCurrencySymbol()}
         onEdit={handleEdit}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={filteredCustomers.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(items) => {
-          setItemsPerPage(items)
-          setCurrentPage(1)
-        }}
       />
 
       <CustomerFormModal
@@ -211,6 +194,6 @@ export default function Customers(): React.JSX.Element {
         onFormDataChange={setFormData}
         onSubmit={handleSubmit}
       />
-    </div>
+    </Container>
   )
 }

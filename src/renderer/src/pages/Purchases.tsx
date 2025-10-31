@@ -1,3 +1,4 @@
+import { Box, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import AddPurchaseModal from '../components/purchases/AddPurchaseModal'
@@ -15,7 +16,6 @@ export default function Purchases(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [paymentFilter, setPaymentFilter] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
@@ -24,7 +24,6 @@ export default function Purchases(): React.JSX.Element {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   const currency = useSettingsStore((state) => state.currency)
 
@@ -61,7 +60,7 @@ export default function Purchases(): React.JSX.Element {
     try {
       const allPurchases = await window.api.purchases.getAll()
       setPurchases(allPurchases)
-    } catch (_error) {
+    } catch {
       toast.error('Failed to load purchases')
     }
   }
@@ -70,7 +69,7 @@ export default function Purchases(): React.JSX.Element {
     try {
       const allSuppliers = await window.api.suppliers.getAll()
       setSuppliers(allSuppliers)
-    } catch (_error) {
+    } catch {
       toast.error('Failed to load suppliers')
     }
   }
@@ -79,7 +78,7 @@ export default function Purchases(): React.JSX.Element {
     try {
       const allProducts = await window.api.products.getAll()
       setProducts(allProducts)
-    } catch (_error) {
+    } catch {
       toast.error('Failed to load products')
     }
   }
@@ -88,7 +87,7 @@ export default function Purchases(): React.JSX.Element {
     try {
       const allAccounts = await window.api.bankAccounts.getAll()
       setAccounts(allAccounts.filter((acc) => acc.isActive))
-    } catch (_error) {
+    } catch {
       toast.error('Failed to load accounts')
     }
   }
@@ -113,7 +112,6 @@ export default function Purchases(): React.JSX.Element {
     }
 
     setFilteredPurchases(filtered)
-    setCurrentPage(1)
   }
 
   const viewPurchaseDetails = async (purchase: Purchase): Promise<void> => {
@@ -124,16 +122,10 @@ export default function Purchases(): React.JSX.Element {
         setPurchaseItems(purchaseWithItems.items)
       }
       setShowDetailsModal(true)
-    } catch (_error) {
+    } catch {
       toast.error('Failed to load purchase details')
     }
   }
-
-  const totalPages = Math.ceil(filteredPurchases.length / itemsPerPage)
-  const paginatedPurchases = filteredPurchases.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
 
   // Calculate stats
   const totalPurchases = filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0)
@@ -146,24 +138,17 @@ export default function Purchases(): React.JSX.Element {
     viewPurchaseDetails(purchase)
   }
 
-  const handlePageChange = (page: number): void => {
-    setCurrentPage(page)
-  }
-
-  const handleItemsPerPageChange = (items: number): void => {
-    setItemsPerPage(items)
-    setCurrentPage(1)
-  }
-
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Purchase Management</h1>
-        <p className="text-sm text-gray-600 mt-1">
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+          Purchase Management
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
           Manage purchase orders and supplier transactions
-        </p>
-      </div>
+        </Typography>
+      </Box>
 
       {/* Stats Cards */}
       <PurchaseStats
@@ -174,61 +159,23 @@ export default function Purchases(): React.JSX.Element {
         currencySymbol={getCurrencySymbol()}
       />
 
-      {/* Action Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <PurchaseFilters
-            searchTerm={searchTerm}
-            statusFilter={statusFilter}
-            paymentFilter={paymentFilter}
-            onSearchChange={setSearchTerm}
-            onStatusFilterChange={setStatusFilter}
-            onPaymentFilterChange={setPaymentFilter}
-          />
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              New Purchase
-            </button>
-            <button
-              onClick={() => setShowReturnModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                />
-              </svg>
-              Purchase Return
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Filters */}
+      <PurchaseFilters
+        searchTerm={searchTerm}
+        statusFilter={statusFilter}
+        paymentFilter={paymentFilter}
+        onSearchChange={setSearchTerm}
+        onStatusFilterChange={setStatusFilter}
+        onPaymentFilterChange={setPaymentFilter}
+        onAddPurchase={() => setShowAddModal(true)}
+        onPurchaseReturn={() => setShowReturnModal(true)}
+      />
 
       {/* Purchases Table */}
       <PurchasesTable
-        purchases={paginatedPurchases}
+        purchases={filteredPurchases}
         currencySymbol={getCurrencySymbol()}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
         onViewDetails={handleViewDetails}
-        onPageChange={handlePageChange}
-        onItemsPerPageChange={handleItemsPerPageChange}
       />
 
       {/* Purchase Details Modal */}
@@ -260,6 +207,6 @@ export default function Purchases(): React.JSX.Element {
         onClose={() => setShowReturnModal(false)}
         onSuccess={loadPurchases}
       />
-    </div>
+    </Container>
   )
 }

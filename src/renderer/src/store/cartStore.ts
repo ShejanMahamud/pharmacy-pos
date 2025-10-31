@@ -4,6 +4,7 @@ interface CartItem {
   id: string
   productId: string
   name: string
+  barcode: string
   price: number
   quantity: number
   discount: number

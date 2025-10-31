@@ -1,3 +1,5 @@
+import { AccountBalance, AccountBalanceWallet, PhoneAndroid, Wallet } from '@mui/icons-material'
+import { Avatar, Box, Paper, Typography } from '@mui/material'
 import { BankAccount } from '../../types/bankAccount'
 
 interface BankAccountStatsProps {
@@ -16,24 +18,70 @@ export default function BankAccountStats({ accounts }: BankAccountStatsProps): R
     .filter((a) => a.accountType === 'mobile_banking')
     .reduce((sum, account) => sum + account.currentBalance, 0)
 
+  const stats = [
+    {
+      title: 'Total Balance',
+      value: `$${totalBalance.toFixed(2)}`,
+      subtitle: 'All accounts combined',
+      icon: <Wallet sx={{ color: 'white' }} />,
+      color: 'primary.main',
+      bgColor: 'primary.main'
+    },
+    {
+      title: 'Cash',
+      value: `$${totalCash.toFixed(2)}`,
+      subtitle: 'Cash in hand',
+      icon: <AccountBalanceWallet sx={{ color: 'white' }} />,
+      color: 'primary.light',
+      bgColor: 'primary.light'
+    },
+    {
+      title: 'Bank Accounts',
+      value: `$${totalBank.toFixed(2)}`,
+      subtitle: 'Bank account balance',
+      icon: <AccountBalance sx={{ color: 'white' }} />,
+      color: 'secondary.main',
+      bgColor: 'secondary.light'
+    },
+    {
+      title: 'Mobile Banking',
+      value: `$${totalMobile.toFixed(2)}`,
+      subtitle: 'Mobile banking balance',
+      icon: <PhoneAndroid sx={{ color: 'white' }} />,
+      color: 'warning.main',
+      bgColor: 'warning.light'
+    }
+  ]
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="bg-indigo-50 rounded-lg p-3">
-        <p className="text-sm text-gray-600">Total Balance</p>
-        <p className="text-2xl font-bold text-indigo-600">${totalBalance.toFixed(2)}</p>
-      </div>
-      <div className="bg-green-50 rounded-lg p-3">
-        <p className="text-sm text-gray-600">Cash</p>
-        <p className="text-2xl font-bold text-green-600">${totalCash.toFixed(2)}</p>
-      </div>
-      <div className="bg-blue-50 rounded-lg p-3">
-        <p className="text-sm text-gray-600">Bank Accounts</p>
-        <p className="text-2xl font-bold text-blue-600">${totalBank.toFixed(2)}</p>
-      </div>
-      <div className="bg-purple-50 rounded-lg p-3">
-        <p className="text-sm text-gray-600">Mobile Banking</p>
-        <p className="text-2xl font-bold text-purple-600">${totalMobile.toFixed(2)}</p>
-      </div>
-    </div>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+        gap: 3,
+        mb: 3
+      }}
+    >
+      {stats.map((stat, index) => (
+        <Paper key={index} sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                {stat.title}
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: stat.color }}>
+                {stat.value}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                {stat.subtitle}
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: stat.bgColor, color: stat.color }}>
+              {stat.icon}
+            </Avatar>
+          </Box>
+        </Paper>
+      ))}
+    </Box>
   )
 }

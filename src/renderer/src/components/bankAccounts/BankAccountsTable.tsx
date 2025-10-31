@@ -1,14 +1,29 @@
+import { AccountBalance, Delete, Edit, TuneOutlined } from '@mui/icons-material'
+import {
+  Box,
+  Chip,
+  CircularProgress,
+  IconButton,
+  Paper,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Tooltip,
+  Typography
+} from '@mui/material'
+import { useState } from 'react'
 import { BankAccount } from '../../types/bankAccount'
-import Pagination from '../Pagination'
 
 interface BankAccountsTableProps {
   accounts: BankAccount[]
   loading: boolean
-  currentPage: number
-  itemsPerPage: number
   hasAdjustPermission: boolean
-  onPageChange: (page: number) => void
-  onItemsPerPageChange: (items: number) => void
   onEdit: (account: BankAccount) => void
   onDelete: (id: string) => void
   onAdjustBalance: (account: BankAccount) => void
@@ -17,20 +32,38 @@ interface BankAccountsTableProps {
 export default function BankAccountsTable({
   accounts,
   loading,
-  currentPage,
-  itemsPerPage,
   hasAdjustPermission,
-  onPageChange,
-  onItemsPerPageChange,
   onEdit,
   onDelete,
   onAdjustBalance
 }: BankAccountsTableProps): React.JSX.Element {
-  const totalPages = Math.ceil(accounts.length / itemsPerPage)
-  const paginatedAccounts = accounts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(25)
+
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.grey[300],
+      color: theme.palette.text.secondary,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      fontSize: '0.75rem',
+      letterSpacing: '0.5px'
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14
+    }
+  }))
+
+  const handleChangePage = (_: unknown, newPage: number): void => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const paginatedAccounts = accounts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   const getAccountTypeLabel = (type: string): string => {
     switch (type) {
@@ -45,167 +78,201 @@ export default function BankAccountsTable({
     }
   }
 
-  const getAccountTypeColor = (type: string): string => {
+  const getAccountTypeColor = (type: string): 'success' | 'info' | 'secondary' | 'default' => {
     switch (type) {
       case 'cash':
-        return 'bg-green-100 text-green-800'
+        return 'success'
       case 'bank':
-        return 'bg-blue-100 text-blue-800'
+        return 'info'
       case 'mobile_banking':
-        return 'bg-purple-100 text-purple-800'
+        return 'secondary'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'default'
     }
   }
 
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Account Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Account Number
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Bank/Provider
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Current Balance
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                </td>
-              </tr>
-            ) : paginatedAccounts.length > 0 ? (
-              paginatedAccounts.map((account) => (
-                <tr key={account.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{account.name}</div>
-                    {account.description && (
-                      <div className="text-xs text-gray-500">{account.description}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getAccountTypeColor(account.accountType)}`}
-                    >
-                      {getAccountTypeLabel(account.accountType)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{account.accountNumber || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{account.bankName || '-'}</div>
-                    {account.branchName && (
-                      <div className="text-xs text-gray-500">{account.branchName}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div
-                      className={`text-sm font-semibold ${
-                        account.currentBalance >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      ${Math.abs(account.currentBalance).toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        account.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {account.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => onEdit(account)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      Edit
-                    </button>
-                    {hasAdjustPermission && (
-                      <button
-                        onClick={() => onAdjustBalance(account)}
-                        className="text-purple-600 hover:text-purple-900 mr-4"
-                      >
-                        Adjust
-                      </button>
-                    )}
-                    <button
-                      onClick={() => onDelete(account.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                  <div className="flex flex-col items-center">
-                    <svg
-                      className="h-12 w-12 text-gray-400 mb-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                      />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No accounts found</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Get started by creating a new account
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+  if (loading) {
+    return (
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <CircularProgress />
+      </Paper>
+    )
+  }
 
-      {/* Pagination */}
-      {accounts.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={accounts.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={onPageChange}
-          onItemsPerPageChange={(items) => {
-            onItemsPerPageChange(items)
-            onPageChange(1)
+  if (paginatedAccounts.length === 0) {
+    return (
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            bgcolor: 'grey.200',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 2
           }}
+        >
+          <Typography variant="h5" sx={{ color: 'text.secondary' }}>
+            <AccountBalance />
+          </Typography>
+        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          No accounts found
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Get started by creating a new account
+        </Typography>
+      </Paper>
+    )
+  }
+
+  return (
+    <Box>
+      <TableContainer component={Paper} sx={{ maxHeight: 540, bgcolor: 'white' }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>Account Name</StyledTableCell>
+              <StyledTableCell>Type</StyledTableCell>
+              <StyledTableCell>Account Number</StyledTableCell>
+              <StyledTableCell>Bank/Provider</StyledTableCell>
+              <StyledTableCell align="right">Current Balance</StyledTableCell>
+              <StyledTableCell>Status</StyledTableCell>
+              <StyledTableCell align="right">Actions</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedAccounts.map((account) => (
+              <TableRow key={account.id} hover>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 2,
+                        bgcolor: 'primary.light',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white'
+                      }}
+                    >
+                      <AccountBalance fontSize="small" />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        {account.name}
+                      </Typography>
+                      {account.description && (
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {account.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={getAccountTypeLabel(account.accountType)}
+                    size="small"
+                    color={getAccountTypeColor(account.accountType)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                    {account.accountNumber || '-'}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                    {account.bankName || '-'}
+                  </Typography>
+                  {account.branchName && (
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {account.branchName}
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell align="right">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      color: account.currentBalance >= 0 ? 'success.main' : 'error.main'
+                    }}
+                  >
+                    ${Math.abs(account.currentBalance).toFixed(2)}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={account.isActive ? 'Active' : 'Inactive'}
+                    size="small"
+                    color={account.isActive ? 'success' : 'default'}
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                    <Tooltip title="Edit Account">
+                      <IconButton
+                        size="small"
+                        onClick={() => onEdit(account)}
+                        sx={{
+                          color: 'primary.main',
+                          '&:hover': { bgcolor: 'primary.50' }
+                        }}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    {hasAdjustPermission && (
+                      <Tooltip title="Adjust Balance">
+                        <IconButton
+                          size="small"
+                          onClick={() => onAdjustBalance(account)}
+                          sx={{
+                            color: 'secondary.main',
+                            '&:hover': { bgcolor: 'secondary.50' }
+                          }}
+                        >
+                          <TuneOutlined fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    <Tooltip title="Delete Account">
+                      <IconButton
+                        size="small"
+                        onClick={() => onDelete(account.id)}
+                        sx={{
+                          color: 'error.main',
+                          '&:hover': { bgcolor: 'error.50' }
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Paper>
+        <TablePagination
+          component="div"
+          count={accounts.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
         />
-      )}
-    </div>
+      </Paper>
+    </Box>
   )
 }

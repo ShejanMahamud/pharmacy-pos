@@ -1,3 +1,17 @@
+import { CheckCircle, ChevronRight, Warning } from '@mui/icons-material'
+import {
+  Avatar,
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  Link,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Typography
+} from '@mui/material'
 import { LowStockItem } from '../../types/dashboard'
 
 interface LowStockAlertsCardProps {
@@ -5,80 +19,101 @@ interface LowStockAlertsCardProps {
   currencySymbol: string
 }
 
-export default function LowStockAlertsCard({ items, currencySymbol }: LowStockAlertsCardProps) {
+export default function LowStockAlertsCard({
+  items,
+  currencySymbol
+}: LowStockAlertsCardProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Low Stock Alerts</h2>
-          <a
+    <Card
+      sx={{
+        borderRadius: 2,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+        border: '1px solid #e0e0e0'
+      }}
+    >
+      <CardContent sx={{ p: 0 }}>
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            borderBottom: '1px solid #e0e0e0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Low Stock Alerts
+          </Typography>
+          <Link
             href="#/inventory"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: 500
+            }}
           >
             View All
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
-        </div>
-      </div>
-      <div className="divide-y divide-gray-200">
+            <ChevronRight sx={{ fontSize: 16 }} />
+          </Link>
+        </Box>
+
         {items.length === 0 ? (
-          <div className="px-6 py-8 text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="mt-2 text-sm text-gray-500">All items are well stocked</p>
-          </div>
+          <Box sx={{ textAlign: 'center', py: 6, px: 3 }}>
+            <CheckCircle sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              All items are well stocked
+            </Typography>
+          </Box>
         ) : (
-          items.map((item) => (
-            <div key={item.id} className="px-6 py-4 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-5 w-5 text-red-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-                    <p className="text-xs text-gray-500">
-                      Current: {item.currentStock} | Min: {item.minimumStock}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-red-600">{item.currentStock} left</p>
-                  <p className="text-xs text-gray-500">
-                    {currencySymbol}
-                    {item.unitPrice != null ? item.unitPrice.toFixed(2) : '0.00'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))
+          <List sx={{ p: 0 }}>
+            {items.map((item, index) => (
+              <Box key={item.id}>
+                <ListItem
+                  sx={{
+                    px: 3,
+                    py: 2,
+                    '&:hover': {
+                      bgcolor: 'action.hover'
+                    }
+                  }}
+                >
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: '#ffebee' }}>
+                      <Warning sx={{ color: '#f44336' }} />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {item.productName}
+                      </Typography>
+                    }
+                    secondary={
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        Current: {item.currentStock} | Min: {item.minimumStock}
+                      </Typography>
+                    }
+                  />
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
+                      {item.currentStock} left
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {currencySymbol}
+                      {item.unitPrice != null ? item.unitPrice.toFixed(2) : '0.00'}
+                    </Typography>
+                  </Box>
+                </ListItem>
+                {index < items.length - 1 && <Divider />}
+              </Box>
+            ))}
+          </List>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

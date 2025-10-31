@@ -1,13 +1,14 @@
+import { Box, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useAuthStore } from '../store/authStore'
-import { Product, SalesReturn, PurchaseReturn, DamagedItem, TabType } from '../types/return'
+import DamagedItemModal from '../components/returns/DamagedItemModal'
+import DamagedItemsTable from '../components/returns/DamagedItemsTable'
+import PurchaseReturnsTable from '../components/returns/PurchaseReturnsTable'
+import ReturnDetailsModal from '../components/returns/ReturnDetailsModal'
 import ReturnsTabs from '../components/returns/ReturnsTabs'
 import SalesReturnsTable from '../components/returns/SalesReturnsTable'
-import PurchaseReturnsTable from '../components/returns/PurchaseReturnsTable'
-import DamagedItemsTable from '../components/returns/DamagedItemsTable'
-import DamagedItemModal from '../components/returns/DamagedItemModal'
-import ReturnDetailsModal from '../components/returns/ReturnDetailsModal'
+import { useAuthStore } from '../store/authStore'
+import { DamagedItem, Product, PurchaseReturn, SalesReturn, TabType } from '../types/return'
 
 export default function Returns(): React.JSX.Element {
   const user = useAuthStore((state) => state.user)
@@ -188,9 +189,34 @@ export default function Returns(): React.JSX.Element {
     setShowProductDropdown(false)
   }
 
-  const handleViewDetails = (returnItem: SalesReturn | PurchaseReturn): void => {
-    setSelectedReturn(returnItem)
-    setShowDetailsModal(true)
+  const handleViewDetails = async (returnItem: SalesReturn | PurchaseReturn): Promise<void> => {
+    try {
+      // Open modal with loading state first
+      setSelectedReturn(null)
+      setShowDetailsModal(true)
+
+      const isSalesReturn = 'customerName' in returnItem
+
+      // Fetch full details with items from database
+      let fullReturn
+      if (isSalesReturn) {
+        fullReturn = await window.api.salesReturns.getById(returnItem.id)
+      } else {
+        fullReturn = await window.api.purchaseReturns.getById(returnItem.id)
+      }
+
+      if (!fullReturn) {
+        throw new Error('Return not found')
+      }
+
+      // Set the full data
+      setSelectedReturn(fullReturn)
+    } catch (error) {
+      console.error('Failed to load return details:', error)
+      toast.error('Failed to load return details')
+      setShowDetailsModal(false)
+      setSelectedReturn(null)
+    }
   }
 
   const handleProductSearchChange = (term: string): void => {
@@ -224,71 +250,75 @@ export default function Returns(): React.JSX.Element {
   )
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Returns & Damage Tracking</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Manage sales returns, purchase returns, and damaged/expired inventory
-        </p>
-      </div>
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+      {/* Page Header */}
+      <Box
+        sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+      >
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+            Returns & Damage Tracking
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage sales returns, purchase returns, and damaged/expired inventory
+          </Typography>
+        </Box>
+      </Box>
 
       {/* Tabs */}
       <ReturnsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        {activeTab === 'sales-returns' && (
-          <SalesReturnsTable
-            returns={paginatedSalesReturns}
-            searchTerm={salesSearchTerm}
-            onSearchChange={setSalesSearchTerm}
-            currentPage={salesCurrentPage}
-            totalPages={salesTotalPages}
-            itemsPerPage={salesItemsPerPage}
-            onPageChange={setSalesCurrentPage}
-            onItemsPerPageChange={(items) => {
-              setSalesItemsPerPage(items)
-              setSalesCurrentPage(1)
-            }}
-            onViewDetails={handleViewDetails}
-          />
-        )}
+      {activeTab === 'sales-returns' && (
+        <SalesReturnsTable
+          returns={paginatedSalesReturns}
+          searchTerm={salesSearchTerm}
+          onSearchChange={setSalesSearchTerm}
+          currentPage={salesCurrentPage}
+          totalPages={salesTotalPages}
+          itemsPerPage={salesItemsPerPage}
+          onPageChange={setSalesCurrentPage}
+          onItemsPerPageChange={(items) => {
+            setSalesItemsPerPage(items)
+            setSalesCurrentPage(1)
+          }}
+          onViewDetails={handleViewDetails}
+        />
+      )}
 
-        {activeTab === 'purchase-returns' && (
-          <PurchaseReturnsTable
-            returns={paginatedPurchaseReturns}
-            searchTerm={purchaseSearchTerm}
-            onSearchChange={setPurchaseSearchTerm}
-            currentPage={purchaseCurrentPage}
-            totalPages={purchaseTotalPages}
-            itemsPerPage={purchaseItemsPerPage}
-            onPageChange={setPurchaseCurrentPage}
-            onItemsPerPageChange={(items) => {
-              setPurchaseItemsPerPage(items)
-              setPurchaseCurrentPage(1)
-            }}
-            onViewDetails={handleViewDetails}
-          />
-        )}
+      {activeTab === 'purchase-returns' && (
+        <PurchaseReturnsTable
+          returns={paginatedPurchaseReturns}
+          searchTerm={purchaseSearchTerm}
+          onSearchChange={setPurchaseSearchTerm}
+          currentPage={purchaseCurrentPage}
+          totalPages={purchaseTotalPages}
+          itemsPerPage={purchaseItemsPerPage}
+          onPageChange={setPurchaseCurrentPage}
+          onItemsPerPageChange={(items) => {
+            setPurchaseItemsPerPage(items)
+            setPurchaseCurrentPage(1)
+          }}
+          onViewDetails={handleViewDetails}
+        />
+      )}
 
-        {activeTab === 'damaged-expired' && (
-          <DamagedItemsTable
-            items={paginatedDamagedItems}
-            searchTerm={damagedSearchTerm}
-            onSearchChange={setDamagedSearchTerm}
-            currentPage={damagedCurrentPage}
-            totalPages={damagedTotalPages}
-            itemsPerPage={damagedItemsPerPage}
-            onPageChange={setDamagedCurrentPage}
-            onItemsPerPageChange={(items) => {
-              setDamagedItemsPerPage(items)
-              setDamagedCurrentPage(1)
-            }}
-            onAddDamagedItem={() => setShowDamagedItemModal(true)}
-          />
-        )}
-      </div>
+      {activeTab === 'damaged-expired' && (
+        <DamagedItemsTable
+          items={paginatedDamagedItems}
+          searchTerm={damagedSearchTerm}
+          onSearchChange={setDamagedSearchTerm}
+          currentPage={damagedCurrentPage}
+          totalPages={damagedTotalPages}
+          itemsPerPage={damagedItemsPerPage}
+          onPageChange={setDamagedCurrentPage}
+          onItemsPerPageChange={(items) => {
+            setDamagedItemsPerPage(items)
+            setDamagedCurrentPage(1)
+          }}
+          onAddDamagedItem={() => setShowDamagedItemModal(true)}
+        />
+      )}
 
       {/* Modals */}
       <DamagedItemModal
@@ -324,6 +354,6 @@ export default function Returns(): React.JSX.Element {
         }}
         returnItem={selectedReturn}
       />
-    </div>
+    </Container>
   )
 }

@@ -1,3 +1,4 @@
+import { Box, Paper, Typography } from '@mui/material'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { MonthlySale } from '../../types/report'
 
@@ -12,14 +13,16 @@ export default function SalesChart({
   data,
   currencySymbol,
   title = 'Monthly Sales Performance',
-  barColor = '#3b82f6'
+  barColor = '#1976d2'
 }: SalesChartProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-      </div>
-      <div className="p-6">
+    <Paper sx={{ mb: 3 }}>
+      <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Typography variant="h6" fontWeight="semibold">
+          {title}
+        </Typography>
+      </Box>
+      <Box sx={{ p: 3 }}>
         {data.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data}>
@@ -34,13 +37,20 @@ export default function SalesChart({
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center text-gray-500">
-              <p>No sales data available for the selected period</p>
-            </div>
-          </div>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: 300
+            }}
+          >
+            <Typography variant="body1" color="text.secondary">
+              No sales data available for the selected period
+            </Typography>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Paper>
   )
 }

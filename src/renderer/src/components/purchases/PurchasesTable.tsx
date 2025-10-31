@@ -1,200 +1,231 @@
+import { Inventory, Visibility } from '@mui/icons-material'
+import {
+  Box,
+  Chip,
+  IconButton,
+  Paper,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Tooltip,
+  Typography
+} from '@mui/material'
+import { useState } from 'react'
 import { Purchase } from '../../types/purchase'
-import Pagination from '../Pagination'
 
 interface PurchasesTableProps {
   purchases: Purchase[]
   currencySymbol: string
-  currentPage: number
-  totalPages: number
-  itemsPerPage: number
   onViewDetails: (purchase: Purchase) => void
-  onPageChange: (page: number) => void
-  onItemsPerPageChange: (items: number) => void
 }
 
 export default function PurchasesTable({
   purchases,
   currencySymbol,
-  currentPage,
-  totalPages,
-  itemsPerPage,
-  onViewDetails,
-  onPageChange,
-  onItemsPerPageChange
+  onViewDetails
 }: PurchasesTableProps): React.JSX.Element {
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'received':
-        return 'bg-green-100 text-green-800'
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(25)
+
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.grey[300],
+      color: theme.palette.text.secondary,
+      fontWeight: 600,
+      textTransform: 'uppercase',
+      fontSize: '0.75rem',
+      letterSpacing: '0.5px'
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14
     }
+  }))
+
+  const handleChangePage = (_: unknown, newPage: number): void => {
+    setPage(newPage)
   }
 
-  const getPaymentStatusColor = (status: string): string => {
-    switch (status) {
-      case 'paid':
-        return 'bg-green-100 text-green-800'
-      case 'partial':
-        return 'bg-blue-100 text-blue-800'
-      case 'pending':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const paginatedPurchases = purchases.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  if (paginatedPurchases.length === 0) {
+    return (
+      <Paper sx={{ p: 12, textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            bgcolor: 'grey.200',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 2
+          }}
+        >
+          <Typography variant="h5" sx={{ color: 'text.secondary' }}>
+            <Inventory />
+          </Typography>
+        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+          No purchases found
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Get started by creating a new purchase order.
+        </Typography>
+      </Paper>
+    )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Invoice
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Supplier
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Amount
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Paid
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Due
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {purchases.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No purchases found</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Get started by creating a new purchase order
-                  </p>
-                </td>
-              </tr>
-            ) : (
-              purchases.map((purchase) => (
-                <tr key={purchase.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="h-5 w-5 text-purple-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <div className="text-sm font-medium text-gray-900">
-                          {purchase.invoiceNumber}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{purchase.supplierName || 'N/A'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(purchase.createdAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {currencySymbol}
-                      {purchase.totalAmount.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-green-600 font-medium">
-                      {currencySymbol}
-                      {purchase.paidAmount.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-red-600 font-medium">
-                      {currencySymbol}
-                      {purchase.dueAmount.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(purchase.status)}`}
-                      >
-                        {purchase.status}
-                      </span>
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusColor(purchase.paymentStatus)}`}
-                      >
-                        {purchase.paymentStatus}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => onViewDetails(purchase)}
-                      className="text-purple-600 hover:text-purple-900"
+    <Box>
+      <TableContainer component={Paper} sx={{ maxHeight: 540, bgcolor: 'white' }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>Invoice</StyledTableCell>
+              <StyledTableCell>Supplier</StyledTableCell>
+              <StyledTableCell>Date</StyledTableCell>
+              <StyledTableCell>Total Amount</StyledTableCell>
+              <StyledTableCell>Paid</StyledTableCell>
+              <StyledTableCell>Due</StyledTableCell>
+              <StyledTableCell>Status</StyledTableCell>
+              <StyledTableCell align="right">Actions</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedPurchases.map((purchase) => (
+              <TableRow key={purchase.id} hover>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 2,
+                        bgcolor: 'secondary.light',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'secondary.main'
+                      }}
                     >
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {purchases.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={purchases.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={onPageChange}
-          onItemsPerPageChange={onItemsPerPageChange}
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        style={{ color: '#ffffff' }}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                        {purchase.invoiceNumber}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        #{purchase.id.slice(0, 8)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                    {purchase.supplierName || 'N/A'}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                    {new Date(purchase.createdAt).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {new Date(purchase.createdAt).toLocaleTimeString()}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                    {currencySymbol}
+                    {purchase.totalAmount.toFixed(2)}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
+                    {currencySymbol}
+                    {purchase.paidAmount.toFixed(2)}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
+                    {currencySymbol}
+                    {purchase.dueAmount.toFixed(2)}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {purchase.status === 'received' ? (
+                      <Chip label="Received" size="small" color="success" />
+                    ) : purchase.status === 'pending' ? (
+                      <Chip label="Pending" size="small" color="warning" />
+                    ) : purchase.status === 'cancelled' ? (
+                      <Chip label="Cancelled" size="small" color="error" />
+                    ) : null}
+                    {purchase.paymentStatus === 'paid' ? (
+                      <Chip label="Paid" size="small" color="success" />
+                    ) : purchase.paymentStatus === 'partial' ? (
+                      <Chip label="Partial" size="small" color="info" />
+                    ) : purchase.paymentStatus === 'pending' ? (
+                      <Chip label="Pending" size="small" color="warning" />
+                    ) : null}
+                  </Box>
+                </TableCell>
+                <TableCell align="right">
+                  <Tooltip title="View Details">
+                    <IconButton
+                      size="small"
+                      onClick={() => onViewDetails(purchase)}
+                      sx={{
+                        color: 'secondary.main',
+                        '&:hover': { bgcolor: 'secondary.50' }
+                      }}
+                    >
+                      <Visibility fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Paper>
+        <TablePagination
+          component="div"
+          count={purchases.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
         />
-      )}
-    </div>
+      </Paper>
+    </Box>
   )
 }

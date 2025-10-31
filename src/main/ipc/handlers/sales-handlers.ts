@@ -363,8 +363,9 @@ export function registerSalesHandlers(): void {
 
   // Get all sales returns (with optional date range)
   ipcMain.handle('db:salesReturns:getAll', async (_, { startDate, endDate }) => {
+    let salesReturns
     if (startDate && endDate) {
-      return db
+      salesReturns = db
         .select()
         .from(schema.salesReturns)
         .where(
@@ -375,9 +376,51 @@ export function registerSalesHandlers(): void {
         )
         .orderBy(desc(schema.salesReturns.createdAt))
         .all()
+    } else {
+      salesReturns = db
+        .select()
+        .from(schema.salesReturns)
+        .orderBy(desc(schema.salesReturns.createdAt))
+        .all()
     }
 
-    return db.select().from(schema.salesReturns).orderBy(desc(schema.salesReturns.createdAt)).all()
+    // Enrich with related names
+    return salesReturns.map((salesReturn) => {
+      // Get user name
+      let userName = ''
+      if (salesReturn.userId) {
+        const user = db
+          .select({ username: schema.users.username })
+          .from(schema.users)
+          .where(eq(schema.users.id, salesReturn.userId))
+          .get()
+        userName = user?.username || ''
+      }
+
+      // Get customer name
+      let customerName: string | null = null
+      if (salesReturn.customerId) {
+        const customer = db
+          .select({ name: schema.customers.name })
+          .from(schema.customers)
+          .where(eq(schema.customers.id, salesReturn.customerId))
+          .get()
+        customerName = customer?.name || null
+      }
+
+      // Get account name
+      let accountName: string | null = null
+      if (salesReturn.accountId) {
+        const account = db
+          .select({ name: schema.bankAccounts.name })
+          .from(schema.bankAccounts)
+          .where(eq(schema.bankAccounts.id, salesReturn.accountId))
+          .get()
+        accountName = account?.name || null
+      }
+
+      return { ...salesReturn, userName, customerName, accountName }
+    })
   })
 
   // Get sales return by ID with items
@@ -394,7 +437,41 @@ export function registerSalesHandlers(): void {
         .from(schema.salesReturnItems)
         .where(eq(schema.salesReturnItems.returnId, id))
         .all()
-      return { ...salesReturn, items }
+
+      // Get user name
+      let userName = ''
+      if (salesReturn.userId) {
+        const user = db
+          .select({ username: schema.users.username })
+          .from(schema.users)
+          .where(eq(schema.users.id, salesReturn.userId))
+          .get()
+        userName = user?.username || ''
+      }
+
+      // Get customer name
+      let customerName: string | null = null
+      if (salesReturn.customerId) {
+        const customer = db
+          .select({ name: schema.customers.name })
+          .from(schema.customers)
+          .where(eq(schema.customers.id, salesReturn.customerId))
+          .get()
+        customerName = customer?.name || null
+      }
+
+      // Get account name
+      let accountName: string | null = null
+      if (salesReturn.accountId) {
+        const account = db
+          .select({ name: schema.bankAccounts.name })
+          .from(schema.bankAccounts)
+          .where(eq(schema.bankAccounts.id, salesReturn.accountId))
+          .get()
+        accountName = account?.name || null
+      }
+
+      return { ...salesReturn, items, userName, customerName, accountName }
     }
     return null
   })

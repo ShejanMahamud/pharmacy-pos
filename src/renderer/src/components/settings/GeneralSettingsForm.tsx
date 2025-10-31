@@ -1,3 +1,5 @@
+import { Paper, Box, Typography, TextField, Button } from '@mui/material'
+
 interface GeneralSettingsFormProps {
   storeName: string
   storePhone: string
@@ -20,73 +22,71 @@ export default function GeneralSettingsForm({
   onStoreEmailChange,
   onStoreAddressChange,
   onSubmit
-}: GeneralSettingsFormProps) {
+}: GeneralSettingsFormProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Store Information</h2>
-        <p className="text-sm text-gray-600 mt-1">Basic information about your pharmacy store</p>
-      </div>
+    <Paper sx={{ p: 3 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" fontWeight="semibold" gutterBottom>
+          Store Information
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Basic information about your pharmacy store
+        </Typography>
+      </Box>
 
-      <form onSubmit={onSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Store Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={storeName}
-              onChange={(e) => onStoreNameChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter store name"
-              required
-            />
-          </div>
+      <Box component="form" onSubmit={onSubmit}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+            gap: 3
+          }}
+        >
+          <TextField
+            label="Store Name"
+            value={storeName}
+            onChange={(e) => onStoreNameChange(e.target.value)}
+            placeholder="Enter store name"
+            required
+            fullWidth
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-            <input
-              type="tel"
-              value={storePhone}
-              onChange={(e) => onStorePhoneChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter phone number"
-            />
-          </div>
+          <TextField
+            label="Phone Number"
+            type="tel"
+            value={storePhone}
+            onChange={(e) => onStorePhoneChange(e.target.value)}
+            placeholder="Enter phone number"
+            fullWidth
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-            <input
-              type="email"
-              value={storeEmail}
-              onChange={(e) => onStoreEmailChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter email address"
-            />
-          </div>
+          <TextField
+            label="Email Address"
+            type="email"
+            value={storeEmail}
+            onChange={(e) => onStoreEmailChange(e.target.value)}
+            placeholder="Enter email address"
+            fullWidth
+          />
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Store Address</label>
-            <textarea
-              value={storeAddress}
-              onChange={(e) => onStoreAddressChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter full store address"
-              rows={3}
-            />
-          </div>
-        </div>
+          <TextField
+            label="Store Address"
+            value={storeAddress}
+            onChange={(e) => onStoreAddressChange(e.target.value)}
+            placeholder="Enter full store address"
+            multiline
+            rows={3}
+            fullWidth
+            sx={{ gridColumn: { md: 'span 2' } }}
+          />
+        </Box>
 
-        <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end">
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
+        <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="submit" variant="contained" size="large">
             Save Changes
-          </button>
-        </div>
-      </form>
-    </div>
+          </Button>
+        </Box>
+      </Box>
+    </Paper>
   )
 }

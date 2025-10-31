@@ -1,13 +1,13 @@
+import { Box, CircularProgress, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import CustomerReport from '../components/reports/CustomerReport'
+import InventoryReport from '../components/reports/InventoryReport'
+import OverviewReport from '../components/reports/OverviewReport'
+import ReportFilters from '../components/reports/ReportFilters'
+import SalesReport from '../components/reports/SalesReport'
 import { useSettingsStore } from '../store/settingsStore'
 import { ReportData } from '../types/report'
-import ReportHeader from '../components/reports/ReportHeader'
-import ReportFilters from '../components/reports/ReportFilters'
-import OverviewReport from '../components/reports/OverviewReport'
-import SalesReport from '../components/reports/SalesReport'
-import InventoryReport from '../components/reports/InventoryReport'
-import CustomerReport from '../components/reports/CustomerReport'
 
 export default function Reports(): React.JSX.Element {
   const currency = useSettingsStore((state) => state.currency)
@@ -191,33 +191,61 @@ export default function Reports(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading reports...</p>
-          </div>
-        </div>
-      </div>
+      <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px'
+          }}
+        >
+          <CircularProgress size={48} />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            Loading reports...
+          </Typography>
+        </Box>
+      </Container>
     )
   }
 
   if (!reportData) {
     return (
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="text-center text-gray-600">No data available</div>
-      </div>
+      <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '400px'
+          }}
+        >
+          <Typography variant="body1" color="text.secondary">
+            No data available
+          </Typography>
+        </Box>
+      </Container>
     )
   }
 
   const currencySymbol = getCurrencySymbol()
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <ReportHeader
-        title="Reports & Analytics"
-        description="Track your pharmacy performance and insights"
-      />
+    <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
+      {/* Page Header */}
+      <Box
+        sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+      >
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+            Reports & Analytics
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Track your pharmacy performance and insights
+          </Typography>
+        </Box>
+      </Box>
 
       <ReportFilters
         reportType={reportType}
@@ -246,6 +274,6 @@ export default function Reports(): React.JSX.Element {
       {reportType === 'customer' && (
         <CustomerReport reportData={reportData} currencySymbol={currencySymbol} />
       )}
-    </div>
+    </Container>
   )
 }
