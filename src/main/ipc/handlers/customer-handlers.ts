@@ -33,11 +33,23 @@ export function registerCustomerHandlers(): void {
   // Create new customer
   ipcMain.handle('db:customers:create', async (_, data) => {
     const id = uuidv4()
-    const result = db
-      .insert(schema.customers)
-      .values({ id, ...data })
-      .returning()
-      .get()
+
+    // Transform status to isActive (boolean)
+    const isActive = data.status === 'active'
+
+    // Prepare customer data with proper field mapping
+    const customerData = {
+      id,
+      name: data.name,
+      phone: data.phone,
+      email: data.email || null,
+      address: data.address || null,
+      dateOfBirth: data.dateOfBirth || null,
+      loyaltyPoints: 0,
+      isActive
+    }
+
+    const result = db.insert(schema.customers).values(customerData).returning().get()
 
     createAuditLog(db, {
       action: 'create',
@@ -53,18 +65,32 @@ export function registerCustomerHandlers(): void {
   ipcMain.handle('db:customers:update', async (_, { id, data }) => {
     const oldCustomer = db.select().from(schema.customers).where(eq(schema.customers.id, id)).get()
 
+    // Transform status to isActive (boolean)
+    const isActive = data.status === 'active'
+
+    // Prepare update data with proper field mapping
+    const updateData = {
+      name: data.name,
+      phone: data.phone,
+      email: data.email || null,
+      address: data.address || null,
+      dateOfBirth: data.dateOfBirth || null,
+      isActive,
+      updatedAt: new Date().toISOString()
+    }
+
     const result = db
       .update(schema.customers)
-      .set({ ...data, updatedAt: new Date().toISOString() })
+      .set(updateData)
       .where(eq(schema.customers.id, id))
       .returning()
       .get()
 
     const changes: Record<string, { old: unknown; new: unknown }> = {}
     if (oldCustomer) {
-      Object.keys(data).forEach((key) => {
-        if (oldCustomer[key] !== data[key]) {
-          changes[key] = { old: oldCustomer[key], new: data[key] }
+      Object.keys(updateData).forEach((key) => {
+        if (oldCustomer[key] !== updateData[key]) {
+          changes[key] = { old: oldCustomer[key], new: updateData[key] }
         }
       })
     }
@@ -78,5 +104,44 @@ export function registerCustomerHandlers(): void {
     })
 
     return result
+  })
+
+  // Recalculate customer loyalty points and total purchases from sales
+  ipcMain.handle('db:customers:recalculateStats', async () => {
+    try {
+      const customers = db.select().from(schema.customers).all()
+
+      for (const customer of customers) {
+        // Get all completed sales for this customer
+        const sales = db
+          .select()
+          .from(schema.sales)
+          .where(
+            and(eq(schema.sales.customerId, customer.id), eq(schema.sales.status, 'completed'))
+          )
+          .all()
+
+        // Calculate total purchases
+        const totalPurchases = sales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0)
+
+        // Calculate loyalty points (1 point per $10)
+        const loyaltyPoints = Math.floor(totalPurchases / 10)
+
+        // Update customer
+        db.update(schema.customers)
+          .set({
+            totalPurchases,
+            loyaltyPoints,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.customers.id, customer.id))
+          .run()
+      }
+
+      return { success: true, message: 'Customer stats recalculated successfully' }
+    } catch (error) {
+      console.error('Error recalculating customer stats:', error)
+      return { success: false, message: 'Failed to recalculate customer stats' }
+    }
   })
 }

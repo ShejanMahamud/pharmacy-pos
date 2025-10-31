@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useAuthStore } from '../store/authStore'
-import { useSettingsStore } from '../store/settingsStore'
-import { DashboardStats as StatsType, LowStockItem, RecentSale } from '../types/dashboard'
 import DashboardHeader from '../components/dashboard/DashboardHeader'
 import DashboardStats from '../components/dashboard/DashboardStats'
-import RecentSalesCard from '../components/dashboard/RecentSalesCard'
 import LowStockAlertsCard from '../components/dashboard/LowStockAlertsCard'
 import QuickActionsCard from '../components/dashboard/QuickActionsCard'
+import RecentSalesCard from '../components/dashboard/RecentSalesCard'
+import { useAuthStore } from '../store/authStore'
+import { useSettingsStore } from '../store/settingsStore'
+import { LowStockItem, RecentSale, DashboardStats as StatsType } from '../types/dashboard'
 
 export default function Dashboard(): React.JSX.Element {
   const user = useAuthStore((state) => state.user)
@@ -92,6 +92,23 @@ export default function Dashboard(): React.JSX.Element {
         // Get recent 5 sales
         const recent = allSales.slice(0, 5)
 
+        // Map low stock data to LowStockItem format
+        const mappedLowStock: LowStockItem[] = lowStock.map(
+          (item: {
+            id: string
+            productName: string
+            quantity: number
+            reorderLevel: number
+            unitPrice: number
+          }) => ({
+            id: item.id,
+            productName: item.productName,
+            currentStock: item.quantity,
+            minimumStock: item.reorderLevel,
+            unitPrice: item.unitPrice || 0
+          })
+        )
+
         setStats({
           todaySales: todaySales.length,
           todayRevenue,
@@ -102,7 +119,7 @@ export default function Dashboard(): React.JSX.Element {
         })
 
         setRecentSales(recent)
-        setLowStockItems(lowStock.slice(0, 5))
+        setLowStockItems(mappedLowStock.slice(0, 5))
       } catch (error) {
         console.error('Error loading dashboard data:', error)
         toast.error('Failed to load dashboard data')

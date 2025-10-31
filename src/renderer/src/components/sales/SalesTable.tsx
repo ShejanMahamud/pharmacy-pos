@@ -1,4 +1,4 @@
-import { Inventory, Print, Visibility } from '@mui/icons-material'
+import { Inventory, Visibility } from '@mui/icons-material'
 import {
   Box,
   Chip,
@@ -164,8 +164,10 @@ export default function SalesTable({
                 <TableCell>
                   {sale.paymentMethod === 'cash' ? (
                     <Chip label="Cash" size="small" color="success" />
-                  ) : sale.paymentMethod === 'card' ? (
-                    <Chip label="Card" size="small" color="warning" />
+                  ) : sale.paymentMethod === 'bank' ? (
+                    <Chip label="Bank" size="small" color="info" />
+                  ) : sale.paymentMethod === 'mobile_banking' ? (
+                    <Chip label="Mobile Banking" size="small" color="warning" />
                   ) : (
                     <Chip label="Other" size="small" color="secondary" />
                   )}
@@ -187,8 +189,10 @@ export default function SalesTable({
                     <Chip label="Completed" size="small" color="success" />
                   ) : sale.status === 'refunded' ? (
                     <Chip label="Refunded" size="small" color="error" />
-                  ) : sale.status === 'partially_refunded' ? (
-                    <Chip label="Partially Refunded" size="small" color="warning" />
+                  ) : sale.status === 'partially_returned' ? (
+                    <Chip label="Partially Returned" size="small" color="warning" />
+                  ) : sale.status === 'cancelled' ? (
+                    <Chip label="Cancelled" size="small" color="default" />
                   ) : null}
                 </TableCell>
                 <TableCell align="right">
@@ -203,18 +207,6 @@ export default function SalesTable({
                         }}
                       >
                         <Visibility fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Print">
-                      <IconButton
-                        size="small"
-                        onClick={() => onPrint(sale)}
-                        sx={{
-                          color: 'text.secondary',
-                          '&:hover': { bgcolor: 'grey.100' }
-                        }}
-                      >
-                        <Print fontSize="small" />
                       </IconButton>
                     </Tooltip>
                   </Box>

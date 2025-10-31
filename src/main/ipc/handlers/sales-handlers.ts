@@ -61,6 +61,39 @@ export function registerSalesHandlers(): void {
       }
     }
 
+    // Update customer loyalty points and total purchases if customer is linked
+    if (sale.customerId) {
+      const customer = db
+        .select()
+        .from(schema.customers)
+        .where(eq(schema.customers.id, sale.customerId))
+        .get()
+
+      if (customer) {
+        const currentLoyaltyPoints = customer.loyaltyPoints ?? 0
+        const currentTotalPurchases = customer.totalPurchases ?? 0
+        const pointsRedeemed = sale.pointsRedeemed ?? 0
+
+        // Calculate the amount on which new points should be earned
+        // This should be the final amount paid (totalAmount) which already has points discount applied
+        // So we earn points on what customer actually paid
+        const newPointsEarned = Math.floor(sale.totalAmount / 10)
+
+        // Calculate final points: (current - redeemed) + earned
+        // First deduct redeemed points, then add newly earned points
+        const finalPoints = Math.max(0, currentLoyaltyPoints - pointsRedeemed + newPointsEarned)
+
+        db.update(schema.customers)
+          .set({
+            loyaltyPoints: finalPoints,
+            totalPurchases: currentTotalPurchases + sale.totalAmount,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.customers.id, sale.customerId))
+          .run()
+      }
+    }
+
     // Create audit log
     createAuditLog(db, {
       userId: sale.userId,
@@ -78,19 +111,81 @@ export function registerSalesHandlers(): void {
   ipcMain.handle('db:sales:getAll', async (_, { startDate, endDate }) => {
     if (startDate && endDate) {
       return db
-        .select()
+        .select({
+          id: schema.sales.id,
+          invoiceNumber: schema.sales.invoiceNumber,
+          customerId: schema.sales.customerId,
+          customerName: schema.customers.name,
+          accountId: schema.sales.accountId,
+          userId: schema.sales.userId,
+          subtotal: schema.sales.subtotal,
+          taxAmount: schema.sales.taxAmount,
+          discountAmount: schema.sales.discountAmount,
+          totalAmount: schema.sales.totalAmount,
+          paidAmount: schema.sales.paidAmount,
+          changeAmount: schema.sales.changeAmount,
+          paymentMethod: schema.sales.paymentMethod,
+          status: schema.sales.status,
+          notes: schema.sales.notes,
+          createdAt: schema.sales.createdAt
+        })
         .from(schema.sales)
+        .leftJoin(schema.customers, eq(schema.sales.customerId, schema.customers.id))
         .where(and(gte(schema.sales.createdAt, startDate), lte(schema.sales.createdAt, endDate)))
         .orderBy(desc(schema.sales.createdAt))
         .all()
     }
 
-    return db.select().from(schema.sales).orderBy(desc(schema.sales.createdAt)).all()
+    return db
+      .select({
+        id: schema.sales.id,
+        invoiceNumber: schema.sales.invoiceNumber,
+        customerId: schema.sales.customerId,
+        customerName: schema.customers.name,
+        accountId: schema.sales.accountId,
+        userId: schema.sales.userId,
+        subtotal: schema.sales.subtotal,
+        taxAmount: schema.sales.taxAmount,
+        discountAmount: schema.sales.discountAmount,
+        totalAmount: schema.sales.totalAmount,
+        paidAmount: schema.sales.paidAmount,
+        changeAmount: schema.sales.changeAmount,
+        paymentMethod: schema.sales.paymentMethod,
+        status: schema.sales.status,
+        notes: schema.sales.notes,
+        createdAt: schema.sales.createdAt
+      })
+      .from(schema.sales)
+      .leftJoin(schema.customers, eq(schema.sales.customerId, schema.customers.id))
+      .orderBy(desc(schema.sales.createdAt))
+      .all()
   })
 
   // Get sale by ID with items
   ipcMain.handle('db:sales:getById', async (_, id: string) => {
-    const sale = db.select().from(schema.sales).where(eq(schema.sales.id, id)).get()
+    const sale = db
+      .select({
+        id: schema.sales.id,
+        invoiceNumber: schema.sales.invoiceNumber,
+        customerId: schema.sales.customerId,
+        customerName: schema.customers.name,
+        accountId: schema.sales.accountId,
+        userId: schema.sales.userId,
+        subtotal: schema.sales.subtotal,
+        taxAmount: schema.sales.taxAmount,
+        discountAmount: schema.sales.discountAmount,
+        totalAmount: schema.sales.totalAmount,
+        paidAmount: schema.sales.paidAmount,
+        changeAmount: schema.sales.changeAmount,
+        paymentMethod: schema.sales.paymentMethod,
+        status: schema.sales.status,
+        notes: schema.sales.notes,
+        createdAt: schema.sales.createdAt
+      })
+      .from(schema.sales)
+      .leftJoin(schema.customers, eq(schema.sales.customerId, schema.customers.id))
+      .where(eq(schema.sales.id, id))
+      .get()
 
     if (sale) {
       const items = db.select().from(schema.saleItems).where(eq(schema.saleItems.saleId, id)).all()
@@ -161,6 +256,96 @@ export function registerSalesHandlers(): void {
           .where(eq(schema.bankAccounts.id, salesReturn.accountId))
           .run()
       }
+    }
+
+    // Update customer loyalty points and total purchases (deduct returned amount)
+    if (salesReturn.customerId) {
+      const customer = db
+        .select()
+        .from(schema.customers)
+        .where(eq(schema.customers.id, salesReturn.customerId))
+        .get()
+
+      if (customer) {
+        const currentLoyaltyPoints = customer.loyaltyPoints ?? 0
+        const currentTotalPurchases = customer.totalPurchases ?? 0
+        // Deduct loyalty points based on return amount (1 point per $10)
+        const pointsToDeduct = Math.floor(salesReturn.totalAmount / 10)
+
+        db.update(schema.customers)
+          .set({
+            loyaltyPoints: Math.max(0, currentLoyaltyPoints - pointsToDeduct),
+            totalPurchases: Math.max(0, currentTotalPurchases - salesReturn.totalAmount),
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(schema.customers.id, salesReturn.customerId))
+          .run()
+      }
+    }
+
+    // Update the original sale status and amounts
+    const originalSale = db
+      .select()
+      .from(schema.sales)
+      .where(eq(schema.sales.id, salesReturn.saleId))
+      .get()
+
+    if (originalSale) {
+      // Get all sale items
+      const originalSaleItems = db
+        .select()
+        .from(schema.saleItems)
+        .where(eq(schema.saleItems.saleId, salesReturn.saleId))
+        .all()
+
+      // Get all returns for this sale (including the current one)
+      const allReturns = db
+        .select()
+        .from(schema.salesReturnItems)
+        .innerJoin(
+          schema.salesReturns,
+          eq(schema.salesReturnItems.returnId, schema.salesReturns.id)
+        )
+        .where(eq(schema.salesReturns.saleId, salesReturn.saleId))
+        .all()
+
+      // Calculate total returned quantities per product
+      const returnedQuantities = new Map<string, number>()
+      for (const returnRecord of allReturns) {
+        const productId = returnRecord.sales_return_items.productId
+        const qty = returnRecord.sales_return_items.quantity
+        returnedQuantities.set(productId, (returnedQuantities.get(productId) || 0) + qty)
+      }
+
+      // Check if all items are fully returned
+      let isFullyReturned = true
+      let hasPartialReturn = false
+      for (const saleItem of originalSaleItems) {
+        const returnedQty = returnedQuantities.get(saleItem.productId) || 0
+        if (returnedQty > 0 && returnedQty < saleItem.quantity) {
+          hasPartialReturn = true
+          isFullyReturned = false
+          break
+        } else if (returnedQty < saleItem.quantity) {
+          isFullyReturned = false
+        }
+      }
+
+      // Determine the new status (keep original totalAmount intact for history)
+      let newStatus = 'completed'
+      if (isFullyReturned) {
+        newStatus = 'refunded'
+      } else if (hasPartialReturn || salesReturn.totalAmount > 0) {
+        newStatus = 'partially_returned'
+      }
+
+      // Update sale status only (preserve original totalAmount for accurate reporting)
+      db.update(schema.sales)
+        .set({
+          status: newStatus
+        })
+        .where(eq(schema.sales.id, salesReturn.saleId))
+        .run()
     }
 
     // Create audit log

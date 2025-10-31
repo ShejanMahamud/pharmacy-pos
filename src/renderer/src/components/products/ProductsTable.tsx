@@ -1,6 +1,7 @@
 import { Inventory } from '@mui/icons-material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
+import BarcodeIcon from '@mui/icons-material/QrCode2'
 import WarningIcon from '@mui/icons-material/Warning'
 import {
   Box,
@@ -31,6 +32,7 @@ interface ProductsTableProps {
   loading: boolean
   onEdit: (product: Product) => void
   onDelete: (id: string) => void
+  onViewBarcode: (product: Product) => void
 }
 
 export default function ProductsTable({
@@ -40,7 +42,8 @@ export default function ProductsTable({
   currencySymbol,
   loading,
   onEdit,
-  onDelete
+  onDelete,
+  onViewBarcode
 }: ProductsTableProps): React.JSX.Element {
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(25)
@@ -240,6 +243,15 @@ export default function ProductsTable({
                     />
                   </TableCell>
                   <TableCell align="right">
+                    <Tooltip title="View Barcode">
+                      <IconButton
+                        size="small"
+                        color="secondary"
+                        onClick={() => onViewBarcode(product)}
+                      >
+                        <BarcodeIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Edit">
                       <IconButton size="small" color="primary" onClick={() => onEdit(product)}>
                         <EditIcon fontSize="small" />

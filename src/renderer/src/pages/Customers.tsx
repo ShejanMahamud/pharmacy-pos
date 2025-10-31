@@ -48,7 +48,8 @@ export default function Customers(): React.JSX.Element {
   })
 
   useEffect(() => {
-    loadCustomers()
+    initializeCustomers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -56,10 +57,29 @@ export default function Customers(): React.JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customers, searchTerm, statusFilter])
 
+  const initializeCustomers = async (): Promise<void> => {
+    try {
+      // First, recalculate customer stats from existing sales (one-time fix)
+      await window.api.customers.recalculateStats()
+      // Then load customers with updated stats
+      await loadCustomers()
+    } catch (_error) {
+      // If recalculation fails, still try to load customers
+      await loadCustomers()
+    }
+  }
+
   const loadCustomers = async (): Promise<void> => {
     try {
       const allCustomers = await window.api.customers.getAll()
-      setCustomers(allCustomers)
+      // Map isActive to status for frontend compatibility
+      const mappedCustomers = allCustomers.map((customer: any) => ({
+        ...customer,
+        status: customer.isActive ? 'active' : 'inactive',
+        loyaltyPoints: customer.loyaltyPoints || 0,
+        totalPurchases: customer.totalPurchases || 0
+      }))
+      setCustomers(mappedCustomers)
     } catch (_error) {
       toast.error('Failed to load customers')
     }
@@ -118,7 +138,7 @@ export default function Customers(): React.JSX.Element {
       email: customer.email || '',
       address: customer.address || '',
       dateOfBirth: customer.dateOfBirth || '',
-      status: customer.status
+      status: customer.status || 'active'
     })
     setShowModal(true)
   }

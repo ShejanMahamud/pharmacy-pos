@@ -10,6 +10,7 @@ import {
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { Category, Product, ProductFormData, Supplier, Unit } from '../../types/product'
+import { generateUniqueBarcode } from '../../utils/barcodeGenerator'
 import BasicInfoSection from './form/BasicInfoSection'
 import InventorySection from './form/InventorySection'
 import PricingSection from './form/PricingSection'
@@ -86,9 +87,11 @@ export default function ProductFormModal({
         stockQuantity: 0 // Don't auto-fill stock when editing
       })
     } else {
-      setFormData(initialFormData)
+      // Generate barcode for new products
+      const newBarcode = generateUniqueBarcode()
+      setFormData({ ...initialFormData, barcode: newBarcode })
     }
-  }, [editingProduct])
+  }, [editingProduct, isOpen])
 
   const handleFormChange = (updates: Partial<ProductFormData>): void => {
     setFormData((prev) => ({ ...prev, ...updates }))

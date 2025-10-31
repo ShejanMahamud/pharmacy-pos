@@ -6,10 +6,12 @@ import SaleReturnModal from '../components/sales/SaleReturnModal'
 import SalesFilters from '../components/sales/SalesFilters'
 import SalesStats from '../components/sales/SalesStats'
 import SalesTable from '../components/sales/SalesTable'
+import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { BankAccount, ReturnFormData, ReturnItem, Sale, SaleItem } from '../types/sale'
 
 export default function Sales(): React.JSX.Element {
+  const user = useAuthStore((state) => state.user)
   const [sales, setSales] = useState<Sale[]>([])
   const [filteredSales, setFilteredSales] = useState<Sale[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -33,6 +35,9 @@ export default function Sales(): React.JSX.Element {
   const [returnItems, setReturnItems] = useState<ReturnItem[]>([])
 
   const currency = useSettingsStore((state) => state.currency)
+  const storeName = useSettingsStore((state) => state.storeName)
+  const storeAddress = useSettingsStore((state) => state.storeAddress)
+  const storePhone = useSettingsStore((state) => state.storePhone)
 
   // Get currency symbol
   const getCurrencySymbol = (): string => {
@@ -353,8 +358,26 @@ export default function Sales(): React.JSX.Element {
   const handleReturnSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
     try {
-      if (!returnFormData.saleId || returnItems.length === 0) {
-        toast.error('Please fill all required fields')
+      if (!user) {
+        toast.error('User not authenticated')
+        return
+      }
+
+      if (!returnFormData.saleId) {
+        toast.error('Please select a sale')
+        return
+      }
+
+      // Filter return items with quantity > 0
+      const validReturnItems = returnItems.filter((item) => item.quantity > 0)
+
+      if (validReturnItems.length === 0) {
+        toast.error('Please add at least one item to return')
+        return
+      }
+
+      if (!returnFormData.reason) {
+        toast.error('Please provide a return reason')
         return
       }
 
@@ -364,7 +387,22 @@ export default function Sales(): React.JSX.Element {
         return
       }
 
-      const totalAmount = returnItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+      const totalAmount = validReturnItems.reduce(
+        (sum, item) => sum + item.quantity * item.unitPrice,
+        0
+      )
+
+      // Prepare return items with all required fields
+      const returnItemsWithSubtotal = validReturnItems.map((item) => ({
+        saleItemId: item.saleItemId,
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discountPercent: 0,
+        taxRate: 0,
+        subtotal: item.quantity * item.unitPrice
+      }))
 
       await window.api.salesReturns.create(
         {
@@ -372,7 +410,7 @@ export default function Sales(): React.JSX.Element {
           saleId: returnFormData.saleId,
           customerId: sale.customerId || null,
           accountId: returnFormData.accountId || null,
-          userId: 'current-user',
+          userId: user.id,
           subtotal: totalAmount,
           taxAmount: 0,
           discountAmount: 0,
@@ -387,7 +425,7 @@ export default function Sales(): React.JSX.Element {
           reason: returnFormData.reason,
           notes: returnFormData.notes
         },
-        returnItems
+        returnItemsWithSubtotal
       )
 
       toast.success('Sales return created successfully')
@@ -401,7 +439,8 @@ export default function Sales(): React.JSX.Element {
       })
       setReturnItems([])
       await loadSales()
-    } catch {
+    } catch (error) {
+      console.error('Failed to create sales return:', error)
       toast.error('Failed to create sales return')
     }
   }
@@ -462,8 +501,10 @@ export default function Sales(): React.JSX.Element {
         sale={selectedSale}
         saleItems={saleItems}
         currencySymbol={getCurrencySymbol()}
+        storeName={storeName}
+        storeAddress={storeAddress}
+        storePhone={storePhone}
         onClose={() => setShowDetailsModal(false)}
-        onPrint={handlePrint}
       />
 
       {/* Sales Return Modal */}

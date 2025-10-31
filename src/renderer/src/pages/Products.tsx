@@ -3,6 +3,7 @@ import CategoryIcon from '@mui/icons-material/Category'
 import { Box, Button, Container, Paper, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import ProductBarcodeModal from '../components/products/ProductBarcodeModal'
 import ProductFilters from '../components/products/ProductFilters'
 import ProductFormModal from '../components/products/ProductFormModal'
 import ProductsTable from '../components/products/ProductsTable'
@@ -19,7 +20,9 @@ export default function Products(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(false)
 
   // Get currency symbol
@@ -184,6 +187,16 @@ export default function Products(): React.JSX.Element {
     setEditingProduct(null)
   }
 
+  const handleViewBarcode = (product: Product): void => {
+    setSelectedProduct(product)
+    setShowBarcodeModal(true)
+  }
+
+  const handleCloseBarcodeModal = (): void => {
+    setShowBarcodeModal(false)
+    setSelectedProduct(null)
+  }
+
   return (
     <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       {/* Page Header */}
@@ -251,6 +264,7 @@ export default function Products(): React.JSX.Element {
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onViewBarcode={handleViewBarcode}
       />
 
       {/* Product Form Modal */}
@@ -263,6 +277,14 @@ export default function Products(): React.JSX.Element {
         currencySymbol={getCurrencySymbol()}
         onClose={handleCloseModal}
         onSubmit={handleSubmit}
+      />
+
+      {/* Product Barcode Modal */}
+      <ProductBarcodeModal
+        isOpen={showBarcodeModal}
+        product={selectedProduct}
+        currencySymbol={getCurrencySymbol()}
+        onClose={handleCloseBarcodeModal}
       />
     </Container>
   )

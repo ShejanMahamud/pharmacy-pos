@@ -82,6 +82,7 @@ interface API {
     getByPhone: (phone: string) => Promise<any>
     create: (data: any) => Promise<any>
     update: (id: string, data: any) => Promise<any>
+    recalculateStats: () => Promise<{ success: boolean; message: string }>
   }
   sales: {
     create: (sale: any, items: any[]) => Promise<any>

@@ -86,7 +86,8 @@ const api = {
     getAll: (search?: string) => ipcRenderer.invoke('db:customers:getAll', search),
     getByPhone: (phone: string) => ipcRenderer.invoke('db:customers:getByPhone', phone),
     create: (data: any) => ipcRenderer.invoke('db:customers:create', data),
-    update: (id: string, data: any) => ipcRenderer.invoke('db:customers:update', { id, data })
+    update: (id: string, data: any) => ipcRenderer.invoke('db:customers:update', { id, data }),
+    recalculateStats: () => ipcRenderer.invoke('db:customers:recalculateStats')
   },
   // Sales
   sales: {

@@ -71,7 +71,7 @@ export default function LowStockAlertsCard({ items, currencySymbol }: LowStockAl
                   <p className="text-sm font-semibold text-red-600">{item.currentStock} left</p>
                   <p className="text-xs text-gray-500">
                     {currencySymbol}
-                    {item.unitPrice.toFixed(2)}
+                    {item.unitPrice != null ? item.unitPrice.toFixed(2) : '0.00'}
                   </p>
                 </div>
               </div>

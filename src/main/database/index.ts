@@ -12,9 +12,11 @@ import { addAttendanceSalaryTables } from './migrations/add-attendance-salary-ta
 import { runAuditLogsMigration } from './migrations/add-audit-logs-table'
 import { addBankAccountsTable } from './migrations/add-bank-accounts-table'
 import { migrateAddCreatedBy } from './migrations/add-created-by'
+import { addCustomerTotalPurchases } from './migrations/add-customer-total-purchases'
 import { addDamagedItemsTable } from './migrations/add-damaged-items-table'
 import { addMissingOpeningBalances } from './migrations/add-missing-opening-balances'
 import { addMustChangePassword } from './migrations/add-must-change-password'
+import { addPointsRedeemedToSales } from './migrations/add-points-redeemed-to-sales'
 import { migrateProductShelf } from './migrations/add-product-shelf'
 import { migrateProductUnitConversion } from './migrations/add-product-unit-conversion'
 import { addSupplierAccountingFields } from './migrations/add-supplier-accounting-fields'
@@ -60,6 +62,8 @@ function runMigrations(): void {
     addAccountToPurchases()
     addAccountToSales()
     addMustChangePassword()
+    addCustomerTotalPurchases()
+    addPointsRedeemedToSales()
     if (sqlite) {
       migrateSupplierPaymentsLedger(sqlite)
       addMissingOpeningBalances(sqlite)

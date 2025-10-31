@@ -1,7 +1,6 @@
-import { Close, Print } from '@mui/icons-material'
+import { Close } from '@mui/icons-material'
 import {
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,15 +17,21 @@ import {
   TableRow,
   Typography
 } from '@mui/material'
+import toast from 'react-hot-toast'
 import { Sale, SaleItem } from '../../types/sale'
+import { printPDFReceipt } from '../../utils/pdfPrint'
+import { printThermalReceipt } from '../../utils/thermalPrint'
+import PrintButtons from '../shared/PrintButtons'
 
 interface SaleDetailsModalProps {
   isOpen: boolean
   sale: Sale | null
   saleItems: SaleItem[]
   currencySymbol: string
+  storeName?: string
+  storeAddress?: string
+  storePhone?: string
   onClose: () => void
-  onPrint: (sale: Sale) => void
 }
 
 export default function SaleDetailsModal({
@@ -34,10 +39,76 @@ export default function SaleDetailsModal({
   sale,
   saleItems,
   currencySymbol,
-  onClose,
-  onPrint
+  storeName,
+  storeAddress,
+  storePhone,
+  onClose
 }: SaleDetailsModalProps): React.JSX.Element | null {
   if (!sale) return null
+
+  const handlePdfPrint = (): void => {
+    try {
+      const receiptData = {
+        invoiceNumber: sale.invoiceNumber,
+        customerName: sale.customerName || 'Walk-in Customer',
+        date: new Date(sale.createdAt).toLocaleString(),
+        items: saleItems.map((item) => ({
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.subtotal
+        })),
+        subtotal: sale.totalAmount,
+        discountAmount: 0,
+        taxAmount: 0,
+        totalAmount: sale.totalAmount,
+        paidAmount: sale.paidAmount,
+        changeAmount: sale.changeAmount,
+        paymentMethod: sale.paymentMethod,
+        storeName,
+        storeAddress,
+        storePhone
+      }
+
+      printPDFReceipt(receiptData, currencySymbol)
+      toast.success('PDF receipt generated successfully')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      toast.error('Failed to generate PDF receipt')
+    }
+  }
+
+  const handleThermalPrint = (): void => {
+    try {
+      const receiptData = {
+        invoiceNumber: sale.invoiceNumber,
+        customerName: sale.customerName || 'Walk-in Customer',
+        date: new Date(sale.createdAt).toLocaleString(),
+        items: saleItems.map((item) => ({
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.subtotal
+        })),
+        subtotal: sale.totalAmount,
+        discountAmount: 0,
+        taxAmount: 0,
+        totalAmount: sale.totalAmount,
+        paidAmount: sale.paidAmount,
+        changeAmount: sale.changeAmount,
+        paymentMethod: sale.paymentMethod,
+        storeName,
+        storeAddress,
+        storePhone
+      }
+
+      printThermalReceipt(receiptData, currencySymbol)
+      toast.success('Thermal receipt sent to printer')
+    } catch (error) {
+      console.error('Error printing thermal receipt:', error)
+      toast.error('Failed to print thermal receipt')
+    }
+  }
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -170,13 +241,8 @@ export default function SaleDetailsModal({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={onClose} variant="outlined">
-          Close
-        </Button>
-        <Button onClick={() => onPrint(sale)} variant="contained" startIcon={<Print />}>
-          Print Invoice
-        </Button>
+      <DialogActions sx={{ p: 2, gap: 1, flexDirection: 'row' }}>
+        <PrintButtons onPdfPrint={handlePdfPrint} onThermalPrint={handleThermalPrint} />
       </DialogActions>
     </Dialog>
   )

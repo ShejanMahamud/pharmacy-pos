@@ -25,15 +25,23 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       login: async (username: string, password: string) => {
         try {
+          if (!window.api) {
+            console.error('window.api not available in login')
+            return false
+          }
           const user = await window.api.users.authenticate(username, password)
           if (user) {
             set({ user, isAuthenticated: true })
-            await window.api.auditLogs.create({
-              userId: user.id,
-              action: 'login',
-              entityType: 'user',
-              entityId: user.id
-            })
+            try {
+              await window.api.auditLogs.create({
+                userId: user.id,
+                action: 'login',
+                entityType: 'user',
+                entityId: user.id
+              })
+            } catch (auditError) {
+              console.error('Failed to create audit log:', auditError)
+            }
             return true
           }
           return false
@@ -43,17 +51,26 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       logout: () => {
-        const currentUser = useAuthStore.getState().user
-        if (currentUser) {
-          window.api.auditLogs.create({
-            userId: currentUser.id,
-            username: currentUser.username,
-            action: 'logout',
-            entityType: 'auth',
-            entityName: currentUser.fullName
-          })
+        try {
+          const currentUser = useAuthStore.getState().user
+          if (currentUser && window.api) {
+            window.api.auditLogs
+              .create({
+                userId: currentUser.id,
+                username: currentUser.username,
+                action: 'logout',
+                entityType: 'auth',
+                entityName: currentUser.fullName
+              })
+              .catch((error) => {
+                console.error('Failed to create logout audit log:', error)
+              })
+          }
+          set({ user: null, isAuthenticated: false })
+        } catch (error) {
+          console.error('Logout error:', error)
+          set({ user: null, isAuthenticated: false })
         }
-        set({ user: null, isAuthenticated: false })
       },
       setUser: (user: User) => {
         set({ user, isAuthenticated: true })

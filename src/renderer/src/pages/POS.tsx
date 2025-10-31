@@ -1,374 +1,203 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Box, Button, Typography } from '@mui/material'
 import toast from 'react-hot-toast'
-import CartPanel from '../components/pos/CartPanel'
-import CartSummary from '../components/pos/CartSummary'
-import CustomerBadge from '../components/pos/CustomerBadge'
-import CustomerSelectModal from '../components/pos/CustomerSelectModal'
-import PaymentModal from '../components/pos/PaymentModal'
-import ProductSearch from '../components/pos/ProductSearch'
-import ProductsGrid from '../components/pos/ProductsGrid'
-import { useAuthStore } from '../store/authStore'
-import { useCartStore } from '../store/cartStore'
-import { useSettingsStore } from '../store/settingsStore'
-import { BankAccount, Customer, InventoryItem, Product } from '../types/pos'
+import CartList from '../components/pos/CartList'
+import CustomerSearch from '../components/pos/CustomerSearch'
+import PaymentPanel from '../components/pos/PaymentPanel'
+import ProductGrid from '../components/pos/ProductGrid'
+import SaleCompleteDialog from '../components/pos/SaleCompleteDialog'
+import { usePOS } from '../hooks/usePOS'
+import { printPDFReceipt } from '../utils/pdfPrint'
+import { printThermalReceipt } from '../utils/thermalPrint'
 
 export default function POS(): React.JSX.Element {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [products, setProducts] = useState<Product[]>([])
-  const [inventory, setInventory] = useState<InventoryItem[]>([])
-  const [accounts, setAccounts] = useState<BankAccount[]>([])
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [showCustomerModal, setShowCustomerModal] = useState(false)
-  const [customerSearch, setCustomerSearch] = useState('')
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [barcodeBuffer, setBarcodeBuffer] = useState('')
-  const [isBarcodeScanning, setIsBarcodeScanning] = useState(false)
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const barcodeTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const {
+    // State
+    searchTerm,
+    products,
+    inventory,
+    accounts,
+    customerSearch,
+    customers,
+    selectedCustomer,
+    showCustomerDropdown,
+    loading,
+    cashReceived,
+    selectedAccount,
+    discountPercent,
+    pointsToRedeem,
+    searchInputRef,
+    cart,
+    taxRate,
+    showSaleCompleteDialog,
+    completedSaleDetails,
+    storeName,
+    storeAddress,
+    storePhone,
 
-  const cart = useCartStore()
-  const user = useAuthStore((state) => state.user)
-  const currency = useSettingsStore((state) => state.currency)
+    // Computed values
+    currencySymbol,
+    total,
+    change,
+    maxRedeemablePoints,
+    pointValue,
 
-  // Get currency symbol
-  const getCurrencySymbol = (): string => {
-    switch (currency) {
-      case 'USD':
-        return '$'
-      case 'EUR':
-        return '€'
-      case 'GBP':
-        return '£'
-      case 'BDT':
-        return '৳'
-      case 'INR':
-        return '₹'
-      default:
-        return '$'
-    }
-  }
+    // Handlers
+    setSearchTerm,
+    setCustomerSearch,
+    setCashReceived,
+    setDiscountPercent,
+    setPointsToRedeem,
+    setShowCustomerDropdown,
+    setShowSaleCompleteDialog,
+    addToCart,
+    selectCustomer,
+    clearCustomer,
+    handleCheckout,
+    handleReset,
+    handleAccountSelect
+  } = usePOS()
 
-  const loadProducts = async (): Promise<void> => {
-    try {
-      setLoading(true)
-      const allProducts = await window.api.products.getAll()
-      setProducts(allProducts)
-    } catch {
-      toast.error('Failed to load products')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const searchProducts = async (): Promise<void> => {
-    if (!searchTerm.trim()) {
-      await loadProducts()
+  const handlePdfPrint = (): void => {
+    if (!completedSaleDetails) {
+      toast.error('No sale details available')
       return
     }
 
     try {
-      const results = await window.api.products.getAll(searchTerm)
-      setProducts(results)
-    } catch {
-      toast.error('Search failed')
-    }
-  }
-
-  const loadInventory = async (): Promise<void> => {
-    try {
-      const inv = await window.api.inventory.getAll()
-      setInventory(inv)
-    } catch {
-      console.error('Failed to load inventory')
-    }
-  }
-
-  const loadAccounts = async (): Promise<void> => {
-    try {
-      const allAccounts = await window.api.bankAccounts.getAll()
-      setAccounts(allAccounts.filter((acc) => acc.isActive))
-    } catch {
-      console.error('Failed to load accounts')
-    }
-  }
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      void searchProducts()
-    }, 300)
-    return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm])
-
-  useEffect(() => {
-    void loadProducts()
-    void loadInventory()
-    void loadAccounts()
-    // Focus search input on mount for barcode scanner
-    searchInputRef.current?.focus()
-  }, [])
-
-  const addToCart = useCallback(
-    (product: Product): void => {
-      // Check inventory
-      const inventoryItem = inventory.find((inv) => inv.productId === product.id)
-      if (inventoryItem && inventoryItem.quantity <= 0) {
-        toast.error('Product out of stock')
-        return
+      const receiptData = {
+        ...completedSaleDetails,
+        storeName,
+        storeAddress,
+        storePhone
       }
-
-      cart.addItem({
-        productId: product.id,
-        name: product.name,
-        price: product.sellingPrice,
-        quantity: 1,
-        discount: product.discountPercent || 0,
-        taxRate: product.taxRate || 0
-      })
-      toast.success(`${product.name} added to cart`)
-
-      // Refocus search input for barcode scanner
-      searchInputRef.current?.focus()
-    },
-    [cart, inventory]
-  )
-
-  const handleBarcodeSearch = useCallback(
-    async (barcode: string): Promise<void> => {
-      if (!barcode.trim()) return
-
-      try {
-        const product = await window.api.products.getByBarcode(barcode)
-        if (product) {
-          addToCart(product)
-          setSearchTerm('')
-        } else {
-          toast.error('Product not found')
-        }
-      } catch {
-        console.error('Barcode search error')
-      }
-    },
-    [addToCart, setSearchTerm]
-  )
-
-  // Barcode scanner keyboard event listener
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent): void => {
-      // Ignore if typing in input fields (except search input)
-      const target = e.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        return
-      }
-
-      // If Enter pressed and buffer has content, search
-      if (e.key === 'Enter' && barcodeBuffer) {
-        void handleBarcodeSearch(barcodeBuffer)
-        setBarcodeBuffer('')
-        setIsBarcodeScanning(false)
-        return
-      }
-
-      // Accumulate printable characters (letters, numbers, symbols)
-      if (e.key.length === 1) {
-        setBarcodeBuffer((prev) => prev + e.key)
-        setIsBarcodeScanning(true)
-
-        // Clear buffer if no input for 100ms (indicates manual typing, not scanner)
-        if (barcodeTimerRef.current) {
-          clearTimeout(barcodeTimerRef.current)
-        }
-        barcodeTimerRef.current = setTimeout(() => {
-          setBarcodeBuffer('')
-          setIsBarcodeScanning(false)
-        }, 100)
-      }
-    }
-
-    window.addEventListener('keypress', handleKeyPress)
-    return () => {
-      window.removeEventListener('keypress', handleKeyPress)
-      if (barcodeTimerRef.current) {
-        clearTimeout(barcodeTimerRef.current)
-      }
-    }
-  }, [barcodeBuffer, handleBarcodeSearch])
-
-  const searchCustomers = async (): Promise<void> => {
-    try {
-      const results = await window.api.customers.getAll(customerSearch)
-      setCustomers(results)
-    } catch {
-      toast.error('Failed to search customers')
+      printPDFReceipt(receiptData, currencySymbol)
+      toast.success('PDF receipt opened in new window')
+    } catch (error) {
+      console.error('PDF print error:', error)
+      toast.error('Failed to generate PDF receipt')
     }
   }
 
-  const selectCustomer = (customer: Customer): void => {
-    setSelectedCustomer(customer)
-    cart.setCustomer(customer.id)
-    setShowCustomerModal(false)
-    toast.success(`Customer ${customer.name} selected`)
-  }
-
-  const removeCustomer = (): void => {
-    setSelectedCustomer(null)
-    cart.setCustomer(undefined)
-    toast.success('Customer removed')
-  }
-
-  useEffect(() => {
-    if (customerSearch) {
-      const timer = setTimeout(() => {
-        void searchCustomers()
-      }, 300)
-      return () => clearTimeout(timer)
-    }
-    return undefined
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customerSearch])
-
-  const handleCheckout = (): void => {
-    if (cart.items.length === 0) {
-      toast.error('Cart is empty')
-      return
-    }
-    setShowPaymentModal(true)
-  }
-
-  const completeSale = async (
-    paymentMethod: string,
-    paidAmount: number,
-    selectedAccount: string
-  ): Promise<void> => {
-    if (!user) return
-
-    const total = cart.getTotal()
-
-    if (paidAmount < total) {
-      toast.error('Insufficient payment amount')
+  const handleThermalPrint = (): void => {
+    if (!completedSaleDetails) {
+      toast.error('No sale details available')
       return
     }
 
     try {
-      const invoiceNumber = `INV-${Date.now()}`
-      const sale = {
-        invoiceNumber,
-        userId: user.id,
-        customerId: cart.customerId,
-        accountId: selectedAccount || null,
-        subtotal: cart.getSubtotal(),
-        taxAmount: cart.getTaxAmount(),
-        discountAmount: cart.getDiscountAmount(),
-        totalAmount: total,
-        paidAmount,
-        changeAmount: paidAmount - total,
-        paymentMethod,
-        status: 'completed'
+      const receiptData = {
+        ...completedSaleDetails,
+        storeName,
+        storeAddress,
+        storePhone
       }
-
-      const items = cart.items.map((item) => ({
-        productId: item.productId,
-        productName: item.name,
-        quantity: item.quantity,
-        unitPrice: item.price,
-        discountPercent: item.discount,
-        taxRate: item.taxRate,
-        subtotal: item.price * item.quantity
-      }))
-
-      await window.api.sales.create(sale, items)
-
-      toast.success(`Sale completed! Invoice: ${invoiceNumber}`)
-      cart.clearCart()
-      setShowPaymentModal(false)
-      await loadProducts()
-    } catch {
-      toast.error('Failed to complete sale')
+      printThermalReceipt(receiptData, currencySymbol)
+      toast.success('Thermal receipt sent to printer')
+    } catch (error) {
+      console.error('Thermal print error:', error)
+      toast.error('Failed to print thermal receipt')
     }
   }
 
   return (
-    <div className="p-6 h-full bg-gray-100">
+    <Box
+      sx={{ p: 3, height: '100vh', bgcolor: '#f5f5f5', display: 'flex', flexDirection: 'column' }}
+    >
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Point of Sale</h1>
-        <p className="text-sm text-gray-600 mt-1">Process customer transactions and manage sales</p>
-      </div>
+      <Box
+        sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+      >
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+            Point of Sale
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Process sales transactions and manage customer purchases
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleReset}
+          sx={{ textTransform: 'none', mt: 0.5 }}
+        >
+          Reset All
+        </Button>
+      </Box>
 
-      <div className="flex h-[calc(100vh-180px)] gap-6">
-        {/* Left Side - Products */}
-        <div className="flex-1 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          {/* Search and Customer Selection */}
-          <div className="mb-6 space-y-3">
-            <ProductSearch
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              onBarcodeSearch={handleBarcodeSearch}
-              isBarcodeScanning={isBarcodeScanning}
-              onCustomerSelect={() => setShowCustomerModal(true)}
-            />
-
-            {/* Selected Customer Badge */}
-            {selectedCustomer && (
-              <CustomerBadge customer={selectedCustomer} onRemove={removeCustomer} />
-            )}
-          </div>
-
-          {/* Products Grid */}
-          <div className="flex-1 overflow-y-auto">
-            <ProductsGrid
-              products={products}
-              inventory={inventory}
-              loading={loading}
-              currencySymbol={getCurrencySymbol()}
-              onAddToCart={addToCart}
-            />
-          </div>
-        </div>
-
-        {/* Right Side - Cart */}
-        <div className="flex flex-col">
-          <CartPanel
-            items={cart.items}
-            customer={selectedCustomer}
-            currencySymbol={getCurrencySymbol()}
-            onUpdateQuantity={cart.updateQuantity}
-            onRemoveItem={cart.removeItem}
-          />
-          <CartSummary
-            subtotal={cart.getSubtotal()}
-            discount={cart.getDiscountAmount()}
-            tax={cart.getTaxAmount()}
-            total={cart.getTotal()}
-            itemCount={cart.items.length}
-            currencySymbol={getCurrencySymbol()}
-            onCheckout={handleCheckout}
-            onClear={cart.clearCart}
-          />
-        </div>
-      </div>
-
-      {/* Customer Modal */}
-      <CustomerSelectModal
-        isOpen={showCustomerModal}
+      {/* Customer Search Field */}
+      <CustomerSearch
+        customerSearch={customerSearch}
+        selectedCustomer={selectedCustomer}
         customers={customers}
-        searchTerm={customerSearch}
+        showDropdown={showCustomerDropdown}
         onSearchChange={setCustomerSearch}
-        onSelect={selectCustomer}
-        onClose={() => setShowCustomerModal(false)}
+        onCustomerSelect={selectCustomer}
+        onCustomerClear={clearCustomer}
+        onDropdownClose={() => setShowCustomerDropdown(false)}
+        onFocus={() => {
+          if (customers.length > 0) {
+            setShowCustomerDropdown(true)
+          }
+        }}
       />
 
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        total={cart.getTotal()}
-        accounts={accounts}
-        currencySymbol={getCurrencySymbol()}
-        onComplete={completeSale}
-        onClose={() => setShowPaymentModal(false)}
+      {/* Main Content */}
+      <Box sx={{ display: 'flex', gap: 2, flex: 1, minHeight: 0 }}>
+        {/* Left Side - Products */}
+        <ProductGrid
+          products={products}
+          inventory={inventory}
+          loading={loading}
+          searchTerm={searchTerm}
+          currencySymbol={currencySymbol}
+          onSearchChange={setSearchTerm}
+          onProductClick={addToCart}
+          searchInputRef={searchInputRef}
+        />
+
+        {/* Middle - Cart Items */}
+        <CartList
+          items={cart.items}
+          currencySymbol={currencySymbol}
+          onQuantityUpdate={cart.updateQuantity}
+          onItemRemove={cart.removeItem}
+          onClearCart={cart.clearCart}
+        />
+
+        {/* Right Side - Payment & Summary */}
+        <PaymentPanel
+          accounts={accounts}
+          selectedAccount={selectedAccount}
+          cashReceived={cashReceived}
+          discountPercent={discountPercent}
+          pointsToRedeem={pointsToRedeem}
+          selectedCustomer={selectedCustomer}
+          subtotal={cart.getSubtotal()}
+          taxRate={taxRate}
+          total={total}
+          change={change}
+          maxRedeemablePoints={maxRedeemablePoints}
+          pointValue={pointValue}
+          currencySymbol={currencySymbol}
+          cartItemsCount={cart.items.length}
+          onAccountSelect={handleAccountSelect}
+          onCashChange={setCashReceived}
+          onDiscountChange={setDiscountPercent}
+          onPointsChange={setPointsToRedeem}
+          onCheckout={handleCheckout}
+        />
+      </Box>
+
+      {/* Sale Complete Dialog */}
+      <SaleCompleteDialog
+        open={showSaleCompleteDialog}
+        saleDetails={completedSaleDetails}
+        currencySymbol={currencySymbol}
+        onClose={() => setShowSaleCompleteDialog(false)}
+        onPdfPrint={handlePdfPrint}
+        onThermalPrint={handleThermalPrint}
       />
-    </div>
+    </Box>
   )
 }

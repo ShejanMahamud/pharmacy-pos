@@ -27,6 +27,10 @@ export const useSettingsStore = create<SettingsState>()(
       lowStockThreshold: 10,
       loadSettings: async () => {
         try {
+          if (!window.api) {
+            console.error('window.api not available in loadSettings')
+            return
+          }
           const settings = await window.api.settings.getAll()
           const settingsMap: { [key: string]: string } = {}
           settings.forEach((setting: any) => {

@@ -37,7 +37,6 @@ export default function BasicInfoSection({
           Basic Information
         </Typography>
       </Box>
-
       <TextField
         fullWidth
         required
@@ -46,7 +45,6 @@ export default function BasicInfoSection({
         onChange={(e) => onFormChange({ name: e.target.value })}
         placeholder="Enter product name"
       />
-
       <TextField
         fullWidth
         label="Generic Name"
@@ -54,7 +52,6 @@ export default function BasicInfoSection({
         onChange={(e) => onFormChange({ genericName: e.target.value })}
         placeholder="Enter generic name"
       />
-
       <Stack direction="row" spacing={1}>
         <TextField
           fullWidth
@@ -68,15 +65,14 @@ export default function BasicInfoSection({
           Generate
         </Button>
       </Stack>
-
       <TextField
         fullWidth
-        label="Barcode"
+        disabled
+        label="Barcode (Auto-generated)"
         value={formData.barcode}
-        onChange={(e) => onFormChange({ barcode: e.target.value })}
-        placeholder="Enter barcode"
-      />
-
+        placeholder="Barcode will be generated automatically"
+        helperText="Barcode is automatically generated when product is created"
+      />{' '}
       <FormControl fullWidth>
         <InputLabel>Category</InputLabel>
         <Select
@@ -92,7 +88,6 @@ export default function BasicInfoSection({
           ))}
         </Select>
       </FormControl>
-
       <FormControl fullWidth>
         <InputLabel>Supplier</InputLabel>
         <Select
@@ -108,7 +103,6 @@ export default function BasicInfoSection({
           ))}
         </Select>
       </FormControl>
-
       <TextField
         fullWidth
         label="Manufacturer"
@@ -116,7 +110,6 @@ export default function BasicInfoSection({
         onChange={(e) => onFormChange({ manufacturer: e.target.value })}
         placeholder="Enter manufacturer"
       />
-
       <TextField
         fullWidth
         required
@@ -126,7 +119,6 @@ export default function BasicInfoSection({
         placeholder="e.g., A1, B2, C3"
         helperText="Which shelf the medicine is stored (e.g., A1, B2, Rack-5)"
       />
-
       <Box sx={{ gridColumn: '1 / -1' }}>
         <TextField
           fullWidth
@@ -137,7 +129,6 @@ export default function BasicInfoSection({
           helperText="Optional: URL or path to product image"
         />
       </Box>
-
       <Box sx={{ gridColumn: '1 / -1' }}>
         <TextField
           fullWidth

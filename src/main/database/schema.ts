@@ -134,6 +134,7 @@ export const customers = sqliteTable('customers', {
   dateOfBirth: text('date_of_birth'),
   gender: text('gender'),
   loyaltyPoints: integer('loyalty_points').default(0),
+  totalPurchases: real('total_purchases').default(0), // Total amount of purchases made by customer
   allergies: text('allergies'),
   notes: text('notes'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
@@ -157,7 +158,8 @@ export const sales = sqliteTable('sales', {
   paidAmount: real('paid_amount').notNull(),
   changeAmount: real('change_amount').default(0),
   paymentMethod: text('payment_method').notNull(), // 'cash', 'card', 'mobile', 'credit'
-  status: text('status').notNull().default('completed'), // 'completed', 'refunded', 'cancelled'
+  status: text('status').notNull().default('completed'), // 'completed', 'partially_returned', 'refunded', 'cancelled'
+  pointsRedeemed: integer('points_redeemed').default(0), // Loyalty points used for this sale
   notes: text('notes'),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`)
 })

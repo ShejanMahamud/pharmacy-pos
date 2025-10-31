@@ -157,7 +157,8 @@ export function registerProductInventoryHandlers(): void {
         productId: schema.inventory.productId,
         productName: schema.products.name,
         quantity: schema.inventory.quantity,
-        reorderLevel: schema.products.reorderLevel
+        reorderLevel: schema.products.reorderLevel,
+        unitPrice: schema.products.sellingPrice
       })
       .from(schema.inventory)
       .innerJoin(schema.products, eq(schema.inventory.productId, schema.products.id))
