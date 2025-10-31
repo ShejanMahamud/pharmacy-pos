@@ -1,5 +1,16 @@
-import { Paper, Box, Typography, Button, Alert, CircularProgress, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
-import { CloudDownload, CloudUpload, CheckCircle } from '@mui/icons-material'
+import { CheckCircle, CloudDownload, CloudUpload } from '@mui/icons-material'
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+  Typography
+} from '@mui/material'
 
 interface BackupRestoreSectionProps {
   loading: boolean
@@ -53,7 +64,9 @@ export default function BackupRestoreSection({
                 onClick={onBackup}
                 disabled={loading}
                 variant="contained"
-                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CloudDownload />}
+                startIcon={
+                  loading ? <CircularProgress size={20} color="inherit" /> : <CloudDownload />
+                }
               >
                 {loading ? 'Creating Backup...' : 'Create Backup'}
               </Button>
@@ -87,8 +100,8 @@ export default function BackupRestoreSection({
                   Warning
                 </Typography>
                 <Typography variant="caption">
-                  Restoring a backup will replace ALL current data with the backup data. A backup
-                  of your current database will be created automatically before restoring. The
+                  Restoring a backup will replace ALL current data with the backup data. A backup of
+                  your current database will be created automatically before restoring. The
                   application will restart after restoration.
                 </Typography>
               </Alert>
@@ -100,7 +113,9 @@ export default function BackupRestoreSection({
                 disabled={loading}
                 variant="contained"
                 color="error"
-                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CloudUpload />}
+                startIcon={
+                  loading ? <CircularProgress size={20} color="inherit" /> : <CloudUpload />
+                }
               >
                 {loading ? 'Restoring...' : 'Restore Backup'}
               </Button>

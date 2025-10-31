@@ -1,4 +1,4 @@
-import { Paper, Box, Typography, TextField, Button } from '@mui/material'
+import { Box, Button, Paper, TextField, Typography } from '@mui/material'
 
 interface GeneralSettingsFormProps {
   storeName: string
@@ -81,7 +81,16 @@ export default function GeneralSettingsForm({
           />
         </Box>
 
-        <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'flex-end' }}>
+        <Box
+          sx={{
+            mt: 4,
+            pt: 3,
+            borderTop: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}
+        >
           <Button type="submit" variant="contained" size="large">
             Save Changes
           </Button>

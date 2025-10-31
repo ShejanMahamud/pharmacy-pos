@@ -1,3 +1,16 @@
+import { FilterList as FilterListIcon, Search as SearchIcon } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography
+} from '@mui/material'
+
 interface AuditLogFiltersProps {
   startDate: string
   endDate: string
@@ -28,83 +41,96 @@ export default function AuditLogFilters({
   onClearFilters
 }: AuditLogFiltersProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => onStartDateChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => onEndDateChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Action</label>
-          <select
+    <Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+        <FilterListIcon color="primary" />
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          Filters
+        </Typography>
+      </Box>
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(5, 1fr)' },
+          gap: 2,
+          mb: 2
+        }}
+      >
+        <TextField
+          label="Start Date"
+          type="date"
+          value={startDate}
+          onChange={(e) => onStartDateChange(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          size="small"
+          fullWidth
+        />
+
+        <TextField
+          label="End Date"
+          type="date"
+          value={endDate}
+          onChange={(e) => onEndDateChange(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          size="small"
+          fullWidth
+        />
+
+        <FormControl size="small" fullWidth>
+          <InputLabel>Action</InputLabel>
+          <Select
             value={actionFilter}
+            label="Action"
             onChange={(e) => onActionFilterChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">All Actions</option>
-            <option value="create">Create</option>
-            <option value="update">Update</option>
-            <option value="delete">Delete</option>
-            <option value="login">Login</option>
-            <option value="logout">Logout</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Entity Type</label>
-          <select
+            <MenuItem value="">All Actions</MenuItem>
+            <MenuItem value="create">Create</MenuItem>
+            <MenuItem value="update">Update</MenuItem>
+            <MenuItem value="delete">Delete</MenuItem>
+            <MenuItem value="login">Login</MenuItem>
+            <MenuItem value="logout">Logout</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl size="small" fullWidth>
+          <InputLabel>Entity Type</InputLabel>
+          <Select
             value={entityTypeFilter}
+            label="Entity Type"
             onChange={(e) => onEntityTypeFilterChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">All Types</option>
-            <option value="user">User</option>
-            <option value="product">Product</option>
-            <option value="sale">Sale</option>
-            <option value="purchase">Purchase</option>
-            <option value="customer">Customer</option>
-            <option value="supplier">Supplier</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-          <input
-            type="text"
-            value={searchUsername}
-            onChange={(e) => onSearchUsernameChange(e.target.value)}
-            placeholder="Search by username"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-      <div className="flex justify-end space-x-3 mt-4">
-        <button
-          onClick={onClearFilters}
-          className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
-        >
+            <MenuItem value="">All Types</MenuItem>
+            <MenuItem value="user">User</MenuItem>
+            <MenuItem value="product">Product</MenuItem>
+            <MenuItem value="sale">Sale</MenuItem>
+            <MenuItem value="purchase">Purchase</MenuItem>
+            <MenuItem value="customer">Customer</MenuItem>
+            <MenuItem value="supplier">Supplier</MenuItem>
+          </Select>
+        </FormControl>
+
+        <TextField
+          label="Username"
+          placeholder="Search by username"
+          value={searchUsername}
+          onChange={(e) => onSearchUsernameChange(e.target.value)}
+          size="small"
+          fullWidth
+          InputProps={{
+            endAdornment: <SearchIcon sx={{ color: 'text.secondary' }} />
+          }}
+        />
+      </Box>
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Button variant="outlined" onClick={onClearFilters}>
           Clear Filters
-        </button>
-        <button
-          onClick={onApplyFilters}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-        >
+        </Button>
+        <Button variant="contained" onClick={onApplyFilters}>
           Apply Filters
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Box>
+    </Paper>
   )
 }

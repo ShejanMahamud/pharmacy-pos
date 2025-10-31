@@ -1,4 +1,4 @@
-import { Paper, Box, Typography, TextField, Button } from '@mui/material'
+import { Box, Button, Paper, TextField, Typography } from '@mui/material'
 
 interface ReceiptSettingsFormProps {
   receiptFooter: string

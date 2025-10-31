@@ -1,13 +1,13 @@
+import { Box, CircularProgress, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Container, Box, Typography, CircularProgress } from '@mui/material'
+import BackupRestoreSection from '../components/settings/BackupRestoreSection'
+import GeneralSettingsForm from '../components/settings/GeneralSettingsForm'
+import ReceiptSettingsForm from '../components/settings/ReceiptSettingsForm'
+import SettingsTabs from '../components/settings/SettingsTabs'
+import SystemSettingsForm from '../components/settings/SystemSettingsForm'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
-import SettingsTabs from '../components/settings/SettingsTabs'
-import GeneralSettingsForm from '../components/settings/GeneralSettingsForm'
-import SystemSettingsForm from '../components/settings/SystemSettingsForm'
-import ReceiptSettingsForm from '../components/settings/ReceiptSettingsForm'
-import BackupRestoreSection from '../components/settings/BackupRestoreSection'
 
 export default function Settings(): React.JSX.Element {
   const user = useAuthStore((state) => state.user)

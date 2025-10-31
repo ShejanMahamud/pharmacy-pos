@@ -1,3 +1,17 @@
+import { Close as CloseIcon } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  Paper,
+  Typography
+} from '@mui/material'
 import { AuditLog } from '../../types/auditLog'
 
 interface AuditLogDetailsModalProps {
@@ -13,20 +27,22 @@ export default function AuditLogDetailsModal({
 }: AuditLogDetailsModalProps): React.JSX.Element | null {
   if (!show || !log) return null
 
-  const getActionBadgeColor = (action: string): string => {
+  const getActionColor = (
+    action: string
+  ): 'success' | 'primary' | 'error' | 'secondary' | 'default' | 'warning' => {
     switch (action.toLowerCase()) {
       case 'create':
-        return 'bg-green-100 text-green-800'
+        return 'success'
       case 'update':
-        return 'bg-blue-100 text-blue-800'
+        return 'primary'
       case 'delete':
-        return 'bg-red-100 text-red-800'
+        return 'error'
       case 'login':
-        return 'bg-purple-100 text-purple-800'
+        return 'secondary'
       case 'logout':
-        return 'bg-gray-100 text-gray-800'
+        return 'default'
       default:
-        return 'bg-yellow-100 text-yellow-800'
+        return 'warning'
     }
   }
 
@@ -42,7 +58,7 @@ export default function AuditLogDetailsModal({
     })
   }
 
-  const parseChanges = (changes?: string) => {
+  const parseChanges = (changes?: string): unknown => {
     if (!changes) return null
     try {
       return JSON.parse(changes)
@@ -52,101 +68,159 @@ export default function AuditLogDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Audit Log Details</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
+    <Dialog open={show} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+            Audit Log Details
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
 
-        <div className="p-6 space-y-6">
-          {/* Basic Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Timestamp</p>
-                <p className="text-sm text-gray-900 mt-1">{formatDate(log.createdAt)}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">User</p>
-                <p className="text-sm text-gray-900 mt-1">{log.username}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Action</p>
-                <span
-                  className={`inline-block px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getActionBadgeColor(log.action)}`}
-                >
-                  {log.action}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Entity Type</p>
-                <p className="text-sm text-gray-900 mt-1 capitalize">{log.entityType}</p>
-              </div>
-              {log.entityName && (
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Entity Name</p>
-                  <p className="text-sm text-gray-900 mt-1">{log.entityName}</p>
-                </div>
-              )}
-              {log.entityId && (
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Entity ID</p>
-                  <p className="text-sm text-gray-900 mt-1 font-mono">{log.entityId}</p>
-                </div>
-              )}
-              {log.ipAddress && (
-                <div>
-                  <p className="text-sm font-medium text-gray-600">IP Address</p>
-                  <p className="text-sm text-gray-900 mt-1">{log.ipAddress}</p>
-                </div>
-              )}
-              {log.userAgent && (
-                <div className="col-span-2">
-                  <p className="text-sm font-medium text-gray-600">User Agent</p>
-                  <p className="text-sm text-gray-900 mt-1">{log.userAgent}</p>
-                </div>
-              )}
-            </div>
-          </div>
+      <Divider />
 
-          {/* Changes */}
-          {log.changes && parseChanges(log.changes) && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Changes</h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <pre className="text-sm text-gray-900 overflow-x-auto whitespace-pre-wrap">
-                  {JSON.stringify(parseChanges(log.changes), null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+      <DialogContent>
+        {/* Basic Information */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+            Basic Information
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+              gap: 3
+            }}
           >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                Timestamp
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {formatDate(log.createdAt)}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                User
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {log.username}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                Action
+              </Typography>
+              <Box sx={{ mt: 0.5 }}>
+                <Chip
+                  label={log.action}
+                  color={getActionColor(log.action)}
+                  size="small"
+                  sx={{ textTransform: 'capitalize' }}
+                />
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                Entity Type
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, textTransform: 'capitalize' }}>
+                {log.entityType}
+              </Typography>
+            </Box>
+
+            {log.entityName && (
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  Entity Name
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {log.entityName}
+                </Typography>
+              </Box>
+            )}
+
+            {log.entityId && (
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  Entity ID
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, fontFamily: 'monospace' }}>
+                  {log.entityId}
+                </Typography>
+              </Box>
+            )}
+
+            {log.ipAddress && (
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  IP Address
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {log.ipAddress}
+                </Typography>
+              </Box>
+            )}
+
+            {log.userAgent && (
+              <Box sx={{ gridColumn: { sm: 'span 2' } }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  User Agent
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {log.userAgent}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+
+        {/* Changes */}
+        {log.changes && parseChanges(log.changes) && (
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+              Changes
+            </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                bgcolor: 'grey.50',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1
+              }}
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  fontSize: '0.875rem',
+                  overflow: 'auto',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
+                }}
+              >
+                {JSON.stringify(parseChanges(log.changes), null, 2)}
+              </pre>
+            </Paper>
+          </Box>
+        )}
+      </DialogContent>
+
+      <Divider />
+
+      <DialogActions sx={{ p: 2 }}>
+        <Button variant="contained" onClick={onClose} fullWidth>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

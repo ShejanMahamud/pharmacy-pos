@@ -1,4 +1,14 @@
-import { Paper, Box, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material'
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography
+} from '@mui/material'
 
 interface SystemSettingsFormProps {
   taxRate: string
@@ -50,7 +60,11 @@ export default function SystemSettingsForm({
 
           <FormControl fullWidth>
             <InputLabel>Currency</InputLabel>
-            <Select value={currency} onChange={(e) => onCurrencyChange(e.target.value)} label="Currency">
+            <Select
+              value={currency}
+              onChange={(e) => onCurrencyChange(e.target.value)}
+              label="Currency"
+            >
               <MenuItem value="USD">USD - US Dollar</MenuItem>
               <MenuItem value="EUR">EUR - Euro</MenuItem>
               <MenuItem value="GBP">GBP - British Pound</MenuItem>

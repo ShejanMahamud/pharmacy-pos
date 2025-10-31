@@ -1,5 +1,5 @@
-import { Paper, Tabs, Tab } from '@mui/material'
-import { Store, Settings, Receipt, Storage } from '@mui/icons-material'
+import { Receipt, Settings, Storage, Store } from '@mui/icons-material'
+import { Paper, Tab, Tabs } from '@mui/material'
 
 interface SettingsTabsProps {
   activeTab: string
