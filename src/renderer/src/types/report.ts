@@ -19,6 +19,13 @@ export interface MonthlySale {
   sales: number
 }
 
+export interface InventoryProduct {
+  id: string
+  name: string
+  quantity: number
+  reorderLevel: number
+}
+
 export interface ReportData {
   totalRevenue: number
   totalSales: number
@@ -26,6 +33,8 @@ export interface ReportData {
   totalProducts: number
   lowStockItems: number
   outOfStockItems: number
+  lowStockProducts: InventoryProduct[]
+  outOfStockProducts: InventoryProduct[]
   topSellingProducts: TopProduct[]
   recentSales: RecentSale[]
   monthlySales: MonthlySale[]

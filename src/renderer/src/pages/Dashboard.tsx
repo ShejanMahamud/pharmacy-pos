@@ -6,6 +6,8 @@ import DashboardStats from '../components/dashboard/DashboardStats'
 import LowStockAlertsCard from '../components/dashboard/LowStockAlertsCard'
 import QuickActionsCard from '../components/dashboard/QuickActionsCard'
 import RecentSalesCard from '../components/dashboard/RecentSalesCard'
+import RevenueDistributionChart from '../components/dashboard/RevenueDistributionChart'
+import SalesTrendChart from '../components/dashboard/SalesTrendChart'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { LowStockItem, RecentSale, DashboardStats as StatsType } from '../types/dashboard'
@@ -24,6 +26,12 @@ export default function Dashboard(): React.JSX.Element {
   })
   const [recentSales, setRecentSales] = useState<RecentSale[]>([])
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([])
+  const [salesTrendData, setSalesTrendData] = useState<
+    Array<{ date: string; sales: number; revenue: number }>
+  >([])
+  const [revenueDistributionData, setRevenueDistributionData] = useState<
+    Array<{ category: string; revenue: number; color: string }>
+  >([])
   const [loading, setLoading] = useState(true)
 
   // Get currency symbol
@@ -121,6 +129,83 @@ export default function Dashboard(): React.JSX.Element {
 
         setRecentSales(recent)
         setLowStockItems(mappedLowStock.slice(0, 5))
+
+        // Calculate sales trend data (last 7 days)
+        const trendData = []
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date()
+          date.setDate(date.getDate() - i)
+          date.setHours(0, 0, 0, 0)
+
+          const dayEnd = new Date(date)
+          dayEnd.setHours(23, 59, 59, 999)
+
+          const daySales = allSales.filter((sale: { createdAt: string }) => {
+            const saleDate = new Date(sale.createdAt)
+            return saleDate >= date && saleDate <= dayEnd
+          })
+
+          const dayRevenue = daySales.reduce(
+            (sum: number, sale: { totalAmount: number }) => sum + sale.totalAmount,
+            0
+          )
+
+          trendData.push({
+            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            sales: daySales.length,
+            revenue: dayRevenue
+          })
+        }
+        setSalesTrendData(trendData)
+
+        // Calculate revenue distribution - simplified version using product count by category
+        const categoryRevenue = new Map<string, number>()
+
+        // Get all categories
+        const allCategories = await window.api.categories.getAll()
+        const categoryMap = new Map(
+          allCategories.map((cat: { id: string; name: string }) => [cat.id, cat.name])
+        )
+
+        // Count products by category and estimate revenue distribution
+        products.forEach((product: { categoryId: string; sellingPrice: number }) => {
+          if (product.categoryId) {
+            const categoryName = categoryMap.get(product.categoryId) || 'Uncategorized'
+            // Estimate category value based on product prices
+            const estimatedValue = product.sellingPrice || 0
+            categoryRevenue.set(
+              categoryName,
+              (categoryRevenue.get(categoryName) || 0) + estimatedValue
+            )
+          } else {
+            const estimatedValue = product.sellingPrice || 0
+            categoryRevenue.set(
+              'Uncategorized',
+              (categoryRevenue.get('Uncategorized') || 0) + estimatedValue
+            )
+          }
+        })
+
+        // Convert to array and sort by revenue
+        const sortedCategories = Array.from(categoryRevenue.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5) // Top 5 categories
+
+        // If no categories, create placeholder data
+        let distributionData
+        if (sortedCategories.length === 0) {
+          distributionData = [{ category: 'No Data', revenue: 0, color: '#e0e0e0' }]
+        } else {
+          // Assign colors
+          const colors = ['#1976d2', '#2e7d32', '#ed6c02', '#9c27b0', '#d32f2f']
+          distributionData = sortedCategories.map(([category, revenue], index) => ({
+            category: category.length > 12 ? category.substring(0, 12) + '...' : category,
+            revenue,
+            color: colors[index] || '#757575'
+          }))
+        }
+
+        setRevenueDistributionData(distributionData)
       } catch (error) {
         console.error('Error loading dashboard data:', error)
         toast.error('Failed to load dashboard data')
@@ -154,6 +239,19 @@ export default function Dashboard(): React.JSX.Element {
       <DashboardHeader userName={user?.fullName || 'User'} />
 
       <DashboardStats stats={stats} currencySymbol={currencySymbol} />
+
+      {/* Charts Section */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+          gap: 3,
+          mb: 3
+        }}
+      >
+        <SalesTrendChart data={salesTrendData} currencySymbol={currencySymbol} />
+        <RevenueDistributionChart data={revenueDistributionData} currencySymbol={currencySymbol} />
+      </Box>
 
       {/* Two Column Layout */}
       <Box

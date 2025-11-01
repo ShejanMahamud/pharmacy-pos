@@ -39,6 +39,8 @@ export default function InventoryReport({ reportData }: InventoryReportProps): R
       <InventoryAlerts
         lowStockCount={reportData.lowStockItems}
         outOfStockCount={reportData.outOfStockItems}
+        lowStockProducts={reportData.lowStockProducts}
+        outOfStockProducts={reportData.outOfStockProducts}
       />
     </Box>
   )

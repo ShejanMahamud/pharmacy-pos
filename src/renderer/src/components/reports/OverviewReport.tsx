@@ -69,6 +69,8 @@ export default function OverviewReport({
       <InventoryAlerts
         lowStockCount={reportData.lowStockItems}
         outOfStockCount={reportData.outOfStockItems}
+        lowStockProducts={reportData.lowStockProducts}
+        outOfStockProducts={reportData.outOfStockProducts}
       />
     </>
   )

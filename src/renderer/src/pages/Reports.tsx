@@ -71,14 +71,16 @@ export default function Reports(): React.JSX.Element {
         ])
 
       // Process inventory data
-      const lowStockItems = inventoryData.filter(
+      const lowStockProducts = inventoryData.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (item: any) => item.quantity <= item.reorderLevel && item.quantity > 0
-      ).length
-      const outOfStockItems = inventoryData.filter(
+      )
+      const outOfStockProducts = inventoryData.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (item: any) => item.quantity === 0
-      ).length
+      )
+      const lowStockItems = lowStockProducts.length
+      const outOfStockItems = outOfStockProducts.length
 
       // Get recent sales (last 5)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -161,6 +163,20 @@ export default function Reports(): React.JSX.Element {
         totalProducts: allProducts.length,
         lowStockItems,
         outOfStockItems,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        lowStockProducts: lowStockProducts.map((item: any) => ({
+          id: item.productId,
+          name: item.productName,
+          quantity: item.quantity,
+          reorderLevel: item.reorderLevel
+        })),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        outOfStockProducts: outOfStockProducts.map((item: any) => ({
+          id: item.productId,
+          name: item.productName,
+          quantity: item.quantity,
+          reorderLevel: item.reorderLevel
+        })),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         topSellingProducts: topProducts.map((p: any) => ({
           id: p.productId,
