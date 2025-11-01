@@ -1,6 +1,7 @@
 import { Box, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import InventoryDetailsModal from '../components/inventory/InventoryDetailsModal'
 import InventoryFilters from '../components/inventory/InventoryFilters'
 import InventoryStats from '../components/inventory/InventoryStats'
 import InventoryTable from '../components/inventory/InventoryTable'
@@ -22,7 +23,9 @@ export default function Inventory(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'low' | 'out'>('all')
   const [showModal, setShowModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
+  const [selectedItem, setSelectedItem] = useState<InventoryWithProduct | null>(null)
   const [loading, setLoading] = useState(false)
 
   // Get currency symbol
@@ -149,6 +152,16 @@ export default function Inventory(): React.JSX.Element {
     setFilterType(value)
   }
 
+  const handleViewDetails = (item: InventoryWithProduct): void => {
+    setSelectedItem(item)
+    setShowDetailsModal(true)
+  }
+
+  const handleCloseDetailsModal = (): void => {
+    setShowDetailsModal(false)
+    setSelectedItem(null)
+  }
+
   // Calculate stats
   const lowStockCount = inventoryWithProducts.filter(
     (item) => item.product && item.quantity > 0 && item.quantity <= item.product.reorderLevel
@@ -201,6 +214,7 @@ export default function Inventory(): React.JSX.Element {
         loading={loading}
         currencySymbol={getCurrencySymbol()}
         onEdit={handleEdit}
+        onViewDetails={handleViewDetails}
       />
 
       {/* Stock Adjustment Modal */}
@@ -212,6 +226,19 @@ export default function Inventory(): React.JSX.Element {
         formData={formData}
         onFormDataChange={setFormData}
         onSubmit={handleSubmit}
+      />
+
+      {/* Inventory Details Modal */}
+      <InventoryDetailsModal
+        isOpen={showDetailsModal}
+        item={selectedItem}
+        category={
+          selectedItem?.product
+            ? categories.find((c) => c.id === selectedItem.product?.categoryId) || null
+            : null
+        }
+        currencySymbol={getCurrencySymbol()}
+        onClose={handleCloseDetailsModal}
       />
     </Container>
   )

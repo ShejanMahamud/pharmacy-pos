@@ -18,6 +18,7 @@ import { addMissingOpeningBalances } from './migrations/add-missing-opening-bala
 import { addMustChangePassword } from './migrations/add-must-change-password'
 import { addPointsRedeemedToSales } from './migrations/add-points-redeemed-to-sales'
 import { migrateProductShelf } from './migrations/add-product-shelf'
+import { addProductStrength } from './migrations/add-product-strength'
 import { migrateProductUnitConversion } from './migrations/add-product-unit-conversion'
 import { addSupplierAccountingFields } from './migrations/add-supplier-accounting-fields'
 import { migrateSupplierPaymentsLedger } from './migrations/add-supplier-payments-ledger'
@@ -73,6 +74,7 @@ function runMigrations(): void {
       runAuditLogsMigration(sqlite)
       addDamagedItemsTable(sqlite)
       addAttendanceSalaryTables(sqlite)
+      addProductStrength(sqlite)
     }
     console.log('Database migrations completed successfully')
   } catch (error) {

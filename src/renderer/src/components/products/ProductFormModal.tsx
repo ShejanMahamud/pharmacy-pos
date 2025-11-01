@@ -30,6 +30,7 @@ interface ProductFormModalProps {
 const initialFormData: ProductFormData = {
   name: '',
   genericName: '',
+  strength: '',
   barcode: '',
   sku: '',
   categoryId: '',
@@ -67,6 +68,7 @@ export default function ProductFormModal({
       setFormData({
         name: editingProduct.name,
         genericName: editingProduct.genericName || '',
+        strength: editingProduct.strength || '',
         barcode: editingProduct.barcode || '',
         sku: editingProduct.sku,
         categoryId: editingProduct.categoryId || '',

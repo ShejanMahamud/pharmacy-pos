@@ -170,25 +170,36 @@ export default function Settings(): React.JSX.Element {
         'Do you want to continue?'
     )
 
-    if (!confirmed) return
+    if (!confirmed) {
+      return
+    }
 
     try {
       setBackupRestoreLoading(true)
+      toast.loading('Opening file picker...', { duration: 1000 })
+
       const result = await window.electron.ipcRenderer.invoke('db:backup:restore')
 
       if (result.success) {
-        toast.success(result.message)
+        toast.success(result.message, { duration: 3000 })
         if (result.requiresRestart) {
+          toast.loading('Restarting application in 2 seconds...', { duration: 2000 })
           setTimeout(() => {
             window.electron.ipcRenderer.send('app:restart')
           }, 2000)
         }
       } else {
-        toast.error(result.message)
+        if (result.message === 'Restore canceled') {
+          toast('Restore canceled', { icon: 'ℹ️' })
+        } else {
+          toast.error(result.message)
+        }
       }
     } catch (error) {
       console.error('Restore failed:', error)
-      toast.error('Failed to restore backup')
+      toast.error(
+        `Failed to restore backup: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     } finally {
       setBackupRestoreLoading(false)
     }

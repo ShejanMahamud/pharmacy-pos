@@ -2,6 +2,7 @@ export interface Product {
   id: string
   name: string
   genericName?: string
+  strength?: string
   barcode?: string
   sku: string
   sellingPrice: number
@@ -9,6 +10,7 @@ export interface Product {
   taxRate: number
   discountPercent: number
   quantity?: number
+  imageUrl?: string
 }
 
 export interface InventoryItem {

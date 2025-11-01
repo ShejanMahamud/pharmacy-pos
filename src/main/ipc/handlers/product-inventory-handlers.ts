@@ -194,7 +194,7 @@ export function registerProductInventoryHandlers(): void {
 
         if (existing) {
           oldQuantity = existing.quantity
-          newQuantity = existing.quantity + quantity
+          newQuantity = quantity // Set to the new quantity directly, don't add
           result = db
             .update(schema.inventory)
             .set({ quantity: newQuantity, updatedAt: new Date().toISOString() })

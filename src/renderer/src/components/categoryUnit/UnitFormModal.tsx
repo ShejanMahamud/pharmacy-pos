@@ -50,7 +50,9 @@ export default function UnitFormModal({
           <TextField
             label="Abbreviation"
             value={formData.abbreviation}
-            onChange={(e) => onFormDataChange({ ...formData, abbreviation: e.target.value })}
+            onChange={(e) =>
+              onFormDataChange({ ...formData, abbreviation: e.target.value.toLowerCase() })
+            }
             required
             fullWidth
             margin="normal"

@@ -108,9 +108,14 @@ export function registerCategoryUnitHandlers(): void {
   // Create new unit
   ipcMain.handle('db:units:create', async (_, data) => {
     const id = uuidv4()
+    // Ensure symbol field is populated (legacy field, use abbreviation as fallback)
+    const unitData = {
+      ...data,
+      symbol: data.symbol || data.abbreviation
+    }
     const unit = db
       .insert(schema.units)
-      .values({ id, ...data })
+      .values({ id, ...unitData })
       .returning()
       .get()
 
@@ -131,9 +136,15 @@ export function registerCategoryUnitHandlers(): void {
     // Get old data for audit log
     const oldUnit = db.select().from(schema.units).where(eq(schema.units.id, id)).get()
 
+    // Ensure symbol field is populated (legacy field, use abbreviation as fallback)
+    const unitData = {
+      ...data,
+      symbol: data.symbol || data.abbreviation || oldUnit?.symbol
+    }
+
     const unit = db
       .update(schema.units)
-      .set({ ...data, updatedAt: new Date().toISOString() })
+      .set({ ...unitData, updatedAt: new Date().toISOString() })
       .where(eq(schema.units.id, id))
       .returning()
       .get()

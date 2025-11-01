@@ -1,10 +1,12 @@
 export interface Product {
   id: string
   name: string
+  strength?: string
   barcode?: string
   sku: string
   sellingPrice: number
   costPrice: number
+  imageUrl?: string
 }
 
 export interface SalesReturnItem {

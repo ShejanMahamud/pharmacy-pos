@@ -33,6 +33,7 @@ export interface Supplier {
 export interface Product {
   id: string
   name: string
+  strength?: string
   sku: string
   costPrice: number
   unit: string

@@ -1,4 +1,4 @@
-import { Add, Delete, Edit, Inventory, Search } from '@mui/icons-material'
+import { Add, Delete, Edit, Search } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -108,36 +108,6 @@ export default function CategoriesTable({
     page * rowsPerPage + rowsPerPage
   )
 
-  if (paginatedCategories.length === 0) {
-    return (
-      <Paper sx={{ p: 12, textAlign: 'center' }}>
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            bgcolor: 'grey.200',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 2
-          }}
-        >
-          <Typography variant="h5" sx={{ color: 'text.secondary' }}>
-            <Inventory />
-          </Typography>
-        </Box>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-          No category items found
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Start by adding categories to your inventory.
-        </Typography>
-      </Paper>
-    )
-  }
-
   return (
     <Box>
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -207,8 +177,29 @@ export default function CategoriesTable({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={3} align="center">
-                  No categories found
+                <TableCell colSpan={3} align="center" sx={{ py: 8 }}>
+                  <Box sx={{ color: 'text.secondary' }}>
+                    {searchTerm ? (
+                      <>
+                        <Search sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                        <Typography variant="h6" sx={{ mb: 1 }}>
+                          No categories found
+                        </Typography>
+                        <Typography variant="body2">
+                          No categories match your search &quot;{searchTerm}&quot;
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography variant="h6" sx={{ mb: 1 }}>
+                          No categories available
+                        </Typography>
+                        <Typography variant="body2">
+                          Start by adding categories using the &quot;Add Category&quot; button above
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
                 </TableCell>
               </TableRow>
             )}

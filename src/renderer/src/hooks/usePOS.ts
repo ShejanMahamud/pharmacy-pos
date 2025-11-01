@@ -339,7 +339,6 @@ export function usePOS() {
   }, [searchTerm])
 
   useEffect(() => {
-    void loadProducts()
     void loadInventory()
     void loadAccounts()
     searchInputRef.current?.focus()

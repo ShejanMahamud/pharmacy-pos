@@ -1,11 +1,11 @@
+import { AutoAwesome } from '@mui/icons-material'
 import {
   Box,
-  Button,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
-  Stack,
   TextField,
   Typography
 } from '@mui/material'
@@ -52,19 +52,37 @@ export default function BasicInfoSection({
         onChange={(e) => onFormChange({ genericName: e.target.value })}
         placeholder="Enter generic name"
       />
-      <Stack direction="row" spacing={1}>
-        <TextField
-          fullWidth
-          required
-          label="SKU"
-          value={formData.sku}
-          onChange={(e) => onFormChange({ sku: e.target.value })}
-          placeholder="Enter SKU"
-        />
-        <Button variant="outlined" onClick={onGenerateSKU} sx={{ minWidth: 120 }}>
-          Generate
-        </Button>
-      </Stack>
+      <TextField
+        fullWidth
+        label="Strength"
+        value={formData.strength}
+        onChange={(e) => onFormChange({ strength: e.target.value })}
+        placeholder="e.g., 500mg, 10ml, 250mg/5ml"
+        helperText="Medicine strength (e.g., 500mg, 650mg, 10ml)"
+      />
+      <TextField
+        fullWidth
+        required
+        label="SKU"
+        value={formData.sku}
+        onChange={(e) => onFormChange({ sku: e.target.value })}
+        placeholder="Enter SKU"
+        InputProps={{
+          endAdornment: (
+            <IconButton
+              onClick={onGenerateSKU}
+              size="small"
+              sx={{
+                color: 'primary.main',
+                '&:hover': { bgcolor: 'primary.50' }
+              }}
+              title="Generate SKU"
+            >
+              <AutoAwesome fontSize="small" />
+            </IconButton>
+          )
+        }}
+      />
       <TextField
         fullWidth
         disabled
@@ -72,7 +90,7 @@ export default function BasicInfoSection({
         value={formData.barcode}
         placeholder="Barcode will be generated automatically"
         helperText="Barcode is automatically generated when product is created"
-      />{' '}
+      />
       <FormControl fullWidth>
         <InputLabel>Category</InputLabel>
         <Select

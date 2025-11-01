@@ -17,6 +17,7 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '../../store/authStore'
 import { BankAccount, Purchase } from '../../types/purchase'
 
 interface ReturnItem {
@@ -53,6 +54,7 @@ export default function PurchaseReturnModal({
   onClose,
   onSuccess
 }: PurchaseReturnModalProps): React.JSX.Element | null {
+  const user = useAuthStore((state) => state.user)
   const [returnFormData, setReturnFormData] = useState<ReturnFormData>({
     purchaseId: '',
     accountId: '',
@@ -106,6 +108,11 @@ export default function PurchaseReturnModal({
     e.preventDefault()
 
     try {
+      if (!user) {
+        toast.error('User not authenticated')
+        return
+      }
+
       if (!returnFormData.purchaseId || returnItems.length === 0) {
         toast.error('Please fill all required fields')
         return
@@ -125,7 +132,7 @@ export default function PurchaseReturnModal({
           purchaseId: returnFormData.purchaseId,
           supplierId: purchase.supplierId,
           accountId: returnFormData.accountId || null,
-          userId: 'current-user',
+          userId: user.id,
           subtotal: totalAmount,
           taxAmount: 0,
           discountAmount: 0,

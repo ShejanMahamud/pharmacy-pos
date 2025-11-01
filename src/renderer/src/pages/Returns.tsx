@@ -1,6 +1,7 @@
 import { Box, Container, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import DamagedItemDetailsModal from '../components/returns/DamagedItemDetailsModal'
 import DamagedItemModal from '../components/returns/DamagedItemModal'
 import DamagedItemsTable from '../components/returns/DamagedItemsTable'
 import PurchaseReturnsTable from '../components/returns/PurchaseReturnsTable'
@@ -39,6 +40,8 @@ export default function Returns(): React.JSX.Element {
   const [showDamagedItemModal, setShowDamagedItemModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedReturn, setSelectedReturn] = useState<SalesReturn | PurchaseReturn | null>(null)
+  const [showDamagedItemDetailsModal, setShowDamagedItemDetailsModal] = useState(false)
+  const [selectedDamagedItem, setSelectedDamagedItem] = useState<DamagedItem | null>(null)
 
   // Form states for new damaged item
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -219,6 +222,11 @@ export default function Returns(): React.JSX.Element {
     }
   }
 
+  const handleViewDamagedItemDetails = (item: DamagedItem): void => {
+    setSelectedDamagedItem(item)
+    setShowDamagedItemDetailsModal(true)
+  }
+
   const handleProductSearchChange = (term: string): void => {
     setProductSearchTerm(term)
     if (selectedProduct) setSelectedProduct(null)
@@ -317,6 +325,7 @@ export default function Returns(): React.JSX.Element {
             setDamagedCurrentPage(1)
           }}
           onAddDamagedItem={() => setShowDamagedItemModal(true)}
+          onViewDetails={handleViewDamagedItemDetails}
         />
       )}
 
@@ -353,6 +362,15 @@ export default function Returns(): React.JSX.Element {
           setSelectedReturn(null)
         }}
         returnItem={selectedReturn}
+      />
+
+      <DamagedItemDetailsModal
+        isOpen={showDamagedItemDetailsModal}
+        onClose={() => {
+          setShowDamagedItemDetailsModal(false)
+          setSelectedDamagedItem(null)
+        }}
+        item={selectedDamagedItem}
       />
     </Container>
   )

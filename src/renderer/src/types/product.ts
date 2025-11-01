@@ -2,6 +2,7 @@ export interface Product {
   id: string
   name: string
   genericName?: string
+  strength?: string
   barcode?: string
   sku: string
   categoryId?: string
@@ -51,6 +52,7 @@ export interface Unit {
 export interface ProductFormData {
   name: string
   genericName: string
+  strength: string
   barcode: string
   sku: string
   categoryId: string

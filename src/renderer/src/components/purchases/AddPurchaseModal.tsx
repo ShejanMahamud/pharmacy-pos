@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '../../store/authStore'
 import { BankAccount, Product, Supplier } from '../../types/purchase'
 
 interface PurchaseFormData {
@@ -56,6 +57,7 @@ export default function AddPurchaseModal({
   onClose,
   onSuccess
 }: AddPurchaseModalProps): React.JSX.Element | null {
+  const user = useAuthStore((state) => state.user)
   const [formData, setFormData] = useState<PurchaseFormData>({
     supplierId: '',
     invoiceNumber: '',
@@ -85,6 +87,11 @@ export default function AddPurchaseModal({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
 
+    if (!user) {
+      toast.error('User not authenticated')
+      return
+    }
+
     if (!formData.supplierId) {
       toast.error('Please select a supplier')
       return
@@ -96,12 +103,19 @@ export default function AddPurchaseModal({
     }
 
     try {
-      const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+      const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+      const taxAmount = 0 // Can be calculated if needed
+      const discountAmount = 0 // Can be calculated if needed
+      const totalAmount = subtotal + taxAmount - discountAmount
 
       const purchase = {
         supplierId: formData.supplierId,
         invoiceNumber: formData.invoiceNumber || `PO-${Date.now()}`,
         accountId: formData.accountId || null,
+        userId: user.id,
+        subtotal,
+        taxAmount,
+        discountAmount,
         totalAmount,
         paidAmount: formData.paidAmount,
         dueAmount: totalAmount - formData.paidAmount,
@@ -346,7 +360,7 @@ export default function AddPurchaseModal({
                           }
                           inputProps={{ min: 1 }}
                         />
-                        <Box sx={{ position: 'relative' }}>
+                        <Box>
                           <TextField
                             size="small"
                             type="number"
@@ -366,38 +380,50 @@ export default function AddPurchaseModal({
                                   }
                                 : {}
                             }}
+                            InputProps={
+                              isPriceModified
+                                ? {
+                                    endAdornment: (
+                                      <IconButton
+                                        size="small"
+                                        onClick={() =>
+                                          updateItem(index, 'unitPrice', expectedPrice)
+                                        }
+                                        sx={{
+                                          color: 'warning.main',
+                                          '&:hover': {
+                                            color: 'warning.dark',
+                                            bgcolor: 'warning.lighter'
+                                          },
+                                          p: 0.5
+                                        }}
+                                        title="Reset to standard price"
+                                      >
+                                        <svg
+                                          style={{ width: 16, height: 16 }}
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                          />
+                                        </svg>
+                                      </IconButton>
+                                    )
+                                  }
+                                : undefined
+                            }
                           />
                           {isPriceModified && (
-                            <IconButton
-                              size="small"
-                              onClick={() => updateItem(index, 'unitPrice', expectedPrice)}
-                              sx={{
-                                position: 'absolute',
-                                right: 8,
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: 'warning.main',
-                                '&:hover': { color: 'warning.dark' }
-                              }}
-                              title="Reset to standard price"
+                            <Typography
+                              variant="caption"
+                              color="warning.main"
+                              sx={{ display: 'block', mt: 0.5 }}
                             >
-                              <svg
-                                style={{ width: 16, height: 16 }}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                              </svg>
-                            </IconButton>
-                          )}
-                          {isPriceModified && (
-                            <Typography variant="caption" color="warning.main" sx={{ mt: 0.5 }}>
                               Standard: {currencySymbol}
                               {expectedPrice.toFixed(2)}
                             </Typography>
@@ -429,19 +455,19 @@ export default function AddPurchaseModal({
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 1,
-                          fontSize: '0.75rem',
-                          color: 'info.main',
-                          bgcolor: 'info.50',
-                          px: 2,
-                          py: 1,
-                          borderRadius: 1,
+                          gap: 0.5,
+                          mt: 1,
+                          px: 1.5,
+                          py: 0.75,
+                          borderRadius: 0.5,
+                          bgcolor: 'info.lighter',
                           border: 1,
-                          borderColor: 'info.main'
+                          borderColor: 'info.light',
+                          width: 'fit-content'
                         }}
                       >
-                        <Info fontSize="small" />
-                        <Typography variant="caption" sx={{ fontWeight: 500 }}>
+                        <Info sx={{ fontSize: 16, color: 'info.main' }} />
+                        <Typography variant="caption" sx={{ fontWeight: 500, color: 'info.dark' }}>
                           {item.quantity} {selectedProduct.packageUnit}
                           {item.quantity > 1 ? 's' : ''} ={' '}
                           {item.quantity * (selectedProduct.unitsPerPackage || 1)}{' '}
@@ -449,7 +475,7 @@ export default function AddPurchaseModal({
                           {item.quantity * (selectedProduct.unitsPerPackage || 1) > 1 ? 's' : ''}
                         </Typography>
                         {item.unitPrice > 0 && (
-                          <Typography variant="caption" sx={{ ml: 1 }}>
+                          <Typography variant="caption" sx={{ color: 'info.dark', ml: 0.5 }}>
                             | Cost per {selectedProduct.unit}: {currencySymbol}
                             {(item.unitPrice / (selectedProduct.unitsPerPackage || 1)).toFixed(2)}
                           </Typography>
@@ -465,63 +491,26 @@ export default function AddPurchaseModal({
             <Box
               sx={{
                 mt: 3,
-                background: 'linear-gradient(135deg, #EFF6FF 0%, #E0E7FF 100%)',
-                borderRadius: 2,
-                p: 3,
+                bgcolor: 'grey.50',
+                borderRadius: 1,
+                p: 2,
                 border: 1,
-                borderColor: 'primary.light'
+                borderColor: 'divider'
               }}
             >
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  mb: 2
-                }}
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 600, mb: 1.5, color: 'text.primary' }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <svg
-                    style={{ width: 20, height: 20, color: '#2563eb' }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Purchase Summary
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    bgcolor: 'primary.lighter',
-                    color: 'primary.main',
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 2,
-                    fontSize: '0.75rem',
-                    fontWeight: 500
-                  }}
-                >
-                  {items.filter((item) => item.productId).length}{' '}
-                  {items.filter((item) => item.productId).length === 1 ? 'Item' : 'Items'}
-                </Box>
-              </Box>
+                Purchase Summary
+              </Typography>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                <Box
-                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">
                     Subtotal:
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {currencySymbol}
                     {totalAmount.toFixed(2)}
                   </Typography>
@@ -531,103 +520,51 @@ export default function AddPurchaseModal({
                   sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
-                    pt: 1.5,
-                    borderTop: 2,
-                    borderColor: 'primary.light'
+                    pt: 0.75,
+                    mt: 0.75,
+                    borderTop: 1,
+                    borderColor: 'divider'
                   }}
                 >
-                  <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
                     Total Amount:
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
                     {currencySymbol}
                     {totalAmount.toFixed(2)}
                   </Typography>
                 </Box>
 
                 {formData.paidAmount > 0 && (
-                  <Box
-                    sx={{
-                      pt: 2,
-                      mt: 2,
-                      borderTop: 1,
-                      borderColor: 'primary.light',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 1.5
-                    }}
-                  >
+                  <>
                     <Box
                       sx={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center'
+                        pt: 0.75,
+                        mt: 0.75,
+                        borderTop: 1,
+                        borderColor: 'divider'
                       }}
                     >
-                      <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 500 }}>
+                      <Typography variant="body2" color="success.main">
                         Paid Amount:
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: 'success.main' }}>
                         {currencySymbol}
                         {formData.paidAmount.toFixed(2)}
                       </Typography>
                     </Box>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 500 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="error.main">
                         Due Amount:
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500, color: 'error.main' }}>
                         {currencySymbol}
                         {(totalAmount - formData.paidAmount).toFixed(2)}
                       </Typography>
                     </Box>
-
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pt: 1 }}>
-                      <Box
-                        sx={{
-                          flex: 1,
-                          height: 8,
-                          borderRadius: 1,
-                          overflow: 'hidden',
-                          bgcolor: 'grey.300'
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            height: '100%',
-                            background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
-                            transition: 'width 0.3s ease',
-                            width: `${Math.min(100, (formData.paidAmount / totalAmount) * 100)}%`
-                          }}
-                        />
-                      </Box>
-                      <Typography
-                        variant="caption"
-                        sx={{ fontWeight: 500, color: 'text.secondary' }}
-                      >
-                        {totalAmount > 0
-                          ? Math.min(100, Math.round((formData.paidAmount / totalAmount) * 100))
-                          : 0}
-                        % Paid
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-
-                {items.some((item) => item.productId && item.quantity > 0) && (
-                  <Box sx={{ pt: 2, mt: 2, borderTop: 1, borderColor: 'primary.light' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      <strong>Total Quantity:</strong>{' '}
-                      {items.reduce((sum, item) => sum + (item.quantity || 0), 0)} units
-                    </Typography>
-                  </Box>
+                  </>
                 )}
               </Box>
             </Box>

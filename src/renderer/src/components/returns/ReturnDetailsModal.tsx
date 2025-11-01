@@ -20,6 +20,7 @@ import {
   Typography
 } from '@mui/material'
 import { PurchaseReturn, SalesReturn } from '../../types/return'
+import PrintButtons from '../shared/PrintButtons'
 
 interface ReturnDetailsModalProps {
   isOpen: boolean
@@ -32,6 +33,16 @@ export default function ReturnDetailsModal({
   onClose,
   returnItem
 }: ReturnDetailsModalProps): React.JSX.Element {
+  const handlePdfPrint = (): void => {
+    // TODO: Implement PDF print functionality
+    console.log('PDF Print return:', returnItem)
+  }
+
+  const handleThermalPrint = (): void => {
+    // TODO: Implement thermal print functionality
+    console.log('Thermal Print return:', returnItem)
+  }
+
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -194,7 +205,8 @@ export default function ReturnDetailsModal({
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 2 }}>
+      <DialogActions sx={{ p: 2, gap: 1 }}>
+        <PrintButtons onPdfPrint={handlePdfPrint} onThermalPrint={handleThermalPrint} />
         <Button onClick={onClose} variant="outlined">
           Close
         </Button>

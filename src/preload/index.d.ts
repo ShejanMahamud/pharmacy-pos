@@ -98,6 +98,7 @@ interface API {
     create: (purchase: any, items: any[]) => Promise<any>
     getAll: (startDate?: string, endDate?: string) => Promise<any[]>
     getById: (id: string) => Promise<any>
+    delete: (id: string, userId: string) => Promise<{ success: boolean; message: string }>
   }
   purchaseReturns: {
     create: (purchaseReturn: any, items: any[]) => Promise<any>

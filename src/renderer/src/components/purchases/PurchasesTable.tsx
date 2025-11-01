@@ -1,4 +1,4 @@
-import { Inventory, Visibility } from '@mui/icons-material'
+import { Delete, Inventory, Visibility } from '@mui/icons-material'
 import {
   Box,
   Chip,
@@ -23,12 +23,14 @@ interface PurchasesTableProps {
   purchases: Purchase[]
   currencySymbol: string
   onViewDetails: (purchase: Purchase) => void
+  onDelete: (purchase: Purchase) => void
 }
 
 export default function PurchasesTable({
   purchases,
   currencySymbol,
-  onViewDetails
+  onViewDetails,
+  onDelete
 }: PurchasesTableProps): React.JSX.Element {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(25)
@@ -207,6 +209,18 @@ export default function PurchasesTable({
                       }}
                     >
                       <Visibility fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Purchase">
+                    <IconButton
+                      size="small"
+                      onClick={() => onDelete(purchase)}
+                      sx={{
+                        color: 'error.main',
+                        '&:hover': { bgcolor: 'error.lighter' }
+                      }}
+                    >
+                      <Delete fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 </TableCell>

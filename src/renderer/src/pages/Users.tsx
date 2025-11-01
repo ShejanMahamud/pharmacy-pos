@@ -263,7 +263,7 @@ export default function Users(): React.JSX.Element {
       {/* Page Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
-          User & Role Management
+          Users Management
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
           Manage system users, roles, and permissions

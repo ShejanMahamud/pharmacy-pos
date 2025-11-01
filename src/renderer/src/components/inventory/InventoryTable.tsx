@@ -1,4 +1,4 @@
-import { Edit, Inventory } from '@mui/icons-material'
+import { Edit, Inventory, Visibility } from '@mui/icons-material'
 import {
   Box,
   Chip,
@@ -18,6 +18,7 @@ import {
   Typography
 } from '@mui/material'
 import { useState } from 'react'
+import medicinePlaceholder from '../../assets/medicine.png'
 import { Category, InventoryWithProduct } from '../../types/inventory'
 
 interface InventoryTableProps {
@@ -26,6 +27,7 @@ interface InventoryTableProps {
   loading: boolean
   currencySymbol: string
   onEdit: (item: InventoryWithProduct) => void
+  onViewDetails: (item: InventoryWithProduct) => void
 }
 
 export default function InventoryTable({
@@ -33,8 +35,9 @@ export default function InventoryTable({
   categories,
   loading,
   currencySymbol,
-  onEdit
-}: InventoryTableProps) {
+  onEdit,
+  onViewDetails
+}: InventoryTableProps): React.JSX.Element {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
@@ -52,11 +55,11 @@ export default function InventoryTable({
     }
   }))
 
-  const handleChangePage = (_: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number): void => {
     setPage(newPage)
   }
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
   }
@@ -130,32 +133,20 @@ export default function InventoryTable({
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Box
+                        component="img"
+                        src={product.imageUrl || medicinePlaceholder}
+                        alt={product.name}
                         sx={{
                           width: 40,
                           height: 40,
                           borderRadius: 2,
-                          bgcolor: 'primary.light',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white'
+                          objectFit: 'contain',
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          bgcolor: 'grey.50',
+                          p: 0.5
                         }}
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                          />
-                        </svg>
-                      </Box>
+                      />
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           {product.name}
@@ -219,6 +210,11 @@ export default function InventoryTable({
                     )}
                   </TableCell>
                   <TableCell align="right">
+                    <Tooltip title="View Details">
+                      <IconButton size="small" color="info" onClick={() => onViewDetails(item)}>
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Adjust Stock">
                       <IconButton size="small" color="primary" onClick={() => onEdit(item)}>
                         <Edit fontSize="small" />

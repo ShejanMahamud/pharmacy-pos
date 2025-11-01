@@ -1,7 +1,6 @@
 import { Close } from '@mui/icons-material'
 import {
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,6 +18,7 @@ import {
   Typography
 } from '@mui/material'
 import { Purchase, PurchaseItem } from '../../types/purchase'
+import PrintButtons from '../shared/PrintButtons'
 
 interface PurchaseDetailsModalProps {
   isOpen: boolean
@@ -36,6 +36,16 @@ export default function PurchaseDetailsModal({
   onClose
 }: PurchaseDetailsModalProps): React.JSX.Element | null {
   if (!purchase) return null
+
+  const handlePdfPrint = (): void => {
+    // TODO: Implement PDF print functionality
+    console.log('PDF Print:', purchase)
+  }
+
+  const handleThermalPrint = (): void => {
+    // TODO: Implement thermal print functionality
+    console.log('Thermal Print:', purchase)
+  }
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -168,10 +178,14 @@ export default function PurchaseDetailsModal({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} variant="contained" color="primary">
-          Close
-        </Button>
+      <DialogActions sx={{ p: 2, gap: 2 }}>
+        <Box sx={{ flex: 1 }}>
+          <PrintButtons
+            onPdfPrint={handlePdfPrint}
+            onThermalPrint={handleThermalPrint}
+            disabled={false}
+          />
+        </Box>
       </DialogActions>
     </Dialog>
   )

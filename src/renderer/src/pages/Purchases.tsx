@@ -7,6 +7,8 @@ import PurchaseFilters from '../components/purchases/PurchaseFilters'
 import PurchaseReturnModal from '../components/purchases/PurchaseReturnModal'
 import PurchaseStats from '../components/purchases/PurchaseStats'
 import PurchasesTable from '../components/purchases/PurchasesTable'
+import ConfirmDialog from '../components/shared/ConfirmDialog'
+import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { BankAccount, Product, Purchase, PurchaseItem, Supplier } from '../types/purchase'
 
@@ -19,6 +21,8 @@ export default function Purchases(): React.JSX.Element {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [purchaseToDelete, setPurchaseToDelete] = useState<Purchase | null>(null)
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null)
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -138,6 +142,39 @@ export default function Purchases(): React.JSX.Element {
     viewPurchaseDetails(purchase)
   }
 
+  const handleDelete = (purchase: Purchase): void => {
+    setPurchaseToDelete(purchase)
+    setShowDeleteDialog(true)
+  }
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!purchaseToDelete) return
+
+    try {
+      const user = useAuthStore.getState().user
+      if (!user) {
+        toast.error('User not authenticated')
+        setShowDeleteDialog(false)
+        return
+      }
+
+      await window.api.purchases.delete(purchaseToDelete.id, user.id)
+      toast.success('Purchase deleted successfully')
+      setShowDeleteDialog(false)
+      setPurchaseToDelete(null)
+      loadPurchases()
+    } catch (error) {
+      toast.error('Failed to delete purchase')
+      console.error(error)
+      setShowDeleteDialog(false)
+    }
+  }
+
+  const handleCancelDelete = (): void => {
+    setShowDeleteDialog(false)
+    setPurchaseToDelete(null)
+  }
+
   return (
     <Container maxWidth="xl" sx={{ py: 4, bgcolor: 'grey.100', minHeight: '100vh' }}>
       {/* Page Header */}
@@ -176,6 +213,7 @@ export default function Purchases(): React.JSX.Element {
         purchases={filteredPurchases}
         currencySymbol={getCurrencySymbol()}
         onViewDetails={handleViewDetails}
+        onDelete={handleDelete}
       />
 
       {/* Purchase Details Modal */}
@@ -206,6 +244,17 @@ export default function Purchases(): React.JSX.Element {
         currencySymbol={getCurrencySymbol()}
         onClose={() => setShowReturnModal(false)}
         onSuccess={loadPurchases}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        title="Delete Purchase"
+        message={`Are you sure you want to delete purchase ${purchaseToDelete?.invoiceNumber}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
       />
     </Container>
   )

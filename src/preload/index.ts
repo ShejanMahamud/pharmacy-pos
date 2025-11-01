@@ -110,7 +110,9 @@ const api = {
       ipcRenderer.invoke('db:purchases:create', { purchase, items }),
     getAll: (startDate?: string, endDate?: string) =>
       ipcRenderer.invoke('db:purchases:getAll', { startDate, endDate }),
-    getById: (id: string) => ipcRenderer.invoke('db:purchases:getById', id)
+    getById: (id: string) => ipcRenderer.invoke('db:purchases:getById', id),
+    delete: (id: string, userId: string) =>
+      ipcRenderer.invoke('db:purchases:delete', { id, userId })
   },
   // Purchase Returns
   purchaseReturns: {

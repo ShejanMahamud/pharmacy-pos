@@ -12,6 +12,7 @@ export interface Product {
   id: string
   name: string
   genericName?: string
+  strength?: string
   sku: string
   barcode?: string
   categoryId?: string
@@ -19,6 +20,7 @@ export interface Product {
   reorderLevel: number
   sellingPrice: number
   costPrice: number
+  imageUrl?: string
 }
 
 export interface Category {

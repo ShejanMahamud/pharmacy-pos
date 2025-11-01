@@ -1,8 +1,9 @@
-import { Add, Search } from '@mui/icons-material'
+import { Add, Search, Visibility } from '@mui/icons-material'
 import {
   Box,
   Button,
   Chip,
+  IconButton,
   InputAdornment,
   Paper,
   styled,
@@ -28,13 +29,15 @@ interface DamagedItemsTableProps {
   onPageChange: (page: number) => void
   onItemsPerPageChange: (items: number) => void
   onAddDamagedItem: () => void
+  onViewDetails: (item: DamagedItem) => void
 }
 
 export default function DamagedItemsTable({
   items,
   searchTerm,
   onSearchChange,
-  onAddDamagedItem
+  onAddDamagedItem,
+  onViewDetails
 }: DamagedItemsTableProps): React.JSX.Element {
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -123,6 +126,7 @@ export default function DamagedItemsTable({
                 <StyledTableCell>Expiry Date</StyledTableCell>
                 <StyledTableCell>Reported By</StyledTableCell>
                 <StyledTableCell>Date Reported</StyledTableCell>
+                <StyledTableCell>Actions</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -162,6 +166,16 @@ export default function DamagedItemsTable({
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                       {formatDate(item.createdAt)}
                     </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => onViewDetails(item)}
+                      title="View Details"
+                    >
+                      <Visibility fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}

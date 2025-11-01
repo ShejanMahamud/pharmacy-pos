@@ -88,6 +88,7 @@ export const products = sqliteTable('products', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   genericName: text('generic_name'),
+  strength: text('strength'), // Medicine strength (e.g., '500mg', '10ml', '250mg/5ml')
   barcode: text('barcode').unique(),
   sku: text('sku').notNull().unique(),
   categoryId: text('category_id').references(() => categories.id),

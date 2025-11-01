@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { getDatabase } from '../../database'
 import * as schema from '../../database/schema'
@@ -18,10 +19,26 @@ export function createAuditLog(
   }
 ): void {
   try {
+    // Validate userId exists if provided
+    let validUserId: string | null = null
+    if (data.userId) {
+      const userExists = db
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(eq(schema.users.id, data.userId))
+        .get()
+
+      if (userExists) {
+        validUserId = data.userId
+      } else {
+        console.warn(`User ID ${data.userId} not found, audit log will be created without userId`)
+      }
+    }
+
     const id = uuidv4()
     const auditLog = {
       id,
-      userId: data.userId || null,
+      userId: validUserId,
       username: data.username || 'System',
       action: data.action,
       entityType: data.entityType,

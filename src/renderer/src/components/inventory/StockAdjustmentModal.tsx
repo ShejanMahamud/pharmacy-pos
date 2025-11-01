@@ -38,10 +38,20 @@ export default function StockAdjustmentModal({
   }
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      sx={{
+        '& .MuiDialog-paper': {
+          pointerEvents: 'auto'
+        }
+      }}
+    >
       <DialogTitle>{editingItem ? 'Adjust Stock' : 'Add Stock'}</DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent>
+        <DialogContent sx={{ pointerEvents: 'auto' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <FormControl fullWidth required>
               <InputLabel>Product</InputLabel>

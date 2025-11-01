@@ -1,4 +1,4 @@
-import { Add, Delete, Edit, Inventory, Search } from '@mui/icons-material'
+import { Add, Delete, Edit, Search } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -106,36 +106,6 @@ export default function UnitsTable({
 
   const paginatedUnits = filteredUnits.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
-  if (paginatedUnits.length === 0) {
-    return (
-      <Paper sx={{ p: 12, textAlign: 'center' }}>
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            bgcolor: 'grey.200',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 2
-          }}
-        >
-          <Typography variant="h5" sx={{ color: 'text.secondary' }}>
-            <Inventory />
-          </Typography>
-        </Box>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-          No unit items found
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Start by adding units to your inventory.
-        </Typography>
-      </Paper>
-    )
-  }
-
   return (
     <Box>
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -211,8 +181,29 @@ export default function UnitsTable({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No units found
+                <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <Box sx={{ color: 'text.secondary' }}>
+                    {searchTerm ? (
+                      <>
+                        <Search sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                        <Typography variant="h6" sx={{ mb: 1 }}>
+                          No units found
+                        </Typography>
+                        <Typography variant="body2">
+                          No units match your search "{searchTerm}"
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography variant="h6" sx={{ mb: 1 }}>
+                          No units available
+                        </Typography>
+                        <Typography variant="body2">
+                          Start by adding units using the "Add Unit" button above
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
                 </TableCell>
               </TableRow>
             )}
