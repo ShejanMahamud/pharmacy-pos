@@ -1,12 +1,12 @@
 # MedixPOS - Pharmacy Management System
 
-## 🎯 Project Overview
+## Project Overview
 
 **MedixPOS** is a comprehensive, professional-grade **Pharmacy Point-of-Sale (POS) Management System** built as a desktop application using **Electron**, **React**, and **TypeScript**. This licensed software provides end-to-end pharmacy management capabilities including inventory control, sales transactions, customer management, supplier accounting, employee management, and financial reporting.
 
 ---
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ### Technology Stack
 
@@ -69,9 +69,9 @@ pharmacy-pos/
 
 ---
 
-## 🎨 Core Features & Modules
+## Core Features & Modules
 
-### 1. 🔐 Authentication & Authorization
+### 1. Authentication & Authorization
 
 #### Role-Based Access Control (RBAC)
 
@@ -101,7 +101,7 @@ Pharmacist    -> username: pharmacist  | password: pharma123
 Cashier       -> username: cashier     | password: cashier123
 ```
 
-### 2. 🛒 Point of Sale (POS) System
+### 2. Point of Sale (POS) System
 
 #### Features
 
@@ -119,7 +119,7 @@ Cashier       -> username: cashier     | password: cashier123
 - **Change Calculation**: Automatic change computation
 - **Account Selection**: Track which bank account receives payment
 
-### 3. 📦 Inventory Management
+### 3. Inventory Management
 
 #### Product Management
 
@@ -156,7 +156,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Low stock warnings on dashboard
 - Automatic inventory adjustment on sales/returns
 
-### 4. 💼 Purchase Management
+### 4. Purchase Management
 
 #### Purchase Orders
 
@@ -175,7 +175,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Refund tracking (Pending, Partial, Refunded)
 - Supplier account reconciliation
 
-### 5. 💰 Sales Management
+### 5. Sales Management
 
 #### Sales Operations
 
@@ -194,7 +194,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Automatic inventory restoration
 - Original sale reference linking
 
-### 6. 👥 Customer Relationship Management
+### 6. Customer Relationship Management
 
 #### Customer Profiles
 
@@ -214,7 +214,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Total purchases tracking
 - Customer engagement metrics
 
-### 7. 🏢 Supplier Management
+### 7. Supplier Management
 
 #### Supplier Accounts
 
@@ -249,7 +249,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Payment date tracking
 - Notes and documentation
 
-### 8. 🏦 Financial Management
+### 8. Financial Management
 
 #### Bank Account System
 
@@ -276,7 +276,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Receipt/document attachment
 - Date-wise expense records
 
-### 9. 👨‍💼 Human Resources Management
+### 9. Human Resources Management
 
 #### Employee Management
 
@@ -327,7 +327,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Rejection with reason
 - Leave history tracking
 
-### 10. 📊 Reports & Analytics
+### 10. Reports & Analytics
 
 #### Dashboard Analytics
 
@@ -378,7 +378,7 @@ Cashier       -> username: cashier     | password: cashier123
 - Bank account statements
 - Supplier payment reports
 
-### 11. 🔍 Audit & Compliance
+### 11. Audit & Compliance
 
 #### Audit Logging
 
@@ -399,7 +399,7 @@ Comprehensive activity tracking for:
 - Expiry date enforcement
 - Batch number tracking
 
-### 12. ⚙️ Settings & Configuration
+### 12. Settings & Configuration
 
 #### Store Settings
 
@@ -417,7 +417,7 @@ Comprehensive activity tracking for:
 - Report settings
 - Printer configurations
 
-### 13. 📑 Category & Unit Management
+### 13. Category & Unit Management
 
 #### Product Categories
 
@@ -435,7 +435,7 @@ Comprehensive activity tracking for:
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Core Tables (25 tables)
 
@@ -469,7 +469,7 @@ Comprehensive activity tracking for:
 
 ---
 
-## 🔄 Business Workflows
+## Business Workflows
 
 ### Sales Workflow
 
@@ -514,7 +514,7 @@ Comprehensive activity tracking for:
 
 ---
 
-## 🔐 Security Features
+## Security Features
 
 1. **Authentication**:
    - Secure login with hashed passwords
@@ -541,7 +541,7 @@ Comprehensive activity tracking for:
 
 ---
 
-## 📱 User Interface
+## User Interface
 
 ### Design System
 
@@ -565,7 +565,7 @@ Comprehensive activity tracking for:
 
 ---
 
-## 🖨️ Printing Capabilities
+## Printing Capabilities
 
 ### Receipt Printing
 
@@ -586,7 +586,7 @@ Comprehensive activity tracking for:
 
 ---
 
-## 🚀 Deployment & Distribution
+## Deployment & Distribution
 
 ### Build Targets
 
@@ -618,7 +618,7 @@ pnpm build:linux  # Linux
 
 ---
 
-## 📊 Key Metrics Tracked
+## Key Metrics Tracked
 
 1. **Sales Metrics**:
    - Daily/Monthly revenue
@@ -646,32 +646,7 @@ pnpm build:linux  # Linux
 
 ---
 
-## 🎯 Target Users
-
-- **Pharmacy Stores**: Independent pharmacies
-- **Medical Stores**: Drug stores and medical supply shops
-- **Hospital Pharmacies**: In-house pharmacy operations
-- **Retail Chains**: Multi-location pharmacy businesses
-- **Wholesale Distributors**: Medical supply distributors
-
----
-
-## 💡 Unique Selling Points
-
-1. **Offline-First**: No internet dependency for operations
-2. **Complete Solution**: End-to-end pharmacy management
-3. **Regulatory Compliance**: Prescription tracking and audit trails
-4. **Multi-Currency**: Support for multiple currencies
-5. **Role-Based Security**: Fine-grained access control
-6. **Supplier Accounting**: Complete supplier ledger system
-7. **HR Integration**: Employee management built-in
-8. **Loyalty Program**: Customer retention features
-9. **Professional Printing**: Multiple receipt formats
-10. **Open Architecture**: Built on modern, maintainable tech stack
-
----
-
-## 🔧 Technical Highlights
+## Technical Highlights
 
 ### Database Migrations
 
@@ -706,7 +681,7 @@ Modular IPC handlers for clean separation:
 
 ---
 
-## 📈 Future Enhancement Possibilities
+## Future Enhancement Possibilities
 
 - Multi-store management
 - Online ordering integration
@@ -721,13 +696,13 @@ Modular IPC handlers for clean separation:
 
 ---
 
-## 📝 License
+## License
 
 This is a **Licensed Professional Software** developed by **Johuniq** (https://johuniq.xyz).
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 For detailed documentation on specific modules, refer to:
 
@@ -737,7 +712,7 @@ For detailed documentation on specific modules, refer to:
 
 ---
 
-## 🤝 Support
+## Support
 
 For support, feature requests, or licensing inquiries, contact the developer through the official website.
 
