@@ -1,3 +1,38 @@
+import AccessTimeIcon from '@mui/icons-material/AccessTime'
+import AddIcon from '@mui/icons-material/Add'
+import AssignmentIcon from '@mui/icons-material/Assignment'
+import CancelIcon from '@mui/icons-material/Cancel'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CloseIcon from '@mui/icons-material/Close'
+import EventAvailableIcon from '@mui/icons-material/EventAvailable'
+import {
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography
+} from '@mui/material'
+import { grey } from '@mui/material/colors'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -119,332 +154,367 @@ export default function AttendanceTab({
     }
   }
 
+  const StyledTableCell = styled(TableCell)(() => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: grey[300],
+      fontWeight: 600,
+      fontSize: 12,
+      textTransform: 'uppercase'
+    }
+  }))
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Attendance Management</h2>
-            <p className="text-sm text-gray-600 mt-1">Track daily attendance and work hours</p>
-          </div>
-          <button
-            onClick={() => setShowAttendanceModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            Mark Attendance
-          </button>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-green-600 font-semibold text-sm">Present Today</div>
-              <div className="text-2xl font-bold text-green-900 mt-1">
+    <Box>
+      {/* Stats Cards */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gap: 3,
+          mb: 3
+        }}
+      >
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Present Today
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main' }}>
                 {attendanceStats.present}
-              </div>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <div className="text-red-600 font-semibold text-sm">Absent Today</div>
-              <div className="text-2xl font-bold text-red-900 mt-1">{attendanceStats.absent}</div>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <div className="text-yellow-600 font-semibold text-sm">On Leave</div>
-              <div className="text-2xl font-bold text-yellow-900 mt-1">
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Staff present today
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'success.main' }}>
+              <CheckCircleIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Absent Today
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'error.main' }}>
+                {attendanceStats.absent}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Staff absent today
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'error.main' }}>
+              <CancelIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                On Leave
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.main' }}>
                 {attendanceStats.onLeave}
-              </div>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-blue-600 font-semibold text-sm">Avg Work Hours</div>
-              <div className="text-2xl font-bold text-blue-900 mt-1">
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Staff on leave
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'warning.main' }}>
+              <EventAvailableIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Avg Work Hours
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                 {attendanceStats.avgHours.toFixed(1)}h
-              </div>
-            </div>
-          </div>
-          {attendanceRecords.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
-              <svg
-                className="w-16 h-16 mx-auto mb-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <p className="text-lg font-medium">No attendance records yet</p>
-              <p className="text-sm mt-1">Start by marking today&apos;s attendance</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Check In
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Check Out
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Work Hours
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Notes
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {attendanceRecords.map((record) => {
-                    const user = users.find((u) => u.id === record.userId)
-                    return (
-                      <tr key={record.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {user?.username || 'Unknown'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Average hours worked
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'primary.main' }}>
+              <AccessTimeIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+      </Box>
+
+      {/* Action Bar */}
+      <Paper
+        sx={{
+          p: 2,
+          mb: 3,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Attendance Records
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setShowAttendanceModal(true)}
+        >
+          Mark Attendance
+        </Button>
+      </Paper>
+
+      {/* Attendance Table */}
+      <Paper>
+        {attendanceRecords.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <AssignmentIcon sx={{ fontSize: 64, color: grey[300], mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
+              No attendance records yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Start by marking today&apos;s attendance
+            </Typography>
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>User</StyledTableCell>
+                  <StyledTableCell>Date</StyledTableCell>
+                  <StyledTableCell>Check In</StyledTableCell>
+                  <StyledTableCell>Check Out</StyledTableCell>
+                  <StyledTableCell>Status</StyledTableCell>
+                  <StyledTableCell>Work Hours</StyledTableCell>
+                  <StyledTableCell>Notes</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {attendanceRecords.map((record) => {
+                  const user = users.find((u) => u.id === record.userId)
+                  return (
+                    <TableRow key={record.id} hover>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {user?.username || 'Unknown'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
                           {new Date(record.date).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
                           {record.checkInTime || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
                           {record.checkOutTime || '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              record.status === 'present'
-                                ? 'bg-green-100 text-green-800'
-                                : record.status === 'absent'
-                                  ? 'bg-red-100 text-red-800'
-                                  : record.status === 'leave'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {record.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={record.status}
+                          size="small"
+                          color={
+                            record.status === 'present'
+                              ? 'success'
+                              : record.status === 'absent'
+                                ? 'error'
+                                : record.status === 'leave'
+                                  ? 'warning'
+                                  : 'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
                           {record.workHours ? `${record.workHours}h` : '-'}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{record.notes || '-'}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {record.notes || '-'}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
 
       {/* Mark Attendance Modal */}
-      {showAttendanceModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Mark Attendance</h2>
-                <p className="text-sm text-gray-600 mt-1">Record daily attendance for staff</p>
-              </div>
-              <button
-                onClick={() => setShowAttendanceModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+      <Dialog
+        open={showAttendanceModal}
+        onClose={() => setShowAttendanceModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                Mark Attendance
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Record daily attendance for staff
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setShowAttendanceModal(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
 
-            <form onSubmit={handleMarkAttendance} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Staff Member
-                </label>
-                <select
+        <Divider />
+
+        <form onSubmit={handleMarkAttendance}>
+          <DialogContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <FormControl fullWidth required>
+                <InputLabel>Staff Member</InputLabel>
+                <Select
                   value={attendanceFormData.userId}
+                  label="Staff Member"
                   onChange={(e) =>
                     setAttendanceFormData({ ...attendanceFormData, userId: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
                 >
-                  <option value="">Select a staff member</option>
+                  <MenuItem value="">Select a staff member</MenuItem>
                   {users.map((user) => (
-                    <option key={user.id} value={user.id}>
+                    <MenuItem key={user.id} value={user.id}>
                       {user.fullName}
-                    </option>
+                    </MenuItem>
                   ))}
-                </select>
-              </div>
+                </Select>
+              </FormControl>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-                <input
-                  type="date"
-                  value={attendanceFormData.date}
-                  onChange={(e) =>
-                    setAttendanceFormData({ ...attendanceFormData, date: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
+              <TextField
+                label="Date"
+                type="date"
+                value={attendanceFormData.date}
+                onChange={(e) =>
+                  setAttendanceFormData({ ...attendanceFormData, date: e.target.value })
+                }
+                required
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                <select
+              <FormControl fullWidth required>
+                <InputLabel>Status</InputLabel>
+                <Select
                   value={attendanceFormData.status}
+                  label="Status"
                   onChange={(e) =>
                     setAttendanceFormData({ ...attendanceFormData, status: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
                 >
-                  <option value="present">Present</option>
-                  <option value="absent">Absent</option>
-                  <option value="leave">On Leave</option>
-                  <option value="holiday">Holiday</option>
-                </select>
-              </div>
+                  <MenuItem value="present">Present</MenuItem>
+                  <MenuItem value="absent">Absent</MenuItem>
+                  <MenuItem value="leave">On Leave</MenuItem>
+                  <MenuItem value="holiday">Holiday</MenuItem>
+                </Select>
+              </FormControl>
 
               {attendanceFormData.status === 'present' && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Check In Time
-                      </label>
-                      <input
-                        type="time"
-                        value={attendanceFormData.checkIn}
-                        onChange={(e) =>
-                          setAttendanceFormData({ ...attendanceFormData, checkIn: e.target.value })
-                        }
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Check Out Time
-                      </label>
-                      <input
-                        type="time"
-                        value={attendanceFormData.checkOut}
-                        onChange={(e) =>
-                          setAttendanceFormData({ ...attendanceFormData, checkOut: e.target.value })
-                        }
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Work Hours
-                    </label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      max="24"
-                      value={attendanceFormData.workHours}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                    <TextField
+                      label="Check In Time"
+                      type="time"
+                      value={attendanceFormData.checkIn}
                       onChange={(e) =>
-                        setAttendanceFormData({
-                          ...attendanceFormData,
-                          workHours: parseFloat(e.target.value) || 0
-                        })
+                        setAttendanceFormData({ ...attendanceFormData, checkIn: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="8.0"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Overtime Hours
-                    </label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      value={attendanceFormData.overtime}
+                    <TextField
+                      label="Check Out Time"
+                      type="time"
+                      value={attendanceFormData.checkOut}
                       onChange={(e) =>
-                        setAttendanceFormData({
-                          ...attendanceFormData,
-                          overtime: parseFloat(e.target.value) || 0
-                        })
+                        setAttendanceFormData({ ...attendanceFormData, checkOut: e.target.value })
                       }
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="0"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
                     />
-                  </div>
+                  </Box>
+
+                  <TextField
+                    label="Work Hours"
+                    type="number"
+                    value={attendanceFormData.workHours}
+                    onChange={(e) =>
+                      setAttendanceFormData({
+                        ...attendanceFormData,
+                        workHours: parseFloat(e.target.value) || 0
+                      })
+                    }
+                    fullWidth
+                    placeholder="8.0"
+                    inputProps={{ step: 0.5, min: 0, max: 24 }}
+                  />
+
+                  <TextField
+                    label="Overtime Hours"
+                    type="number"
+                    value={attendanceFormData.overtime}
+                    onChange={(e) =>
+                      setAttendanceFormData({
+                        ...attendanceFormData,
+                        overtime: parseFloat(e.target.value) || 0
+                      })
+                    }
+                    fullWidth
+                    placeholder="0"
+                    inputProps={{ step: 0.5, min: 0 }}
+                  />
                 </>
               )}
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  value={attendanceFormData.notes}
-                  onChange={(e) =>
-                    setAttendanceFormData({ ...attendanceFormData, notes: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Add any additional notes..."
-                />
-              </div>
+              <TextField
+                label="Notes (Optional)"
+                value={attendanceFormData.notes}
+                onChange={(e) =>
+                  setAttendanceFormData({ ...attendanceFormData, notes: e.target.value })
+                }
+                multiline
+                rows={3}
+                fullWidth
+                placeholder="Add any additional notes..."
+              />
+            </Box>
+          </DialogContent>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAttendanceModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg transition-all shadow-lg"
-                >
-                  Mark Attendance
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+          <Divider />
+
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setShowAttendanceModal(false)} variant="outlined">
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained">
+              Mark Attendance
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Box>
   )
 }

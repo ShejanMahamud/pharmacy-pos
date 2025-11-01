@@ -138,7 +138,7 @@ export default function InventoryTable({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: 'primary.main'
+                          color: 'white'
                         }}
                       >
                         <svg

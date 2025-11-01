@@ -1,5 +1,39 @@
+import { Person as PersonIcon } from '@mui/icons-material'
+import {
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  FormControl,
+  MenuItem,
+  Paper,
+  Select,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Typography
+} from '@mui/material'
+import { useState } from 'react'
 import { canChangeUserRole, getAssignableRoles, Role, roleMetadata } from '../../utils/permissions'
-import Pagination from '../Pagination'
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: theme.palette.grey[300],
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    fontSize: '0.75rem',
+    letterSpacing: '0.05em'
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14
+  }
+}))
 
 interface User {
   id: string
@@ -32,172 +66,152 @@ export default function UserTable({
   hasEditPermission,
   onUserSelect,
   onRoleChange,
-  onToggleStatus,
-  currentPage,
-  totalPages,
-  itemsPerPage,
-  onPageChange,
-  onItemsPerPageChange
+  onToggleStatus
 }: UserTableProps): React.JSX.Element {
-  return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">System Users</h2>
-        <p className="text-sm text-gray-600 mt-1">Manage user accounts and access</p>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                User
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Role
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              {hasEditPermission && (
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.length === 0 ? (
-              <tr>
-                <td colSpan={hasEditPermission ? 4 : 3} className="px-6 py-12 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400 mb-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <p className="text-gray-500 text-sm">No users found</p>
-                </td>
-              </tr>
-            ) : (
-              users.map((user) => {
-                const userRoleMeta = roleMetadata[user.role]
-                return (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => onUserSelect(user)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                          {user.fullName.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900 text-sm">{user.fullName}</p>
-                          <p className="text-xs text-gray-500">@{user.username}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {hasEditPermission && currentUser ? (
-                        <select
-                          value={user.role}
-                          onChange={(e) => {
-                            e.stopPropagation()
-                            onRoleChange(user.id, user, e.target.value as Role)
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          disabled={
-                            currentUser.id === user.id ||
-                            !canChangeUserRole(currentUser.role, user.role, user.role)
-                          }
-                          className={`px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white ${
-                            currentUser.id === user.id ||
-                            !canChangeUserRole(currentUser.role, user.role, user.role)
-                              ? 'opacity-50 cursor-not-allowed text-gray-500'
-                              : 'text-gray-800 hover:border-blue-500 cursor-pointer'
-                          }`}
-                        >
-                          {getAssignableRoles(currentUser.role).map((role) => (
-                            <option key={role} value={role}>
-                              {roleMetadata[role].name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                          {userRoleMeta.name}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {user.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    {hasEditPermission && (
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onToggleStatus(user.id, user.isActive || false)
-                          }}
-                          disabled={currentUser?.id === user.id}
-                          className={`px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors ${
-                            currentUser?.id === user.id
-                              ? 'opacity-50 cursor-not-allowed text-gray-400'
-                              : user.isActive
-                                ? 'text-red-600 hover:bg-red-50'
-                                : 'text-green-600 hover:bg-green-50'
-                          }`}
-                        >
-                          {user.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(25)
 
-      {/* Pagination */}
-      {users.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={users.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={onPageChange}
-          onItemsPerPageChange={onItemsPerPageChange}
-        />
-      )}
-    </div>
+  const handleChangePage = (_event: unknown, newPage: number): void => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const paginatedUsers = users.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  if (users.length === 0) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{ p: 8, textAlign: 'center', border: '1px solid', borderColor: 'divider' }}
+      >
+        <PersonIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+        <Typography variant="h6" gutterBottom>
+          No Users Found
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          No users match your search criteria
+        </Typography>
+      </Paper>
+    )
+  }
+
+  return (
+    <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ px: 3, py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          System Users
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Manage user accounts and access
+        </Typography>
+      </Box>
+
+      <TableContainer sx={{ maxHeight: 540 }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>User</StyledTableCell>
+              <StyledTableCell>Role</StyledTableCell>
+              <StyledTableCell>Status</StyledTableCell>
+              {hasEditPermission && <StyledTableCell align="center">Actions</StyledTableCell>}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedUsers.map((user) => (
+              <TableRow
+                key={user.id}
+                hover
+                onClick={() => onUserSelect(user)}
+                sx={{ cursor: 'pointer' }}
+              >
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+                      {user.fullName.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {user.fullName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        @{user.username}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  {hasEditPermission && currentUser ? (
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                      <Select
+                        value={user.role}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          onRoleChange(user.id, user, e.target.value as Role)
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={
+                          currentUser.id === user.id ||
+                          !canChangeUserRole(currentUser.role, user.role, user.role)
+                        }
+                      >
+                        {getAssignableRoles(currentUser.role).map((role) => (
+                          <MenuItem key={role} value={role}>
+                            {roleMetadata[role].name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    <Chip
+                      icon={<PersonIcon />}
+                      label={roleMetadata[user.role].name}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={user.isActive ? 'Active' : 'Inactive'}
+                    color={user.isActive ? 'success' : 'error'}
+                    size="small"
+                  />
+                </TableCell>
+                {hasEditPermission && (
+                  <TableCell align="center">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color={user.isActive ? 'error' : 'success'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleStatus(user.id, user.isActive || false)
+                      }}
+                      disabled={currentUser?.id === user.id}
+                    >
+                      {user.isActive ? 'Deactivate' : 'Activate'}
+                    </Button>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 50, 100]}
+        component="div"
+        count={users.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+    </Paper>
   )
 }

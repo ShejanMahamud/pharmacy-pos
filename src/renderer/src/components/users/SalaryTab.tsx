@@ -1,3 +1,38 @@
+import AddIcon from '@mui/icons-material/Add'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
+import CloseIcon from '@mui/icons-material/Close'
+import MoneyOffIcon from '@mui/icons-material/MoneyOff'
+import PaymentIcon from '@mui/icons-material/Payment'
+import PendingActionsIcon from '@mui/icons-material/PendingActions'
+import PeopleIcon from '@mui/icons-material/People'
+import {
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography
+} from '@mui/material'
+import { grey } from '@mui/material/colors'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -214,666 +249,683 @@ export default function SalaryTab({ users, currentUser }: SalaryTabProps): React
     }
   }
 
+  const StyledTableCell = styled(TableCell)(() => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: grey[300],
+      fontWeight: 600,
+      fontSize: 12,
+      textTransform: 'uppercase'
+    }
+  }))
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Salary Management</h2>
-            <p className="text-sm text-gray-600 mt-1">Manage employee salaries and payments</p>
-          </div>
-          <button
-            onClick={() => setShowSalaryModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            Add Salary
-          </button>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-blue-600 font-semibold text-sm">Total Employees</div>
-              <div className="text-2xl font-bold text-blue-900 mt-1">{users.length}</div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-green-600 font-semibold text-sm">Monthly Payroll</div>
-              <div className="text-2xl font-bold text-green-900 mt-1">
+    <Box>
+      {/* Stats Cards */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gap: 3,
+          mb: 3
+        }}
+      >
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Total Employees
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                {users.length}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Active staff members
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'primary.main' }}>
+              <PeopleIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Monthly Payroll
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.main' }}>
                 ${salaryStats.monthlyPayroll.toFixed(2)}
-              </div>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="text-purple-600 font-semibold text-sm">Paid This Month</div>
-              <div className="text-2xl font-bold text-purple-900 mt-1">
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Total monthly expense
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'success.main' }}>
+              <AttachMoneyIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Paid This Month
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
                 ${salaryStats.paidThisMonth.toFixed(2)}
-              </div>
-            </div>
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <div className="text-orange-600 font-semibold text-sm">Pending Payments</div>
-              <div className="text-2xl font-bold text-orange-900 mt-1">
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Completed payments
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'secondary.main' }}>
+              <PaymentIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                Pending Payments
+              </Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.main' }}>
                 ${salaryStats.pendingPayments.toFixed(2)}
-              </div>
-            </div>
-          </div>
-          {salaries.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
-              <svg
-                className="w-16 h-16 mx-auto mb-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p className="text-lg font-medium">No salary records yet</p>
-              <p className="text-sm mt-1">Add salary information for employees to get started</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Salary Configurations */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Salary Configurations</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Employee
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Basic Salary
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Allowances
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Deductions
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Net Salary
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Frequency
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Effective From
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {salaries.map((salary) => {
-                        const user = users.find((u) => u.id === salary.userId)
-                        return (
-                          <tr key={salary.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">
-                                {user?.fullName || 'Unknown'}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              ${salary.basicSalary.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                              +${salary.allowances.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
-                              -${salary.deductions.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                              ${salary.netSalary.toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                {salary.paymentFrequency}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(salary.effectiveFrom).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button
-                                onClick={() => {
-                                  setPaymentFormData({
-                                    ...paymentFormData,
-                                    salaryId: salary.id,
-                                    userId: salary.userId,
-                                    basicAmount: salary.basicSalary,
-                                    allowances: salary.allowances,
-                                    deductions: salary.deductions
-                                  })
-                                  setShowPaymentModal(true)
-                                }}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                Process Payment
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Awaiting payment
+              </Typography>
+            </Box>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: 'warning.main' }}>
+              <PendingActionsIcon sx={{ color: 'white' }} />
+            </Avatar>
+          </Box>
+        </Paper>
+      </Box>
 
-              {/* Payment History */}
-              {salaryPayments.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment History</h3>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Employee
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Period
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Payment Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Method
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {salaryPayments.map((payment) => {
-                          const user = users.find((u) => u.id === payment.userId)
-                          return (
-                            <tr key={payment.id}>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {user?.fullName || 'Unknown'}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(payment.periodStart).toLocaleDateString()} -{' '}
-                                {new Date(payment.periodEnd).toLocaleDateString()}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                ${payment.netAmount.toFixed(2)}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(payment.paymentDate).toLocaleDateString()}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {payment.paymentMethod}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    payment.status === 'paid'
-                                      ? 'bg-green-100 text-green-800'
-                                      : payment.status === 'pending'
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : 'bg-gray-100 text-gray-800'
-                                  }`}
-                                >
-                                  {payment.status}
-                                </span>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Salary Modal - Add Salary Configuration */}
-      {showSalaryModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Add Salary Configuration</h2>
-                <p className="text-sm text-gray-600 mt-1">Set up salary details for an employee</p>
-              </div>
-              <button
-                onClick={() => setShowSalaryModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleAddSalary} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Employee</label>
-                <select
-                  value={salaryFormData.userId}
-                  onChange={(e) => setSalaryFormData({ ...salaryFormData, userId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select an employee</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.fullName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Basic Salary
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={salaryFormData.basicSalary}
-                    onChange={(e) =>
-                      setSalaryFormData({
-                        ...salaryFormData,
-                        basicSalary: parseFloat(e.target.value) || 0
-                      })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="5000.00"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Allowances
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={salaryFormData.allowances}
-                    onChange={(e) =>
-                      setSalaryFormData({
-                        ...salaryFormData,
-                        allowances: parseFloat(e.target.value) || 0
-                      })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="500.00"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Deductions
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={salaryFormData.deductions}
-                    onChange={(e) =>
-                      setSalaryFormData({
-                        ...salaryFormData,
-                        deductions: parseFloat(e.target.value) || 0
-                      })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="200.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Payment Frequency
-                  </label>
-                  <select
-                    value={salaryFormData.paymentFrequency}
-                    onChange={(e) =>
-                      setSalaryFormData({ ...salaryFormData, paymentFrequency: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="monthly">Monthly</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="bi-weekly">Bi-weekly</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-blue-900">Net Salary:</span>
-                  <span className="text-2xl font-bold text-blue-900">
-                    $
-                    {(
-                      salaryFormData.basicSalary +
-                      salaryFormData.allowances -
-                      salaryFormData.deductions
-                    ).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Bank Name
-                  </label>
-                  <input
-                    type="text"
-                    value={salaryFormData.bankName}
-                    onChange={(e) =>
-                      setSalaryFormData({ ...salaryFormData, bankName: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Bank of America"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Account Number
-                  </label>
-                  <input
-                    type="text"
-                    value={salaryFormData.bankAccountNumber}
-                    onChange={(e) =>
-                      setSalaryFormData({ ...salaryFormData, bankAccountNumber: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="1234567890"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Effective From
-                </label>
-                <input
-                  type="date"
-                  value={salaryFormData.effectiveFrom}
-                  onChange={(e) =>
-                    setSalaryFormData({ ...salaryFormData, effectiveFrom: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  value={salaryFormData.notes}
-                  onChange={(e) => setSalaryFormData({ ...salaryFormData, notes: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Add any additional notes..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowSalaryModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-lg transition-all shadow-lg"
-                >
-                  Add Salary
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Modal - Process Salary Payment */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Process Salary Payment</h2>
-                <p className="text-sm text-gray-600 mt-1">Record a salary payment transaction</p>
-              </div>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleProcessPayment} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Employee Salary
-                </label>
-                <select
-                  value={paymentFormData.salaryId}
-                  onChange={(e) => {
-                    const salary = salaries.find((s) => s.id === e.target.value)
-                    setPaymentFormData({
-                      ...paymentFormData,
-                      salaryId: e.target.value,
-                      userId: salary?.userId || '',
-                      basicAmount: salary?.basicSalary || 0,
-                      allowances: salary?.allowances || 0,
-                      deductions: salary?.deductions || 0
-                    })
-                  }}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select employee salary</option>
+      {/* Action Bar */}
+      <Paper
+        sx={{
+          p: 2,
+          mb: 3,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Salary Management
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setShowSalaryModal(true)}
+        >
+          Add Salary
+        </Button>
+      </Paper>
+      {/* Salary Configurations Table */}
+      {salaries.length === 0 ? (
+        <Paper>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <MoneyOffIcon sx={{ fontSize: 64, color: grey[300], mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
+              No salary records yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Add salary information for employees to get started
+            </Typography>
+          </Box>
+        </Paper>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Salary Configurations */}
+          <Paper>
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Salary Configurations
+              </Typography>
+            </Box>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <StyledTableCell>Employee</StyledTableCell>
+                    <StyledTableCell>Basic Salary</StyledTableCell>
+                    <StyledTableCell>Allowances</StyledTableCell>
+                    <StyledTableCell>Deductions</StyledTableCell>
+                    <StyledTableCell>Net Salary</StyledTableCell>
+                    <StyledTableCell>Frequency</StyledTableCell>
+                    <StyledTableCell>Effective From</StyledTableCell>
+                    <StyledTableCell>Actions</StyledTableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {salaries.map((salary) => {
                     const user = users.find((u) => u.id === salary.userId)
                     return (
-                      <option key={salary.id} value={salary.id}>
-                        {user?.fullName} - ${salary.netSalary.toFixed(2)} ({salary.paymentFrequency}
-                        )
-                      </option>
+                      <TableRow key={salary.id} hover>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {user?.fullName || 'Unknown'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            ${salary.basicSalary.toFixed(2)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="success.main">
+                            +${salary.allowances.toFixed(2)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="error.main">
+                            -${salary.deductions.toFixed(2)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            ${salary.netSalary.toFixed(2)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={salary.paymentFrequency} size="small" color="primary" />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {new Date(salary.effectiveFrom).toLocaleDateString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="small"
+                            color="success"
+                            onClick={() => {
+                              setPaymentFormData({
+                                ...paymentFormData,
+                                salaryId: salary.id,
+                                userId: salary.userId,
+                                basicAmount: salary.basicSalary,
+                                allowances: salary.allowances,
+                                deductions: salary.deductions
+                              })
+                              setShowPaymentModal(true)
+                            }}
+                          >
+                            Process Payment
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     )
                   })}
-                </select>
-              </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Period Start
-                  </label>
-                  <input
-                    type="date"
-                    value={paymentFormData.payPeriodStart}
-                    onChange={(e) =>
-                      setPaymentFormData({ ...paymentFormData, payPeriodStart: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  />
-                </div>
+          {/* Payment History */}
+          {salaryPayments.length > 0 && (
+            <Paper>
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Payment History
+                </Typography>
+              </Box>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <StyledTableCell>Employee</StyledTableCell>
+                      <StyledTableCell>Period</StyledTableCell>
+                      <StyledTableCell>Amount</StyledTableCell>
+                      <StyledTableCell>Payment Date</StyledTableCell>
+                      <StyledTableCell>Method</StyledTableCell>
+                      <StyledTableCell>Status</StyledTableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {salaryPayments.map((payment) => {
+                      const user = users.find((u) => u.id === payment.userId)
+                      return (
+                        <TableRow key={payment.id} hover>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {user?.fullName || 'Unknown'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {new Date(payment.periodStart).toLocaleDateString()} -{' '}
+                              {new Date(payment.periodEnd).toLocaleDateString()}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              ${payment.netAmount.toFixed(2)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {new Date(payment.paymentDate).toLocaleDateString()}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {payment.paymentMethod}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={payment.status}
+                              size="small"
+                              color={
+                                payment.status === 'paid'
+                                  ? 'success'
+                                  : payment.status === 'pending'
+                                    ? 'warning'
+                                    : 'default'
+                              }
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          )}
+        </Box>
+      )}
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Period End
-                  </label>
-                  <input
-                    type="date"
-                    value={paymentFormData.payPeriodEnd}
-                    onChange={(e) =>
-                      setPaymentFormData({ ...paymentFormData, payPeriodEnd: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
+      {/* Salary Modal - Add Salary Configuration */}
+      <Dialog
+        open={showSalaryModal}
+        onClose={() => setShowSalaryModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Add Salary Configuration
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Set up salary details for an employee
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setShowSalaryModal(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box
+            component="form"
+            onSubmit={handleAddSalary}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+          >
+            <FormControl fullWidth required>
+              <InputLabel>Employee</InputLabel>
+              <Select
+                value={salaryFormData.userId}
+                onChange={(e) => setSalaryFormData({ ...salaryFormData, userId: e.target.value })}
+                label="Employee"
+              >
+                <MenuItem value="">Select an employee</MenuItem>
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.fullName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Basic Salary:</span>
-                  <span className="font-semibold">${paymentFormData.basicAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Allowances:</span>
-                  <span className="font-semibold text-green-600">
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
+              <TextField
+                label="Basic Salary"
+                type="number"
+                value={salaryFormData.basicSalary}
+                onChange={(e) =>
+                  setSalaryFormData({
+                    ...salaryFormData,
+                    basicSalary: parseFloat(e.target.value) || 0
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                placeholder="5000.00"
+                required
+                fullWidth
+              />
+
+              <TextField
+                label="Allowances"
+                type="number"
+                value={salaryFormData.allowances}
+                onChange={(e) =>
+                  setSalaryFormData({
+                    ...salaryFormData,
+                    allowances: parseFloat(e.target.value) || 0
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                placeholder="500.00"
+                fullWidth
+              />
+            </Box>
+
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
+              <TextField
+                label="Deductions"
+                type="number"
+                value={salaryFormData.deductions}
+                onChange={(e) =>
+                  setSalaryFormData({
+                    ...salaryFormData,
+                    deductions: parseFloat(e.target.value) || 0
+                  })
+                }
+                InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                placeholder="200.00"
+                fullWidth
+              />
+
+              <FormControl fullWidth required>
+                <InputLabel>Payment Frequency</InputLabel>
+                <Select
+                  value={salaryFormData.paymentFrequency}
+                  onChange={(e) =>
+                    setSalaryFormData({ ...salaryFormData, paymentFrequency: e.target.value })
+                  }
+                  label="Payment Frequency"
+                >
+                  <MenuItem value="monthly">Monthly</MenuItem>
+                  <MenuItem value="weekly">Weekly</MenuItem>
+                  <MenuItem value="bi-weekly">Bi-weekly</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Paper
+              sx={{ p: 2, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  Net Salary:
+                </Typography>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                  $
+                  {(
+                    salaryFormData.basicSalary +
+                    salaryFormData.allowances -
+                    salaryFormData.deductions
+                  ).toFixed(2)}
+                </Typography>
+              </Box>
+            </Paper>
+
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
+              <TextField
+                label="Bank Name"
+                type="text"
+                value={salaryFormData.bankName}
+                onChange={(e) => setSalaryFormData({ ...salaryFormData, bankName: e.target.value })}
+                placeholder="Bank of America"
+                fullWidth
+              />
+
+              <TextField
+                label="Account Number"
+                type="text"
+                value={salaryFormData.bankAccountNumber}
+                onChange={(e) =>
+                  setSalaryFormData({ ...salaryFormData, bankAccountNumber: e.target.value })
+                }
+                placeholder="1234567890"
+                fullWidth
+              />
+            </Box>
+
+            <TextField
+              label="Effective From"
+              type="date"
+              value={salaryFormData.effectiveFrom}
+              onChange={(e) =>
+                setSalaryFormData({ ...salaryFormData, effectiveFrom: e.target.value })
+              }
+              InputLabelProps={{ shrink: true }}
+              required
+              fullWidth
+            />
+
+            <TextField
+              label="Notes (Optional)"
+              multiline
+              rows={3}
+              value={salaryFormData.notes}
+              onChange={(e) => setSalaryFormData({ ...salaryFormData, notes: e.target.value })}
+              placeholder="Add any additional notes..."
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setShowSalaryModal(false)} variant="outlined" fullWidth>
+            Cancel
+          </Button>
+          <Button onClick={handleAddSalary} variant="contained" color="success" fullWidth>
+            Add Salary
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Payment Modal - Process Salary Payment */}
+      <Dialog
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Process Salary Payment
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Record a salary payment transaction
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setShowPaymentModal(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box
+            component="form"
+            onSubmit={handleProcessPayment}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+          >
+            <FormControl fullWidth required>
+              <InputLabel>Employee Salary</InputLabel>
+              <Select
+                value={paymentFormData.salaryId}
+                onChange={(e) => {
+                  const salary = salaries.find((s) => s.id === e.target.value)
+                  setPaymentFormData({
+                    ...paymentFormData,
+                    salaryId: e.target.value,
+                    userId: salary?.userId || '',
+                    basicAmount: salary?.basicSalary || 0,
+                    allowances: salary?.allowances || 0,
+                    deductions: salary?.deductions || 0
+                  })
+                }}
+                label="Employee Salary"
+              >
+                <MenuItem value="">Select employee salary</MenuItem>
+                {salaries.map((salary) => {
+                  const user = users.find((u) => u.id === salary.userId)
+                  return (
+                    <MenuItem key={salary.id} value={salary.id}>
+                      {user?.fullName} - ${salary.netSalary.toFixed(2)} ({salary.paymentFrequency})
+                    </MenuItem>
+                  )
+                })}
+              </Select>
+            </FormControl>
+
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
+              <TextField
+                label="Period Start"
+                type="date"
+                value={paymentFormData.payPeriodStart}
+                onChange={(e) =>
+                  setPaymentFormData({ ...paymentFormData, payPeriodStart: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                required
+                fullWidth
+              />
+
+              <TextField
+                label="Period End"
+                type="date"
+                value={paymentFormData.payPeriodEnd}
+                onChange={(e) =>
+                  setPaymentFormData({ ...paymentFormData, payPeriodEnd: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                required
+                fullWidth
+              />
+            </Box>
+
+            <Paper sx={{ p: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'grey.300' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Basic Salary:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    ${paymentFormData.basicAmount.toFixed(2)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Allowances:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
                     +${paymentFormData.allowances.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Deductions:</span>
-                  <span className="font-semibold text-red-600">
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Deductions:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
                     -${paymentFormData.deductions.toFixed(2)}
-                  </span>
-                </div>
-                <div className="border-t border-gray-300 pt-2 mt-2 flex justify-between">
-                  <span className="font-bold text-gray-900">Net Amount:</span>
-                  <span className="text-2xl font-bold text-gray-900">
+                  </Typography>
+                </Box>
+                <Divider sx={{ my: 1 }} />
+                <Box
+                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                    Net Amount:
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     $
                     {(
                       paymentFormData.basicAmount +
                       paymentFormData.allowances -
                       paymentFormData.deductions
                     ).toFixed(2)}
-                  </span>
-                </div>
-              </div>
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Payment Method
-                  </label>
-                  <select
-                    value={paymentFormData.paymentMethod}
-                    onChange={(e) =>
-                      setPaymentFormData({ ...paymentFormData, paymentMethod: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="cash">Cash</option>
-                    <option value="check">Check</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Payment Date
-                  </label>
-                  <input
-                    type="date"
-                    value={paymentFormData.paymentDate}
-                    onChange={(e) =>
-                      setPaymentFormData({ ...paymentFormData, paymentDate: e.target.value })
-                    }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Transaction Reference
-                </label>
-                <input
-                  type="text"
-                  value={paymentFormData.transactionReference}
+            <Box
+              sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}
+            >
+              <FormControl fullWidth required>
+                <InputLabel>Payment Method</InputLabel>
+                <Select
+                  value={paymentFormData.paymentMethod}
                   onChange={(e) =>
-                    setPaymentFormData({
-                      ...paymentFormData,
-                      transactionReference: e.target.value
-                    })
+                    setPaymentFormData({ ...paymentFormData, paymentMethod: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="TXN123456"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  value={paymentFormData.notes}
-                  onChange={(e) =>
-                    setPaymentFormData({ ...paymentFormData, notes: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Add any additional notes..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                  label="Payment Method"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all shadow-lg"
-                >
-                  Process Payment
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+                  <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
+                  <MenuItem value="cash">Cash</MenuItem>
+                  <MenuItem value="check">Check</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Payment Date"
+                type="date"
+                value={paymentFormData.paymentDate}
+                onChange={(e) =>
+                  setPaymentFormData({ ...paymentFormData, paymentDate: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                required
+                fullWidth
+              />
+            </Box>
+
+            <TextField
+              label="Transaction Reference"
+              type="text"
+              value={paymentFormData.transactionReference}
+              onChange={(e) =>
+                setPaymentFormData({
+                  ...paymentFormData,
+                  transactionReference: e.target.value
+                })
+              }
+              placeholder="TXN123456"
+              fullWidth
+            />
+
+            <TextField
+              label="Notes (Optional)"
+              multiline
+              rows={3}
+              value={paymentFormData.notes}
+              onChange={(e) => setPaymentFormData({ ...paymentFormData, notes: e.target.value })}
+              placeholder="Add any additional notes..."
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setShowPaymentModal(false)} variant="outlined" fullWidth>
+            Cancel
+          </Button>
+          <Button onClick={handleProcessPayment} variant="contained" color="secondary" fullWidth>
+            Process Payment
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   )
 }

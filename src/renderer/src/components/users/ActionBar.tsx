@@ -1,3 +1,16 @@
+import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  TextField,
+  Typography
+} from '@mui/material'
 import { Role, roleMetadata } from '../../utils/permissions'
 
 interface ActionBarProps {
@@ -22,70 +35,69 @@ export default function ActionBar({
   onCreateClick
 }: ActionBarProps): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-3 flex-1">
+    <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'stretch', md: 'center' },
+          justifyContent: 'space-between',
+          gap: 2
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 2,
+            flex: 1
+          }}
+        >
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="Search users by name, username, or role..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
+          <TextField
+            placeholder="Search users by name, username, or role..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            size="small"
+            sx={{ flex: 1, maxWidth: { sm: 400 } }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              )
+            }}
+          />
 
           {/* Role Filter */}
-          <select
-            value={selectedRole}
-            onChange={(e) => onRoleFilterChange(e.target.value as Role | 'all')}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Roles</option>
-            {(Object.keys(roleMetadata) as Role[]).map((role) => (
-              <option key={role} value={role}>
-                {roleMetadata[role].name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">
-            {filteredCount} user{filteredCount !== 1 ? 's' : ''} found
-          </span>
-          {hasCreatePermission && hasAvailableRoles && (
-            <button
-              onClick={onCreateClick}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Role</InputLabel>
+            <Select
+              value={selectedRole}
+              label="Role"
+              onChange={(e) => onRoleFilterChange(e.target.value as Role | 'all')}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+              <MenuItem value="all">All Roles</MenuItem>
+              {(Object.keys(roleMetadata) as Role[]).map((role) => (
+                <MenuItem key={role} value={role}>
+                  {roleMetadata[role].name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            {filteredCount} user{filteredCount !== 1 ? 's' : ''} found
+          </Typography>
+          {hasCreatePermission && hasAvailableRoles && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={onCreateClick}>
               Create User
-            </button>
+            </Button>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Paper>
   )
 }

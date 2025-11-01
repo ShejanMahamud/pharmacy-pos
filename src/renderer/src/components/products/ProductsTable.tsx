@@ -146,7 +146,7 @@ export default function ProductsTable({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: 'primary.main'
+                          color: 'white'
                         }}
                       >
                         <svg

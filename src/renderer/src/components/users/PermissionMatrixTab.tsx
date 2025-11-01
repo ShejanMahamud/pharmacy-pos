@@ -1,3 +1,19 @@
+import CheckIcon from '@mui/icons-material/Check'
+import CloseIcon from '@mui/icons-material/Close'
+import {
+  Box,
+  Paper,
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  tableCellClasses,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography
+} from '@mui/material'
+import { green, grey } from '@mui/material/colors'
 import {
   getPermissionName,
   getRolePermissions,
@@ -7,91 +23,105 @@ import {
   roleMetadata
 } from '../../utils/permissions'
 
+const StyledTableCell = styled(TableCell)(() => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: grey[300],
+    fontWeight: 600,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14
+  }
+}))
+
+const StickyTableCell = styled(TableCell)({
+  position: 'sticky',
+  left: 0,
+  backgroundColor: '#fff',
+  zIndex: 10,
+  fontWeight: 500
+})
+
+const CategoryRow = styled(TableRow)({
+  backgroundColor: grey[50]
+})
+
+const CategoryCell = styled(TableCell)({
+  position: 'sticky',
+  left: 0,
+  backgroundColor: grey[50],
+  fontWeight: 700,
+  fontSize: 13
+})
+
 export default function PermissionMatrixTab(): React.JSX.Element {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Complete Permission Matrix</h2>
-        <p className="text-sm text-gray-600 mt-1">
+    <Paper sx={{ border: 1, borderColor: 'divider' }}>
+      <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Complete Permission Matrix
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           Overview of all {(Object.keys(roleMetadata) as Role[]).length} roles and their permissions
-        </p>
-      </div>
-      <div className="p-6 overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-white z-10">
-                Category / Permission
-              </th>
-              {(Object.keys(roleMetadata) as Role[]).map((role) => (
-                <th
-                  key={role}
-                  className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+        </Typography>
+      </Box>
+      <Box sx={{ p: 3 }}>
+        <TableContainer sx={{ maxHeight: 600 }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <StyledTableCell
+                  sx={{
+                    position: 'sticky',
+                    left: 0,
+                    zIndex: 11,
+                    backgroundColor: grey[300]
+                  }}
                 >
-                  {roleMetadata[role].name}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {Object.entries(permissionCategories).map(([category, permissions]) => (
-              <>
-                <tr key={category} className="bg-gray-50">
-                  <td
-                    colSpan={6}
-                    className="px-4 py-2 text-sm font-semibold text-gray-900 sticky left-0 bg-gray-50"
-                  >
-                    {category}
-                  </td>
-                </tr>
-                {permissions.map((permission) => (
-                  <tr key={permission} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700 sticky left-0 bg-white">
-                      {getPermissionName(permission as Permission)}
-                    </td>
-                    {(Object.keys(roleMetadata) as Role[]).map((role) => {
-                      const hasAccess = getRolePermissions(role).includes(permission as Permission)
-                      return (
-                        <td key={role} className="px-4 py-3 text-center">
-                          {hasAccess ? (
-                            <svg
-                              className="h-5 w-5 text-green-600 mx-auto"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              className="h-5 w-5 text-gray-300 mx-auto"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          )}
-                        </td>
-                      )
-                    })}
-                  </tr>
+                  Category / Permission
+                </StyledTableCell>
+                {(Object.keys(roleMetadata) as Role[]).map((role) => (
+                  <StyledTableCell key={role} align="center">
+                    {roleMetadata[role].name}
+                  </StyledTableCell>
                 ))}
-              </>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Object.entries(permissionCategories).map(([category, permissions]) => (
+                <>
+                  <CategoryRow key={category}>
+                    <CategoryCell colSpan={6}>{category}</CategoryCell>
+                  </CategoryRow>
+                  {permissions.map((permission) => (
+                    <TableRow key={permission} hover>
+                      <StickyTableCell>
+                        {getPermissionName(permission as Permission)}
+                      </StickyTableCell>
+                      {(Object.keys(roleMetadata) as Role[]).map((role) => {
+                        const hasAccess = getRolePermissions(role).includes(
+                          permission as Permission
+                        )
+                        return (
+                          <TableCell key={role} align="center">
+                            {hasAccess ? (
+                              <CheckIcon sx={{ color: green[600], fontSize: 20 }} />
+                            ) : (
+                              <CloseIcon sx={{ color: grey[300], fontSize: 20 }} />
+                            )}
+                          </TableCell>
+                        )
+                      })}
+                    </TableRow>
+                  ))}
+                </>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </Paper>
   )
 }
